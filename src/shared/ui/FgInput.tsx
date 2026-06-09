@@ -1,0 +1,81 @@
+import { forwardRef, useId } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+
+import { cn } from '@/shared/lib/cn'
+
+export interface FgInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'className' | 'prefix'> {
+  error?: string
+  hint?: string
+  inputClassName?: string
+  label?: string
+  leftIcon?: ReactNode
+  rightIcon?: ReactNode
+  rootClassName?: string
+}
+
+export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
+  (
+    {
+      disabled,
+      error,
+      hint,
+      id,
+      inputClassName,
+      label,
+      leftIcon,
+      required,
+      rightIcon,
+      rootClassName,
+      ...props
+    },
+    ref,
+  ) => {
+    const generatedId = useId()
+    const inputId = id ?? generatedId
+    const helperText = error ?? hint
+    const helperId = helperText ? `${inputId}-helper` : undefined
+
+    return (
+      <div className={cn('space-y-2', rootClassName)}>
+        {label ? (
+          <label className="block text-label text-ink-2" htmlFor={inputId}>
+            {label}
+            {required ? <span className="text-danger"> *</span> : null}
+          </label>
+        ) : null}
+        <div
+          className={cn(
+            'flex h-11 items-center gap-3 rounded-control border border-line bg-surface px-3 text-body text-ink shadow-none transition-colors',
+            'focus-within:border-primary focus-within:ring-1 focus-within:ring-primary',
+            disabled && 'bg-line-soft text-muted',
+            error && 'border-danger focus-within:border-danger focus-within:ring-danger',
+          )}
+        >
+          {leftIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{leftIcon}</span> : null}
+          <input
+            ref={ref}
+            id={inputId}
+            required={required}
+            disabled={disabled}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={helperId}
+            className={cn(
+              'h-full min-w-0 flex-1 border-none bg-transparent p-0 text-inherit outline-none placeholder:text-faint',
+              'disabled:cursor-not-allowed',
+              inputClassName,
+            )}
+            {...props}
+          />
+          {rightIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{rightIcon}</span> : null}
+        </div>
+        {helperText ? (
+          <p id={helperId} className={cn('text-meta text-faint', error && 'text-danger')}>
+            {helperText}
+          </p>
+        ) : null}
+      </div>
+    )
+  },
+)
+
+FgInput.displayName = 'FgInput'

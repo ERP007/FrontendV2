@@ -19,6 +19,7 @@
     @apply m-0 min-h-screen bg-background font-sans text-body text-ink antialiased;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
+    font-variant-numeric: tabular-nums;
   }
 
   #root {
@@ -50,5 +51,28 @@
 
   ::selection {
     @apply bg-primary-soft text-primary-strong;
+  }
+}
+
+@layer components {
+  .fg-page {
+    @apply min-h-screen bg-background text-ink;
+  }
+
+  .fg-content {
+    @apply mx-auto flex w-full max-w-content flex-col gap-5;
+  }
+
+  .fg-scrollbar {
+    scrollbar-color: theme('colors.line') transparent;
+    scrollbar-width: thin;
+  }
+
+  .fg-scrollbar::-webkit-scrollbar {
+    @apply h-2 w-2;
+  }
+
+  .fg-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-pill bg-line;
   }
 }

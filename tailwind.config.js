@@ -4,6 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: '#0E6E83',
+        'brand-strong': '#0A5365',
+        'brand-soft': '#ECF4F6',
+        'brand-line': '#CFE3E8',
         primary: '#0E6E83',
         'primary-strong': '#0A5365',
         'primary-soft': '#ECF4F6',
@@ -28,6 +32,8 @@ export default {
         'off-dot': '#9AA8B0',
         danger: '#C5453F',
         'danger-bg': '#FBECEB',
+        'modal-backdrop': 'rgba(9, 20, 26, 0.5)',
+        warm: '#FCF6EA',
       },
       fontFamily: {
         sans: [
@@ -42,21 +48,39 @@ export default {
         ],
       },
       fontSize: {
-        h1: ['27px', { lineHeight: '1.2', letterSpacing: '-0.8px', fontWeight: '800' }],
-        section: ['15.5px', { lineHeight: '1.35', letterSpacing: '-0.2px', fontWeight: '700' }],
+        h1: ['27px', { lineHeight: '1.2', letterSpacing: '0', fontWeight: '800' }],
+        'modal-title': ['18.5px', { lineHeight: '1.2', letterSpacing: '0', fontWeight: '800' }],
+        section: ['15.5px', { lineHeight: '1.35', letterSpacing: '0', fontWeight: '700' }],
         body: ['15px', { lineHeight: '1.5', fontWeight: '500' }],
         label: ['13px', { lineHeight: '1.4', fontWeight: '600' }],
+        meta: ['12.5px', { lineHeight: '1.4', fontWeight: '500' }],
         table: ['12.5px', { lineHeight: '1.4', fontWeight: '600' }],
-        badge: ['12px', { lineHeight: '1.2', letterSpacing: '0.2px', fontWeight: '700' }],
-        kpi: ['32px', { lineHeight: '1.05', letterSpacing: '-1px', fontWeight: '800' }],
+        micro: ['11px', { lineHeight: '1.2', letterSpacing: '0', fontWeight: '700' }],
+        badge: ['12px', { lineHeight: '1.2', letterSpacing: '0', fontWeight: '700' }],
+        kpi: ['32px', { lineHeight: '1.05', letterSpacing: '0', fontWeight: '800' }],
       },
       borderRadius: {
         card: '12px',
+        modal: '16px',
         control: '8px',
+        nav: '9px',
         badge: '7px',
+        pill: '999px',
+      },
+      spacing: {
+        sidebar: '248px',
+        topbar: '64px',
+      },
+      maxWidth: {
+        content: '1600px',
+        'modal-sm': '520px',
+        'modal-md': '640px',
+        'modal-lg': '740px',
       },
       boxShadow: {
         card: '0 1px 2px rgba(19, 32, 42, 0.03)',
+        primary: '0 1px 2px rgba(10, 83, 101, 0.25)',
+        selected: 'inset 3px 0 0 #0E6E83',
         modal: '0 24px 70px rgba(9, 20, 26, 0.35)',
         drawer: '-20px 0 60px rgba(9, 20, 26, 0.25)',
         popover: '0 12px 36px rgba(9, 20, 26, 0.16)',
