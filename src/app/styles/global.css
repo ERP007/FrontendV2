@@ -1,0 +1,78 @@
+@import 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    @apply box-border;
+  }
+
+  html {
+    @apply min-h-full bg-background;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-background font-sans text-body text-ink antialiased;
+    font-synthesis: none;
+    text-rendering: optimizelegibility;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    @apply bg-primary-soft text-primary-strong;
+  }
+}
+
+@layer components {
+  .fg-page {
+    @apply min-h-screen bg-background text-ink;
+  }
+
+  .fg-content {
+    @apply mx-auto flex w-full max-w-content flex-col gap-5;
+  }
+
+  .fg-scrollbar {
+    scrollbar-color: theme('colors.line') transparent;
+    scrollbar-width: thin;
+  }
+
+  .fg-scrollbar::-webkit-scrollbar {
+    @apply h-2 w-2;
+  }
+
+  .fg-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-pill bg-line;
+  }
+}
