@@ -69,7 +69,7 @@ export const FgButton = forwardRef<HTMLButtonElement, FgButtonProps>(
         {...props}
       >
         {loading ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : leftIcon}
-        {size === 'icon' ? <span className="sr-only">{children}</span> : children}
+        {children}
         {!loading && rightIcon}
       </Component>
     )

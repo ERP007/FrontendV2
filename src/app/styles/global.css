@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+@import 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css';
 
 @tailwind base;
 @tailwind components;
@@ -18,7 +18,7 @@
   body {
     @apply m-0 min-h-screen bg-background font-sans text-body text-ink antialiased;
     font-synthesis: none;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizelegibility;
     font-variant-numeric: tabular-nums;
   }
 
