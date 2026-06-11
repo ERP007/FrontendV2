@@ -4,6 +4,7 @@ import {
   Package,
   Search,
 } from 'lucide-react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
@@ -12,6 +13,7 @@ import { FgButton } from '@/shared/ui/FgButton'
 
 export interface FgNavItem {
   active?: boolean
+  children?: FgNavItem[]
   href?: string
   icon?: ReactNode
   label: ReactNode
@@ -24,6 +26,7 @@ export interface FgNavGroup {
 }
 
 export interface FgAppShellProps {
+  bottomItems?: FgNavItem[]
   children: ReactNode
   navGroups: FgNavGroup[]
   searchPlaceholder?: string
@@ -31,12 +34,44 @@ export interface FgAppShellProps {
   userRole?: string
 }
 
-function FgSidebarItem({ active = false, href, icon, label, onClick }: FgNavItem) {
+function FgSidebarItem({ active = false, children, href, icon, label, onClick }: FgNavItem) {
+  const hasActiveChild = children?.some((child) => child.active) ?? false
+  const [open, setOpen] = useState(hasActiveChild)
+
   const className = cn(
     'flex w-full items-center gap-3 rounded-nav px-3 py-2.5 text-left text-sm font-medium text-ink-2 transition-colors',
     'hover:bg-background hover:text-primary-strong',
     active && 'bg-primary-soft font-bold text-primary-strong shadow-selected',
   )
+
+  if (children?.length) {
+    const expanded = open || hasActiveChild
+
+    return (
+      <div>
+        <button
+          aria-expanded={expanded}
+          className={cn(className, hasActiveChild && 'font-bold text-primary-strong')}
+          type="button"
+          onClick={() => setOpen((previous) => !previous)}
+        >
+          <span className={cn('text-muted', hasActiveChild && 'text-primary')}>{icon}</span>
+          <span className="flex-1 truncate">{label}</span>
+          <ChevronDown
+            aria-hidden
+            className={cn('h-3.5 w-3.5 text-faint transition-transform', expanded && 'rotate-180')}
+          />
+        </button>
+        {expanded ? (
+          <div className="mt-1 space-y-1 pl-9">
+            {children.map((child, childIndex) => (
+              <FgSidebarItem key={childIndex} {...child} />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
 
   const content = (
     <>
@@ -61,6 +96,7 @@ function FgSidebarItem({ active = false, href, icon, label, onClick }: FgNavItem
 }
 
 export function FgAppShell({
+  bottomItems,
   children,
   navGroups,
   searchPlaceholder = '부품 코드, 사용자, 발주 번호 검색',
@@ -89,6 +125,13 @@ export function FgAppShell({
             </div>
           ))}
         </nav>
+        {bottomItems?.length ? (
+          <div className="mt-5 space-y-1 border-t border-line-soft pt-4">
+            {bottomItems.map((item, itemIndex) => (
+              <FgSidebarItem key={itemIndex} {...item} />
+            ))}
+          </div>
+        ) : null}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-topbar shrink-0 items-center justify-between gap-4 border-b border-line bg-surface px-7">
