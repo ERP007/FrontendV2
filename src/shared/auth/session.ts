@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { api, redirectToAuthLogin, waitForAuthRedirect } from '@/shared/api'
+import {
+  api,
+  clearAuthRedirectAttempt,
+  redirectToAuthLogin,
+  waitForAuthRedirect,
+} from '@/shared/api'
 import { queryClient } from '@/shared/api/query-client'
 
 export interface AuthSession {
@@ -30,6 +35,7 @@ export async function fetchSession() {
     throw new Error('Session response is missing content.')
   }
 
+  clearAuthRedirectAttempt()
   return session
 }
 

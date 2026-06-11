@@ -4,6 +4,10 @@ import { LoginForm } from '@/features/auth'
 import { redirectToAuthLogin } from '@/shared/api'
 
 export function LoginPage() {
+  const hasSessionError =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('auth_error') === 'session'
+
   function handleSsoLogin() {
     redirectToAuthLogin({ force: true })
   }
@@ -18,7 +22,12 @@ export function LoginPage() {
         <div className="mt-4 h-1 w-16 rounded-pill bg-primary" />
         <p className="mt-5 text-label font-medium text-muted">현대 파츠 (주)</p>
       </div>
-      <LoginForm onSsoLogin={handleSsoLogin} />
+      <LoginForm
+        errorMessage={
+          hasSessionError ? '로그인 세션을 확인하지 못했습니다. 다시 로그인해 주세요.' : undefined
+        }
+        onSsoLogin={handleSsoLogin}
+      />
       <p className="text-label text-faint">비밀번호 분실 시 관리자에게 문의</p>
     </div>
   )
