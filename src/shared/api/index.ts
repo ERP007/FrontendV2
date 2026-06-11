@@ -1,6 +1,7 @@
 export {
   API_BASE_URL,
   api,
+  clearAuthRedirectAttempt,
   isAuthRedirectInProgress,
   redirectToAuthLogin,
   waitForAuthRedirect,
