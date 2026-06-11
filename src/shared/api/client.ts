@@ -9,8 +9,6 @@ import type { ErrorResponse } from '@/shared/api/error'
 const DEFAULT_API_BASE_URL = '/api'
 const AUTH_LOGIN_PATH = '/auth/login'
 const LOGIN_PATH = '/login'
-const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
-const AUTH_REDIRECT_ATTEMPT_TTL_MS = 30 * 60 * 1000
 
 let authRedirectInProgress = false
 
@@ -22,41 +20,13 @@ export function waitForAuthRedirect(): Promise<never> {
   return new Promise(() => undefined)
 }
 
-function hasAuthRedirectAttempted() {
-  try {
-    const attemptedAt = Number(window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY))
-
-    if (!Number.isFinite(attemptedAt) || attemptedAt <= 0) {
-      window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
-      return false
-    }
-
-    if (Date.now() - attemptedAt > AUTH_REDIRECT_ATTEMPT_TTL_MS) {
-      window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
-      return false
-    }
-
-    return true
-  } catch {
-    return false
-  }
-}
-
-function markAuthRedirectAttempted() {
-  try {
-    window.sessionStorage.setItem(AUTH_REDIRECT_ATTEMPT_KEY, String(Date.now()))
-  } catch {
-    // Ignore storage failures. The redirect itself is still the source of truth.
-  }
-}
-
 export function clearAuthRedirectAttempt() {
   if (typeof window === 'undefined') {
     return
   }
 
   try {
-    window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
+    window.sessionStorage.removeItem('erp007.authRedirectAttempted')
   } catch {
     // Ignore storage failures.
   }
@@ -95,12 +65,6 @@ function buildApiUrl(path: string) {
   return `${API_BASE_URL}${normalizedPath}`
 }
 
-function redirectToLoginWithSessionError() {
-  authRedirectInProgress = true
-  window.location.assign(`${LOGIN_PATH}?auth_error=session`)
-  return true
-}
-
 export function redirectToAuthLogin({ force = false }: { force?: boolean } = {}) {
   if (typeof window === 'undefined') {
     return false
@@ -114,12 +78,8 @@ export function redirectToAuthLogin({ force = false }: { force?: boolean } = {})
     return false
   }
 
-  if (!force && hasAuthRedirectAttempted()) {
-    return redirectToLoginWithSessionError()
-  }
-
   authRedirectInProgress = true
-  markAuthRedirectAttempted()
+  clearAuthRedirectAttempt()
   window.location.assign(buildApiUrl(AUTH_LOGIN_PATH))
   return true
 }
