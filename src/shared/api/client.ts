@@ -10,6 +10,7 @@ const DEFAULT_API_BASE_URL = '/api'
 const AUTH_LOGIN_PATH = '/auth/login'
 const LOGIN_PATH = '/login'
 const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
+const AUTH_REDIRECT_ATTEMPT_TTL_MS = 30 * 60 * 1000
 
 let authRedirectInProgress = false
 
@@ -23,7 +24,19 @@ export function waitForAuthRedirect(): Promise<never> {
 
 function hasAuthRedirectAttempted() {
   try {
-    return window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY) === 'true'
+    const attemptedAt = Number(window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY))
+
+    if (!Number.isFinite(attemptedAt) || attemptedAt <= 0) {
+      window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
+      return false
+    }
+
+    if (Date.now() - attemptedAt > AUTH_REDIRECT_ATTEMPT_TTL_MS) {
+      window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
+      return false
+    }
+
+    return true
   } catch {
     return false
   }
@@ -31,7 +44,7 @@ function hasAuthRedirectAttempted() {
 
 function markAuthRedirectAttempted() {
   try {
-    window.sessionStorage.setItem(AUTH_REDIRECT_ATTEMPT_KEY, 'true')
+    window.sessionStorage.setItem(AUTH_REDIRECT_ATTEMPT_KEY, String(Date.now()))
   } catch {
     // Ignore storage failures. The redirect itself is still the source of truth.
   }

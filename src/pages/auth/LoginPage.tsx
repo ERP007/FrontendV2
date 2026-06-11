@@ -1,12 +1,17 @@
+import { useEffect } from 'react'
 import { Package } from 'lucide-react'
 
 import { LoginForm } from '@/features/auth'
-import { redirectToAuthLogin } from '@/shared/api'
+import { clearAuthRedirectAttempt, redirectToAuthLogin } from '@/shared/api'
 
 export function LoginPage() {
   const hasSessionError =
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('auth_error') === 'session'
+
+  useEffect(() => {
+    clearAuthRedirectAttempt()
+  }, [])
 
   function handleSsoLogin() {
     redirectToAuthLogin({ force: true })
