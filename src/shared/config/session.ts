@@ -8,6 +8,14 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   BRANCH_STAFF: '지점 담당자',
 }
 
+export function roleLabel(role?: string | null) {
+  if (!role) {
+    return '-'
+  }
+
+  return ROLE_LABELS[role as UserRole] ?? role
+}
+
 export interface SessionUser {
   branchName: string
   email: string
