@@ -12,6 +12,14 @@ const LOGIN_PATH = '/login'
 
 let authRedirectInProgress = false
 
+export function isAuthRedirectInProgress() {
+  return authRedirectInProgress
+}
+
+export function waitForAuthRedirect(): Promise<never> {
+  return new Promise(() => undefined)
+}
+
 function normalizeApiBaseUrl(value: string) {
   const trimmed = value.trim().replace(/\/+$/, '')
 
@@ -47,32 +55,39 @@ function buildApiUrl(path: string) {
 
 export function redirectToAuthLogin({ force = false }: { force?: boolean } = {}) {
   if (typeof window === 'undefined') {
-    return
+    return false
   }
 
-  if (authRedirectInProgress || (!force && window.location.pathname === LOGIN_PATH)) {
-    return
+  if (authRedirectInProgress) {
+    return true
+  }
+
+  if (!force && window.location.pathname === LOGIN_PATH) {
+    return false
   }
 
   authRedirectInProgress = true
   window.location.assign(buildApiUrl(AUTH_LOGIN_PATH))
+  return true
 }
 
 function handleGlobalError(error: ErrorResponse) {
   if (error.status === 401) {
+    const isRedirecting = redirectToAuthLogin()
     queryClient.clear()
-    redirectToAuthLogin()
-    return
+    return isRedirecting
   }
 
   if (error.status === 403) {
     toast.error(error.detail || '접근 권한이 없습니다.')
-    return
+    return false
   }
 
   if (error.status !== 400) {
     toast.error(error.detail || '요청 처리 중 오류가 발생했습니다.')
   }
+
+  return false
 }
 
 export const api = axios.create({
@@ -84,8 +99,11 @@ api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     const errorResponse = normalizeErrorResponse(error)
+    const isWaitingForAuthRedirect = handleGlobalError(errorResponse)
 
-    handleGlobalError(errorResponse)
+    if (isWaitingForAuthRedirect) {
+      return waitForAuthRedirect()
+    }
 
     return Promise.reject(errorResponse)
   },

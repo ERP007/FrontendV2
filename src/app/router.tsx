@@ -19,9 +19,19 @@ import { SalesOrdersPage } from '@/pages/hq/SalesOrdersPage'
 import { StockMovementsPage } from '@/pages/hq/StockMovementsPage'
 import { StocksPage } from '@/pages/hq/StocksPage'
 import { WarehousesPage } from '@/pages/hq/WarehousesPage'
+import {
+  isAuthRedirectInProgress,
+  isErrorResponse,
+  redirectToAuthLogin,
+  waitForAuthRedirect,
+} from '@/shared/api'
 import { ensureSession } from '@/shared/auth/session'
 
 const rootRoute = createRootRoute()
+
+function shouldWaitForAuthRedirect(error: unknown) {
+  return isAuthRedirectInProgress() || (isErrorResponse(error) && error.status === 401)
+}
 
 const loginRoute = createRoute({
   component: LoginPage,
@@ -37,7 +47,16 @@ const passwordChangeRoute = createRoute({
 
 const shellRoute = createRoute({
   beforeLoad: async () => {
-    await ensureSession()
+    try {
+      await ensureSession()
+    } catch (error) {
+      if (shouldWaitForAuthRedirect(error)) {
+        redirectToAuthLogin()
+        return await waitForAuthRedirect()
+      }
+
+      throw error
+    }
   },
   component: AppShellLayout,
   getParentRoute: () => rootRoute,
