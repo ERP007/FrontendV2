@@ -3,7 +3,14 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 
-export interface FgInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'className' | 'prefix'> {
+type FgInputSize = 'md' | 'lg'
+
+const inputSizeClasses: Record<FgInputSize, string> = {
+  md: 'h-11 gap-3 rounded-control border px-3',
+  lg: 'h-13 gap-3.5 rounded-control-lg border-1.5 px-4',
+}
+
+export interface FgInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'className' | 'prefix' | 'size'> {
   error?: string
   hint?: string
   inputClassName?: string
@@ -11,6 +18,7 @@ export interface FgInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'c
   leftIcon?: ReactNode
   rightIcon?: ReactNode
   rootClassName?: string
+  size?: FgInputSize
 }
 
 export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
@@ -26,6 +34,7 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
       required,
       rightIcon,
       rootClassName,
+      size = 'md',
       ...props
     },
     ref,
@@ -45,7 +54,8 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
         ) : null}
         <div
           className={cn(
-            'flex h-11 items-center gap-3 rounded-control border border-line bg-surface px-3 text-body text-ink shadow-none transition-colors',
+            'flex items-center border-line bg-surface text-body text-ink shadow-none transition-colors',
+            inputSizeClasses[size],
             'focus-within:border-primary focus-within:ring-1 focus-within:ring-primary',
             disabled && 'bg-line-soft text-muted',
             error && 'border-danger focus-within:border-danger focus-within:ring-danger',

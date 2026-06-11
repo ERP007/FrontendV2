@@ -1,0 +1,44 @@
+import dayjs from 'dayjs'
+import 'dayjs/locale/ko'
+
+dayjs.locale('ko')
+
+type DateInput = string | number | Date
+
+export function formatDate(value: DateInput): string {
+  return dayjs(value).format('YYYY-MM-DD')
+}
+
+export function formatDateWithDay(value: DateInput): string {
+  return dayjs(value).format('YYYY-MM-DD (dd)')
+}
+
+export function formatDateTime(value: DateInput): string {
+  return dayjs(value).format('YYYY-MM-DD HH:mm')
+}
+
+export function formatTime(value: DateInput): string {
+  return dayjs(value).format('HH:mm')
+}
+
+export function formatNumber(value: number): string {
+  return value.toLocaleString('ko-KR')
+}
+
+export function formatCurrency(value: number): string {
+  return `₩${value.toLocaleString('ko-KR')}`
+}
+
+export function formatDelta(value: number): string {
+  return value > 0 ? `+${value.toLocaleString('ko-KR')}` : value.toLocaleString('ko-KR')
+}
+
+export function formatDday(value: DateInput): string {
+  const diff = dayjs(value).startOf('day').diff(dayjs().startOf('day'), 'day')
+  if (diff === 0) return 'D-Day'
+  return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`
+}
+
+export function isOverdue(value: DateInput): boolean {
+  return dayjs(value).startOf('day').isBefore(dayjs().startOf('day'))
+}
