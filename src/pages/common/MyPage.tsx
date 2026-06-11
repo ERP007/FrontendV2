@@ -7,16 +7,17 @@ import {
   MyProfileCard,
   PASSWORD_CHANGED_AT,
 } from '@/features/user'
-import { MOCK_SESSION } from '@/shared/config/session'
+import { useSession } from '@/shared/auth/session'
 import { FgPageHeader } from '@/shared/ui'
 
 export function MyPage() {
   const navigate = useNavigate()
+  const { data: session } = useSession()
 
   return (
     <div className="fg-content max-w-content-narrow">
       <FgPageHeader breadcrumbs={[{ label: '설정' }, { label: '마이페이지' }]} title="마이페이지" />
-      <MyProfileCard session={MOCK_SESSION} />
+      {session ? <MyProfileCard session={session} /> : null}
       <MyPasswordCard
         changedAt={PASSWORD_CHANGED_AT}
         onChangePassword={() => void navigate({ to: '/password-change' })}

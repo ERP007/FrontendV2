@@ -1,16 +1,11 @@
-import { useNavigate } from '@tanstack/react-router'
 import { Package } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { LoginForm } from '@/features/auth'
-import { MOCK_SESSION } from '@/shared/config/session'
+import { redirectToAuthLogin } from '@/shared/api'
 
 export function LoginPage() {
-  const navigate = useNavigate()
-
-  function handleSuccess() {
-    toast.success(`${MOCK_SESSION.name}님, 환영합니다.`)
-    void navigate({ to: '/dashboard' })
+  function handleSsoLogin() {
+    redirectToAuthLogin({ force: true })
   }
 
   return (
@@ -23,7 +18,7 @@ export function LoginPage() {
         <div className="mt-4 h-1 w-16 rounded-pill bg-primary" />
         <p className="mt-5 text-label font-medium text-muted">현대 파츠 (주)</p>
       </div>
-      <LoginForm onSuccess={handleSuccess} />
+      <LoginForm onSsoLogin={handleSsoLogin} />
       <p className="text-label text-faint">비밀번호 분실 시 관리자에게 문의</p>
     </div>
   )

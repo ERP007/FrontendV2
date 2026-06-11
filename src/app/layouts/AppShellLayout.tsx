@@ -16,7 +16,8 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { MOCK_SESSION, ROLE_LABELS } from '@/shared/config/session'
+import { useSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
 import { FgAppShell } from '@/shared/ui'
 import type { FgNavGroup, FgNavItem } from '@/shared/ui'
 
@@ -25,6 +26,7 @@ const iconClassName = 'h-4.5 w-4.5'
 export function AppShellLayout() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const { data: session } = useSession()
 
   const item = (to: string, label: string, icon?: ReactNode): FgNavItem => ({
     active: pathname === to || pathname.startsWith(`${to}/`),
@@ -81,8 +83,8 @@ export function AppShellLayout() {
     <FgAppShell
       bottomItems={bottomItems}
       navGroups={navGroups}
-      userName={MOCK_SESSION.name}
-      userRole={ROLE_LABELS[MOCK_SESSION.role]}
+      userName={session?.name || session?.employeeNo || ''}
+      userRole={roleLabel(session?.userRole)}
     >
       <Outlet />
     </FgAppShell>

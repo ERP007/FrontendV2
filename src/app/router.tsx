@@ -19,6 +19,7 @@ import { SalesOrdersPage } from '@/pages/hq/SalesOrdersPage'
 import { StockMovementsPage } from '@/pages/hq/StockMovementsPage'
 import { StocksPage } from '@/pages/hq/StocksPage'
 import { WarehousesPage } from '@/pages/hq/WarehousesPage'
+import { ensureSession } from '@/shared/auth/session'
 
 const rootRoute = createRootRoute()
 
@@ -35,6 +36,9 @@ const passwordChangeRoute = createRoute({
 })
 
 const shellRoute = createRoute({
+  beforeLoad: async () => {
+    await ensureSession()
+  },
   component: AppShellLayout,
   getParentRoute: () => rootRoute,
   id: 'shell',

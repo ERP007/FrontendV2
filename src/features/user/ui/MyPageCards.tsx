@@ -1,7 +1,7 @@
 import { Clock, Lock, Pencil, User as UserIcon } from 'lucide-react'
 
-import { ROLE_LABELS } from '@/shared/config/session'
-import type { SessionUser } from '@/shared/config/session'
+import type { AuthSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
 import { cn } from '@/shared/lib/cn'
 import { formatDateTime, formatDelta } from '@/shared/lib/format'
 import { FgAvatar, FgBadge, FgButton, FgCard, FgCardHeader, FgMeta } from '@/shared/ui'
@@ -10,7 +10,7 @@ import { ACTIVITY_TYPE_LABELS } from '../model/types'
 
 import type { UserActivity } from '../model/types'
 
-export function MyProfileCard({ session }: { session: SessionUser }) {
+export function MyProfileCard({ session }: { session: AuthSession }) {
   return (
     <FgCard>
       <FgCardHeader icon={<UserIcon aria-hidden className="h-4 w-4" />} title="본인 정보" />
@@ -19,18 +19,18 @@ export function MyProfileCard({ session }: { session: SessionUser }) {
           <FgAvatar size="profile" />
           <div>
             <p className="text-xl font-extrabold text-ink">{session.name}</p>
-            <p className="mt-1 text-meta font-medium text-faint">{session.empNo}</p>
+            <p className="mt-1 text-meta font-medium text-faint">{session.employeeNo}</p>
           </div>
-          <FgBadge variant="primary">{ROLE_LABELS[session.role]}</FgBadge>
+          <FgBadge variant="primary">{roleLabel(session.userRole)}</FgBadge>
         </div>
         <div className="min-w-0 flex-1">
           <dl className="grid grid-cols-2 gap-x-10 gap-y-6">
-            <FgMeta label="이메일" value={session.email} />
-            <FgMeta label="소속 지점" value={session.branchName} />
-            <FgMeta label="소속 창고" value={session.warehouseName} />
-            <FgMeta label="직급" value={session.rank} />
-            <FgMeta label="가입일" value={session.joinedAt} />
-            <FgMeta label="마지막 로그인" value={session.lastLoginAt} />
+            <FgMeta label="사번" value={session.employeeNo} />
+            <FgMeta label="권한" value={roleLabel(session.userRole)} />
+            <FgMeta label="소속 유형" value={session.tenancyType || '-'} />
+            <FgMeta label="소속 코드" value={session.tenancyCode || '-'} />
+            <FgMeta label="직급" value={session.position || '-'} />
+            <FgMeta label="이름" value={session.name} />
           </dl>
           <p className="mt-6 flex items-center gap-1.5 border-t border-line-soft pt-4 text-meta text-faint">
             <Clock aria-hidden className="h-3.5 w-3.5" />
