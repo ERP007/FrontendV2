@@ -10,6 +10,9 @@ import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { FgAvatar } from '@/shared/ui/FgAvatar'
 import { FgButton } from '@/shared/ui/FgButton'
+import { FgDropdownMenu } from '@/shared/ui/FgDropdownMenu'
+
+import type { FgDropdownItem } from '@/shared/ui/FgDropdownMenu'
 
 export interface FgNavItem {
   active?: boolean
@@ -29,6 +32,7 @@ export interface FgAppShellProps {
   bottomItems?: FgNavItem[]
   children: ReactNode
   navGroups: FgNavGroup[]
+  profileMenuItems?: FgDropdownItem[]
   searchPlaceholder?: string
   userName?: string
   userRole?: string
@@ -99,10 +103,26 @@ export function FgAppShell({
   bottomItems,
   children,
   navGroups,
+  profileMenuItems,
   searchPlaceholder = '부품 코드, 사용자, 발주 번호 검색',
   userName = '김정수',
   userRole = '지점 관리자',
 }: FgAppShellProps) {
+  const profileTrigger = (
+    <button
+      aria-label="사용자 메뉴"
+      className="flex items-center gap-3 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      type="button"
+    >
+      <FgAvatar size="md" />
+      <span>
+        <strong className="block text-label text-ink">{userName}</strong>
+        <span className="block text-micro normal-case text-faint">{userRole}</span>
+      </span>
+      <ChevronDown aria-hidden className="h-4 w-4 text-faint" />
+    </button>
+  )
+
   return (
     <div className="fg-page flex">
       <aside className="flex min-h-screen w-sidebar shrink-0 flex-col border-r border-line bg-surface px-4 py-6">
@@ -149,14 +169,11 @@ export function FgAppShell({
               <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-pill bg-warning-dot" />
             </FgButton>
             <span className="h-6 w-px bg-line" />
-            <button className="flex items-center gap-3 text-left" type="button">
-              <FgAvatar size="md" />
-              <span>
-                <strong className="block text-label text-ink">{userName}</strong>
-                <span className="block text-micro normal-case text-faint">{userRole}</span>
-              </span>
-              <ChevronDown aria-hidden className="h-4 w-4 text-faint" />
-            </button>
+            {profileMenuItems?.length ? (
+              <FgDropdownMenu align="end" items={profileMenuItems} trigger={profileTrigger} />
+            ) : (
+              profileTrigger
+            )}
           </div>
         </header>
         <main className="min-w-0 flex-1 bg-background px-10 py-9">{children}</main>

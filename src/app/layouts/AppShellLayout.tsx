@@ -5,7 +5,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   History,
+  KeyRound,
   LayoutGrid,
+  LogOut,
   Package,
   PackageSearch,
   Settings,
@@ -16,10 +18,11 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { LOGOUT_URL, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgAppShell } from '@/shared/ui'
-import type { FgNavGroup, FgNavItem } from '@/shared/ui'
+import type { FgDropdownItem, FgNavGroup, FgNavItem } from '@/shared/ui'
 
 const iconClassName = 'h-4.5 w-4.5'
 
@@ -84,10 +87,33 @@ export function AppShellLayout() {
     { icon: <Settings aria-hidden className={iconClassName} />, label: '설정' },
   ]
 
+  const profileMenuItems: FgDropdownItem[] = [
+    {
+      icon: <User aria-hidden className={iconClassName} />,
+      label: '마이페이지',
+      onSelect: () => void navigate({ to: '/my-page' }),
+    },
+    {
+      icon: <KeyRound aria-hidden className={iconClassName} />,
+      label: '비밀번호 변경',
+      onSelect: () => void navigate({ to: '/password-change' }),
+    },
+    {
+      danger: true,
+      icon: <LogOut aria-hidden className={iconClassName} />,
+      label: '로그아웃',
+      onSelect: () => {
+        queryClient.clear()
+        window.location.assign(LOGOUT_URL)
+      },
+    },
+  ]
+
   return (
     <FgAppShell
       bottomItems={bottomItems}
       navGroups={navGroups}
+      profileMenuItems={profileMenuItems}
       userName={session?.name || session?.employeeNo || ''}
       userRole={roleLabel(session?.userRole)}
     >
