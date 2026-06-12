@@ -1,3 +1,4 @@
+export { meQueryKey, useMeQuery } from './api/use-me-query'
 export { filterUsers } from './model/filter-users'
 export {
   BELONG_OPTIONS,
@@ -11,10 +12,12 @@ export {
   RANK_OPTIONS,
 } from './model/types'
 export type {
+  Me,
   User,
   UserActivity,
   UserFilter,
   UserFormValues,
+  UserPosition,
   UserStatus,
 } from './model/types'
 export { MyActivityCard, MyPasswordCard, MyProfileCard } from './ui/MyPageCards'
