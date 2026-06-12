@@ -49,5 +49,5 @@ export function getUserTenancyLabel(code: string) {
 }
 
 export function getUserTenancyRoles(code: string): UserRole[] {
-  return getUserTenancyOption(code)?.roles ?? ['ADMIN', 'HQ_MANAGER', 'HQ_STAFF', 'BRANCH_MANAGER', 'BRANCH_STAFF']
+  return getUserTenancyOption(code)?.roles ?? []
 }
