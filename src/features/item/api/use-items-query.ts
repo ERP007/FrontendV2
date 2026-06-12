@@ -79,7 +79,7 @@ function buildItemListQueryParams(params: ItemListParams) {
   const queryParams: Record<string, number | string> = {
     page: params.page,
     size: params.size,
-    sort: params.sort === 'code' ? 'sku,asc' : 'updatedAt,desc',
+    sort: params.sort,
   }
 
   const keyword = params.keyword.trim()

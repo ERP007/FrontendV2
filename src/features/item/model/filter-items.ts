@@ -19,10 +19,26 @@ export function filterItems(items: Item[], filter: ItemFilter): Item[] {
   })
 
   const sorted = [...filtered]
-  if (filter.sort === 'updatedAt') {
-    sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  } else {
-    sorted.sort((a, b) => a.code.localeCompare(b.code))
+
+  switch (filter.sort) {
+    case 'name,asc':
+      sorted.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+      break
+    case 'name,desc':
+      sorted.sort((a, b) => b.name.localeCompare(a.name, 'ko'))
+      break
+    case 'sku,asc':
+      sorted.sort((a, b) => a.code.localeCompare(b.code))
+      break
+    case 'sku,desc':
+      sorted.sort((a, b) => b.code.localeCompare(a.code))
+      break
+    case 'updatedAt,asc':
+      sorted.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+      break
+    case 'updatedAt,desc':
+      sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      break
   }
 
   return sorted

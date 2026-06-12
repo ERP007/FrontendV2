@@ -22,14 +22,12 @@ export function ItemTable({ emptyState, header, items, onToggleActive }: ItemTab
         {
           accessorKey: 'code',
           cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
-          enableSorting: true,
           header: '부품 코드',
           size: 150,
         },
         {
           accessorKey: 'name',
           cell: ({ row }) => <span className="font-bold text-ink">{row.original.name}</span>,
-          enableSorting: true,
           header: '부품명',
         },
         {
@@ -88,7 +86,6 @@ export function ItemTable({ emptyState, header, items, onToggleActive }: ItemTab
           cell: ({ row }) => (
             <span className="font-medium text-muted">{formatDate(row.original.createdAt)}</span>
           ),
-          enableSorting: true,
           header: '등록일',
           size: 110,
         },

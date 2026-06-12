@@ -12,8 +12,12 @@ const statusOptions = [
 ]
 
 const sortOptions = [
-  { label: '최근 수정일', value: 'updatedAt' },
-  { label: '부품 코드', value: 'code' },
+  { label: '부품코드 오름차순', value: 'sku,asc' },
+  { label: '부품코드 내림차순', value: 'sku,desc' },
+  { label: '부품명 오름차순', value: 'name,asc' },
+  { label: '부품명 내림차순', value: 'name,desc' },
+  { label: '최근 수정일', value: 'updatedAt,desc' },
+  { label: '오래된 수정일', value: 'updatedAt,asc' },
 ]
 
 export interface ItemFilterBarProps {

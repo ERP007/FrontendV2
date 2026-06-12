@@ -42,7 +42,13 @@ export const ITEM_CATEGORIES: Record<string, string[]> = {
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
-export type ItemSortKey = 'updatedAt' | 'code'
+export type ItemSortKey =
+  | 'sku,asc'
+  | 'sku,desc'
+  | 'name,asc'
+  | 'name,desc'
+  | 'updatedAt,desc'
+  | 'updatedAt,asc'
 
 export interface ItemFilter {
   keyword: string
@@ -69,7 +75,7 @@ export const DEFAULT_ITEM_FILTER: ItemFilter = {
   keyword: '',
   majorCategory: 'ALL',
   middleCategory: 'ALL',
-  sort: 'updatedAt',
+  sort: 'updatedAt,desc',
   status: 'ALL',
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 
 import {
@@ -17,12 +17,22 @@ const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
+  const [debouncedKeyword, setDebouncedKeyword] = useState(DEFAULT_ITEM_FILTER.keyword)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedKeyword(filter.keyword)
+      setPage(1)
+    }, 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [filter.keyword])
+
   const itemListParams = useMemo<ItemListParams>(
-    () => ({ ...filter, page, size: pageSize }),
-    [filter, page, pageSize],
+    () => ({ ...filter, keyword: debouncedKeyword, page, size: pageSize }),
+    [debouncedKeyword, filter, page, pageSize],
   )
   const selectedMajorCategoryCode = filter.majorCategory === 'ALL' ? undefined : filter.majorCategory
   const {
@@ -58,8 +68,17 @@ export function ItemsPage() {
   const totalPages = Math.max(1, data?.totalPages ?? 1)
 
   function handleFilterChange(next: ItemFilter) {
+    const isOnlyKeywordChanged =
+      next.keyword !== filter.keyword &&
+      next.majorCategory === filter.majorCategory &&
+      next.middleCategory === filter.middleCategory &&
+      next.sort === filter.sort &&
+      next.status === filter.status
+
     setFilter(next)
-    setPage(1)
+    if (!isOnlyKeywordChanged) {
+      setPage(1)
+    }
   }
 
   const rangeStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
