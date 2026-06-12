@@ -11,8 +11,13 @@ import {
   emptySoDraftLine,
   SoDraftLineEditor,
   soDraftFormSchema,
+  useCreateSalesOrderDraftMutation,
 } from '@/features/sales-order'
-import type { SoDraftFormValues, SoDraftLine } from '@/features/sales-order'
+import type {
+  CreateSalesOrderDraftRequest,
+  SoDraftFormValues,
+  SoDraftLine,
+} from '@/features/sales-order'
 import { stockDetailQueryOptions } from '@/features/stock'
 import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
@@ -36,17 +41,17 @@ const DRAFT_REQ_NO = 'REQ-2026-0513'
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
 
 const emptyDraftValues: SoDraftFormValues = {
-  desiredAt: '',
-  note: '',
-  receiveWarehouse: '',
+  desiredArrivalDate: '',
+  memo: '',
+  warehouseCode: '',
 }
 
 function itemToLinePatch(item: ItemListItem): Partial<SoDraftLine> {
   return {
     branchStock: null,
+    itemCode: item.sku,
     itemName: item.name,
     safetyStock: null,
-    sku: item.sku,
     unit: item.unit,
   }
 }
@@ -168,11 +173,13 @@ export function BranchSalesOrderCreatePage() {
   const [lines, setLines] = useState<SoDraftLine[]>([emptySoDraftLine()])
   const [linesError, setLinesError] = useState<string | null>(null)
 
-  const urgentCount = lines.filter((line) => line.sku !== null && line.priority === 'URGENT').length
-  const totalQuantity = lines.reduce((sum, line) => sum + (line.sku ? line.quantity : 0), 0)
+  const createDraftMutation = useCreateSalesOrderDraftMutation()
+
+  const urgentCount = lines.filter((line) => line.itemCode !== null && line.priority === 'URGENT').length
+  const totalQuantity = lines.reduce((sum, line) => sum + (line.itemCode ? line.quantity : 0), 0)
 
   const submit = handleSubmit(() => {
-    const completed = lines.filter((line) => line.sku !== null)
+    const completed = lines.filter((line) => line.itemCode !== null)
 
     if (completed.length === 0) {
       setLinesError('요청 품목을 1개 이상 추가하세요.')
@@ -188,16 +195,46 @@ export function BranchSalesOrderCreatePage() {
     void navigate({ to: '/branch/sales-orders' })
   })
 
-  function handleDraftSave() {
-    toast.success('임시저장되었습니다.')
-  }
+  const handleDraftSave = handleSubmit(async (values) => {
+    const payloadLines = lines
+      .filter((line): line is SoDraftLine & { itemCode: string } => line.itemCode !== null)
+      .map((line) => ({
+        itemCode: line.itemCode,
+        priority: line.priority,
+        quantity: line.quantity,
+      }))
+
+    if (payloadLines.some((line) => line.quantity <= 0)) {
+      setLinesError('모든 품목의 요청 수량을 1 이상으로 입력하세요.')
+      return
+    }
+
+    setLinesError(null)
+    const payload: CreateSalesOrderDraftRequest = {
+      desiredArrivalDate: values.desiredArrivalDate,
+      lines: payloadLines,
+      memo: values.memo,
+      warehouseCode: values.warehouseCode,
+    }
+
+    try {
+      const draft = await createDraftMutation.mutateAsync(payload)
+      toast.success(`${draft.code} 임시저장되었습니다.`)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  })
 
   return (
     <div className="fg-content">
       <FgPageHeader
         actions={
           <>
-            <FgButton leftIcon={<Box aria-hidden className="h-4 w-4" />} onClick={handleDraftSave}>
+            <FgButton
+              disabled={createDraftMutation.isPending}
+              leftIcon={<Box aria-hidden className="h-4 w-4" />}
+              onClick={handleDraftSave}
+            >
               임시저장
             </FgButton>
             <FgButton
@@ -241,19 +278,19 @@ export function BranchSalesOrderCreatePage() {
               </div>
             </div>
             <FgInput
-              error={errors.desiredAt?.message}
+              error={errors.desiredArrivalDate?.message}
               label="도착 희망일"
               leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
               required
               type="date"
-              {...register('desiredAt')}
+              {...register('desiredArrivalDate')}
             />
             <Controller
               control={control}
-              name="receiveWarehouse"
+              name="warehouseCode"
               render={({ field }) => (
                 <FgSelect
-                  error={errors.receiveWarehouse?.message}
+                  error={errors.warehouseCode?.message}
                   label="수신 창고"
                   options={
                     hqWarehouses?.map((warehouse) => ({
@@ -270,11 +307,11 @@ export function BranchSalesOrderCreatePage() {
               )}
             />
             <FgTextarea
-              error={errors.note?.message}
+              error={errors.memo?.message}
               label="메모"
               placeholder="요청 사유, 우선 출고 사항 등을 본사에 전달"
               rows={3}
-              {...register('note')}
+              {...register('memo')}
             />
           </div>
         </FgCard>
@@ -310,6 +347,7 @@ export function BranchSalesOrderCreatePage() {
             취소
           </FgButton>
           <FgButton
+            disabled={createDraftMutation.isPending}
             leftIcon={<Box aria-hidden className="h-4 w-4" />}
             type="button"
             onClick={handleDraftSave}

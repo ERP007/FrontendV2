@@ -103,14 +103,14 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
                   )}
                 >
                   <Search aria-hidden className="h-4 w-4 shrink-0 text-faint" />
-                  {line.sku && !isActive ? (
+                  {line.itemCode && !isActive ? (
                     <button
                       className="min-w-0 flex-1 text-left"
                       type="button"
                       onClick={() => setActiveIndex(index)}
                     >
                       <span className="block truncate text-label font-bold text-ink">{line.itemName}</span>
-                      <span className="block text-meta font-medium text-faint">{line.sku}</span>
+                      <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
                     </button>
                   ) : (
                     <input
@@ -122,7 +122,7 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
                           branchStock: null,
                           itemName: event.target.value,
                           safetyStock: null,
-                          sku: null,
+                          itemCode: null,
                           unit: null,
                         })
                       }
