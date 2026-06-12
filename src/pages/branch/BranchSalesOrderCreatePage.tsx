@@ -13,8 +13,10 @@ import {
   soDraftFormSchema,
 } from '@/features/sales-order'
 import type { SoDraftFormValues, SoDraftLine } from '@/features/sales-order'
+import { stockDetailQueryOptions } from '@/features/stock'
 import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { queryClient } from '@/shared/api'
 import { roleLabel } from '@/shared/config/session'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { formatNumber } from '@/shared/lib/format'
@@ -43,8 +45,7 @@ function itemToLinePatch(item: ItemListItem): Partial<SoDraftLine> {
   return {
     branchStock: null,
     itemName: item.name,
-    safetySource: null,
-    safetyStock: item.safetyStock,
+    safetyStock: null,
     sku: item.sku,
     unit: item.unit,
   }
@@ -53,9 +54,30 @@ function itemToLinePatch(item: ItemListItem): Partial<SoDraftLine> {
 interface ItemSearchPanelProps {
   onSelect: (patch: Partial<SoDraftLine>) => void
   query: string
+  warehouseCode: string | undefined
 }
 
-function ItemSearchPanel({ onSelect, query }: ItemSearchPanelProps) {
+async function buildLinePatch(
+  item: ItemListItem,
+  warehouseCode: string | undefined,
+): Promise<Partial<SoDraftLine>> {
+  const base = itemToLinePatch(item)
+  if (!warehouseCode) return base
+  try {
+    const stock = await queryClient.fetchQuery(
+      stockDetailQueryOptions({ sku: item.sku, warehouseCode }),
+    )
+    return {
+      ...base,
+      branchStock: stock.quantity,
+      safetyStock: stock.safetyStock,
+    }
+  } catch {
+    return base
+  }
+}
+
+function ItemSearchPanel({ onSelect, query, warehouseCode }: ItemSearchPanelProps) {
   const debouncedQuery = useDebouncedValue(query, 300)
   const search = debouncedQuery.trim()
 
@@ -101,7 +123,7 @@ function ItemSearchPanel({ onSelect, query }: ItemSearchPanelProps) {
           type="button"
           onMouseDown={(event) => {
             event.preventDefault()
-            onSelect(itemToLinePatch(item))
+            void buildLinePatch(item, warehouseCode).then(onSelect)
           }}
         >
           <span className="min-w-0">
@@ -259,7 +281,9 @@ export function BranchSalesOrderCreatePage() {
 
         <SoDraftLineEditor
           lines={lines}
-          renderSearchPanel={(props) => <ItemSearchPanel {...props} />}
+          renderSearchPanel={(props) => (
+            <ItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+          )}
           onChange={setLines}
         />
         {linesError ? <FgNotice tone="danger">{linesError}</FgNotice> : null}

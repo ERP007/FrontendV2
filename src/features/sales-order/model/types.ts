@@ -119,7 +119,6 @@ export interface SoDraftLine {
   itemName: string
   priority: SoPriority
   quantity: number
-  safetySource: 'MASTER' | 'OVERRIDE' | null
   safetyStock: number | null
   sku: string | null
   unit: SoItemUnit | null
@@ -131,7 +130,6 @@ export function emptySoDraftLine(): SoDraftLine {
     itemName: '',
     priority: 'NORMAL',
     quantity: 0,
-    safetySource: null,
     safetyStock: null,
     sku: null,
     unit: null,

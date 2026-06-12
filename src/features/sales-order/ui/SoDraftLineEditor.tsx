@@ -121,7 +121,6 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
                         updateLine(index, {
                           branchStock: null,
                           itemName: event.target.value,
-                          safetySource: null,
                           safetyStock: null,
                           sku: null,
                           unit: null,
@@ -165,20 +164,10 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
               </span>
               <span className="w-28 text-right">
                 {line.safetyStock !== null ? (
-                  <>
-                    <span className="text-label font-bold text-ink">
-                      {formatNumber(line.safetyStock)}
-                      <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
-                    </span>
-                    <span
-                      className={cn(
-                        'block text-meta font-semibold',
-                        line.safetySource === 'OVERRIDE' ? 'text-primary-strong' : 'text-faint',
-                      )}
-                    >
-                      {line.safetySource === 'OVERRIDE' ? '창고 오버라이드' : '마스터 기준'}
-                    </span>
-                  </>
+                  <span className="text-label font-bold text-ink">
+                    {formatNumber(line.safetyStock)}
+                    <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
+                  </span>
                 ) : (
                   <span className="text-label font-medium text-faint">—</span>
                 )}

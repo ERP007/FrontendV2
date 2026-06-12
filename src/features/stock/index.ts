@@ -1,4 +1,4 @@
-export { useStockDetailQuery } from './api/use-stock-detail-query'
+export { stockDetailQueryOptions, useStockDetailQuery } from './api/use-stock-detail-query'
 export type { StockDetail, UseStockDetailQueryParams } from './api/use-stock-detail-query'
 export { adjustmentFormSchema } from './model/adjustment-schema'
 export { buildStockSkuDetail, deriveStockKpi } from './model/derive'

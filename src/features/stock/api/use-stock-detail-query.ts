@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
@@ -14,18 +14,17 @@ export interface UseStockDetailQueryParams {
   warehouseCode: string
 }
 
-const stockDetailQueryKey = (warehouseCode: string, sku: string) =>
-  ['stocks', warehouseCode, sku] as const
-
-export function useStockDetailQuery({ sku, warehouseCode }: UseStockDetailQueryParams) {
-  return useQuery({
+export function stockDetailQueryOptions({ sku, warehouseCode }: UseStockDetailQueryParams) {
+  return queryOptions({
     queryFn: async () => {
-      const response = await api.get<StockDetail>(
-        `/inventory/stocks/${warehouseCode}/${sku}`,
-      )
+      const response = await api.get<StockDetail>(`/inventory/stocks/${warehouseCode}/${sku}`)
       return response.data
     },
-    queryKey: stockDetailQueryKey(warehouseCode, sku),
+    queryKey: ['stocks', warehouseCode, sku] as const,
     staleTime: 60_000,
   })
+}
+
+export function useStockDetailQuery(params: UseStockDetailQueryParams) {
+  return useQuery(stockDetailQueryOptions(params))
 }
