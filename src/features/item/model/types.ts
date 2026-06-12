@@ -51,6 +51,46 @@ export const DEFAULT_ITEM_FILTER: ItemFilter = {
   status: 'ALL',
 }
 
+/**
+ * GET /api/items 응답 단건. swagger 미수신 — 백엔드 응답 명세 기준.
+ * 기존 `Item`은 fixture 기반 UI 모델, 점진적으로 본 타입으로 교체.
+ */
+export interface ItemListItem {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  parentCategoryCode: string
+  parentCategoryName: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
+export type ItemListStatus = 'ACTIVE' | 'ALL' | 'INACTIVE'
+export type ItemListSortField = 'createdAt' | 'name' | 'safetyStock' | 'sku' | 'updatedAt'
+export type ItemListSortDirection = 'asc' | 'desc'
+export type ItemListSort = `${ItemListSortField},${ItemListSortDirection}`
+
+export interface ItemListParams {
+  categoryCode?: string
+  page?: number
+  search?: string
+  size?: number
+  sort?: ItemListSort
+  status?: ItemListStatus
+}
+
+export const DEFAULT_ITEM_LIST_PARAMS: Required<Pick<ItemListParams, 'page' | 'size' | 'sort' | 'status'>> = {
+  page: 1,
+  size: 10,
+  sort: 'updatedAt,desc',
+  status: 'ALL',
+}
+
 export interface ItemFormValues {
   autoGenerateCode: boolean
   code: string
