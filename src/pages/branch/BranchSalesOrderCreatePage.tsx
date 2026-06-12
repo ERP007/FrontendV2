@@ -9,12 +9,13 @@ import { useItemsInfiniteQuery } from '@/features/item'
 import type { ItemListItem } from '@/features/item'
 import {
   emptySoDraftLine,
-  MY_BRANCH,
   SoDraftLineEditor,
   soDraftFormSchema,
 } from '@/features/sales-order'
 import type { SoDraftFormValues, SoDraftLine } from '@/features/sales-order'
+import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { roleLabel } from '@/shared/config/session'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { formatNumber } from '@/shared/lib/format'
 import {
@@ -130,6 +131,7 @@ export function BranchSalesOrderCreatePage() {
   const router = useRouter()
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
+  const { data: me } = useMeQuery()
 
   const {
     control,
@@ -197,7 +199,7 @@ export function BranchSalesOrderCreatePage() {
               <FgBadge variant="outline">{DRAFT_REQ_NO} (임시)</FgBadge>
             </div>
             <span className="text-meta font-medium text-faint">
-              요청자 · 정유진 / {MY_BRANCH.name} · 서비스 매니저
+              요청자 · {me?.name ?? '—'} / {me?.tenancyName ?? '—'} · {roleLabel(me?.role)}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-5">
@@ -205,9 +207,9 @@ export function BranchSalesOrderCreatePage() {
               <span className="block text-label text-ink-2">요청 지점</span>
               <div className="flex h-11 items-center justify-between gap-3 rounded-control border border-line bg-background px-3.5 text-body">
                 <span className="font-semibold text-ink">
-                  {MY_BRANCH.name}
+                  {me?.tenancyName ?? '—'}
                   <span className="ml-1.5 text-meta font-medium text-faint">
-                    {MY_BRANCH.code} · {MY_BRANCH.region}
+                    {me?.tenancyCode ?? '—'}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 text-meta font-semibold text-faint">
