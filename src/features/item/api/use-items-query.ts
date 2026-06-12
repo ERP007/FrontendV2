@@ -2,10 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
-import {
-  ITEM_CATEGORY_CODE_BY_NAME,
-  ITEM_UNIT_OPTIONS,
-} from '../model/types'
+import { ITEM_UNIT_OPTIONS } from '../model/types'
 
 import type { Item, ItemListParams, ItemListResponse, ItemUnit } from '../model/types'
 
@@ -68,11 +65,11 @@ function toItemListResponse(response: ItemListApiResponse): ItemListResponse {
 
 function resolveCategoryCode(params: ItemListParams) {
   if (params.middleCategory !== 'ALL') {
-    return ITEM_CATEGORY_CODE_BY_NAME[params.middleCategory]
+    return params.middleCategory
   }
 
   if (params.majorCategory !== 'ALL') {
-    return ITEM_CATEGORY_CODE_BY_NAME[params.majorCategory]
+    return params.majorCategory
   }
 
   return undefined

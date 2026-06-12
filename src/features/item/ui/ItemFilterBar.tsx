@@ -2,8 +2,7 @@ import { ArrowUpDown, RotateCcw, Search } from 'lucide-react'
 
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
-import { ITEM_CATEGORIES } from '../model/types'
-
+import type { FgSelectOption } from '@/shared/ui'
 import type { ItemFilter, ItemSortKey } from '../model/types'
 
 const statusOptions = [
@@ -17,27 +16,37 @@ const sortOptions = [
   { label: '부품 코드', value: 'code' },
 ]
 
-const majorOptions = [
-  { label: '대분류 : 전체', value: 'ALL' },
-  ...Object.keys(ITEM_CATEGORIES).map((major) => ({ label: major, value: major })),
-]
-
 export interface ItemFilterBarProps {
   filter: ItemFilter
+  isMajorCategoryLoading?: boolean
+  isMiddleCategoryLoading?: boolean
+  majorCategoryOptions: FgSelectOption[]
+  middleCategoryOptions: FgSelectOption[]
   onChange: (filter: ItemFilter) => void
   onReset: () => void
 }
 
-export function ItemFilterBar({ filter, onChange, onReset }: ItemFilterBarProps) {
+export function ItemFilterBar({
+  filter,
+  isMajorCategoryLoading = false,
+  isMiddleCategoryLoading = false,
+  majorCategoryOptions,
+  middleCategoryOptions,
+  onChange,
+  onReset,
+}: ItemFilterBarProps) {
+  const majorOptions = [
+    {
+      label: isMajorCategoryLoading ? '대분류 불러오는 중' : '대분류 : 전체',
+      value: 'ALL',
+    },
+    ...majorCategoryOptions,
+  ]
   const middleOptions = [
     { label: '중분류 : 전체', value: 'ALL' },
-    ...(filter.majorCategory === 'ALL'
-      ? []
-      : (ITEM_CATEGORIES[filter.majorCategory] ?? []).map((middle) => ({
-          label: middle,
-          value: middle,
-        }))),
+    ...middleCategoryOptions,
   ]
+  const isMiddleCategoryDisabled = filter.majorCategory === 'ALL' || isMiddleCategoryLoading
 
   return (
     <FgCard className="flex items-center gap-3 p-4">
@@ -50,6 +59,7 @@ export function ItemFilterBar({ filter, onChange, onReset }: ItemFilterBarProps)
       />
       <FgSelect
         className="w-44"
+        disabled={isMajorCategoryLoading}
         options={majorOptions}
         value={filter.majorCategory}
         onValueChange={(value) =>
@@ -58,7 +68,7 @@ export function ItemFilterBar({ filter, onChange, onReset }: ItemFilterBarProps)
       />
       <FgSelect
         className="w-44"
-        disabled={filter.majorCategory === 'ALL'}
+        disabled={isMiddleCategoryDisabled}
         options={middleOptions}
         value={filter.middleCategory}
         onValueChange={(value) => onChange({ ...filter, middleCategory: value })}

@@ -5,6 +5,8 @@ import {
   DEFAULT_ITEM_FILTER,
   ItemFilterBar,
   ItemTable,
+  useItemCategoriesQuery,
+  useItemSubCategoriesQuery,
   useItemsQuery,
 } from '@/features/item'
 import type { ItemFilter, ItemListParams } from '@/features/item'
@@ -22,7 +24,34 @@ export function ItemsPage() {
     () => ({ ...filter, page, size: pageSize }),
     [filter, page, pageSize],
   )
+  const selectedMajorCategoryCode = filter.majorCategory === 'ALL' ? undefined : filter.majorCategory
+  const {
+    data: majorCategories = [],
+    isLoading: isMajorCategoryLoading,
+  } = useItemCategoriesQuery()
+  const {
+    data: middleCategories = [],
+    isFetching: isMiddleCategoryFetching,
+    isLoading: isMiddleCategoryLoading,
+  } = useItemSubCategoriesQuery(selectedMajorCategoryCode)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+
+  const majorCategoryOptions = useMemo(
+    () =>
+      majorCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [majorCategories],
+  )
+  const middleCategoryOptions = useMemo(
+    () =>
+      middleCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [middleCategories],
+  )
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
@@ -44,6 +73,10 @@ export function ItemsPage() {
       />
       <ItemFilterBar
         filter={filter}
+        isMajorCategoryLoading={isMajorCategoryLoading}
+        isMiddleCategoryLoading={isMiddleCategoryLoading || isMiddleCategoryFetching}
+        majorCategoryOptions={majorCategoryOptions}
+        middleCategoryOptions={middleCategoryOptions}
         onChange={handleFilterChange}
         onReset={() => handleFilterChange(DEFAULT_ITEM_FILTER)}
       />

@@ -19,6 +19,16 @@ export interface Item {
   updatedAt: string
 }
 
+export interface ItemCategory {
+  categoryCode: string
+  categoryName: string
+  displayOrder: number
+}
+
+export interface ItemSubCategory extends ItemCategory {
+  parentCategoryCode: string
+}
+
 /** 분류 트리: 대분류 → 중분류 목록 */
 export const ITEM_CATEGORIES: Record<string, string[]> = {
   엔진: ['윤활계통', '필터'],
@@ -28,18 +38,6 @@ export const ITEM_CATEGORIES: Record<string, string[]> = {
   '현가·조향': [],
   전장: [],
   '외장·기타': [],
-}
-
-export const ITEM_CATEGORY_CODE_BY_NAME: Record<string, string> = {
-  엔진: 'ENGINE',
-  윤활계통: 'ENGINE_LUBRICATION',
-  필터: 'ENGINE_FILTER',
-  점화: 'IGNITION',
-  제동: 'BRAKE',
-  동력전달: 'DRIVETRAIN',
-  '현가·조향': 'SUSPENSION_STEERING',
-  전장: 'ELECTRICAL',
-  '외장·기타': 'EXTERIOR_MISC',
 }
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
