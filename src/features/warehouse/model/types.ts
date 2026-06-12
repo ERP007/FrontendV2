@@ -24,6 +24,9 @@ export interface BranchLocation {
   name: string
 }
 
+/** GET /api/inventory/warehouses/hq 응답 단건 */
+export type HqWarehouseSummary = Pick<Warehouse, 'code' | 'id' | 'name'>
+
 export type WarehouseTypeFilter = 'ALL' | WarehouseType
 export type WarehouseStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE'
 
