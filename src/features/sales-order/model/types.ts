@@ -10,7 +10,7 @@ export type SalesOrderStatus =
   | 'DELIVERED'
   | 'CANCELED'
 export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
-export type SoItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
+export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
 
 export interface SalesOrderLine {
@@ -114,7 +114,7 @@ export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'
 export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED', 'SHIPPED']
 
 /** SO-05 작성 중 라인 */
-export interface SoDraftLine {
+export interface SoLine {
   branchStock: number | null
   itemName: string
   priority: SoPriority
@@ -124,7 +124,7 @@ export interface SoDraftLine {
   unit: SoItemUnit | null
 }
 
-export function emptySoDraftLine(): SoDraftLine {
+export function emptySoDraftLine(): SoLine {
   return {
     branchStock: null,
     itemName: '',

@@ -8,12 +8,12 @@ import { FgButton, FgCard, FgSelect } from '@/shared/ui'
 
 import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/types'
 
-import type { SoDraftLine, SoPriority } from '../model/types'
+import type { SoLine, SoPriority } from '../model/types'
 
 const MAX_LINES = 30
 
 export interface SoDraftLineSearchPanelProps {
-  onSelect: (patch: Partial<SoDraftLine>) => void
+  onSelect: (patch: Partial<SoLine>) => void
   query: string
 }
 
@@ -29,15 +29,15 @@ const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as SoPriority[]).map((p
 }))
 
 export interface SoDraftLineEditorProps {
-  lines: SoDraftLine[]
-  onChange: (lines: SoDraftLine[]) => void
+  lines: SoLine[]
+  onChange: (lines: SoLine[]) => void
   renderSearchPanel: (props: SoDraftLineSearchPanelProps) => ReactNode
 }
 
 export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraftLineEditorProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
-  function updateLine(index: number, patch: Partial<SoDraftLine>) {
+  function updateLine(index: number, patch: Partial<SoLine>) {
     onChange(lines.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)))
   }
 
@@ -50,7 +50,7 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
     onChange([...lines, emptySoDraftLine()])
   }
 
-  function handleSelect(index: number, patch: Partial<SoDraftLine>) {
+  function handleSelect(index: number, patch: Partial<SoLine>) {
     updateLine(index, patch)
     setActiveIndex(null)
   }

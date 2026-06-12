@@ -1,28 +1,5 @@
 import type { SalesOrder, SalesOrderLine, SoItemUnit } from './types'
 
-/** SO-05 부품 검색용 카탈로그 (지점 현재고·안전재고 포함, 연동 전 임시) */
-export interface SoCatalogItem {
-  branchStock: number
-  name: string
-  safetySource: 'MASTER' | 'OVERRIDE'
-  safetyStock: number
-  sku: string
-  unit: SoItemUnit
-}
-
-export const SO_ITEM_CATALOG: SoCatalogItem[] = [
-  { branchStock: 8, name: '엔진오일 필터 (2.0L gasoline)', safetySource: 'MASTER', safetyStock: 30, sku: 'HMC-EN-00214', unit: 'EA' },
-  { branchStock: 12, name: '브레이크 패드 세트 (전륜)', safetySource: 'OVERRIDE', safetyStock: 15, sku: 'HMC-BR-01102', unit: 'SET' },
-  { branchStock: 42, name: '에어 클리너 카트리지', safetySource: 'MASTER', safetyStock: 25, sku: 'HMC-EN-10331', unit: 'EA' },
-  { branchStock: 4, name: '스파크 플러그 (이리듐)', safetySource: 'MASTER', safetyStock: 40, sku: 'HMC-SP-00673', unit: 'EA' },
-  { branchStock: 28, name: '와이퍼 블레이드 24"', safetySource: 'MASTER', safetyStock: 10, sku: 'HMC-AC-40229', unit: 'EA' },
-  { branchStock: 6, name: '엔진 쿨런트 1L', safetySource: 'MASTER', safetyStock: 12, sku: 'HMC-CL-50710', unit: 'L' },
-  { branchStock: 12, name: '엔진 쿨런트 4L', safetySource: 'MASTER', safetyStock: 8, sku: 'HMC-CL-50714', unit: 'L' },
-  { branchStock: 18, name: '쿨런트 보조탱크 캡', safetySource: 'MASTER', safetyStock: 6, sku: 'HMC-CL-50822', unit: 'EA' },
-  { branchStock: 0, name: '배터리 12V 80Ah', safetySource: 'OVERRIDE', safetyStock: 4, sku: 'HMC-EL-04481', unit: 'EA' },
-  { branchStock: 3, name: '헤드램프 어셈블리 LH', safetySource: 'MASTER', safetyStock: 2, sku: 'HMC-LT-00088', unit: 'EA' },
-]
-
 /** 본사 출고 창고 옵션 — GET /inventory/warehouses/hq 응답에 해당 */
 export const SO_HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
 

@@ -7,8 +7,7 @@ export {
   filterSalesOrders,
 } from './model/filter-sales-orders'
 export type { SoBranchKpi, SoHqKpi } from './model/filter-sales-orders'
-export { MY_BRANCH, SALES_ORDER_FIXTURES, SO_HQ_WAREHOUSE_OPTIONS, SO_ITEM_CATALOG } from './model/fixtures'
-export type { SoCatalogItem } from './model/fixtures'
+export { MY_BRANCH, SALES_ORDER_FIXTURES, SO_HQ_WAREHOUSE_OPTIONS } from './model/fixtures'
 export { soDraftFormSchema } from './model/so-draft-schema'
 export type { SoDraftFormValues } from './model/so-draft-schema'
 export {
@@ -31,7 +30,7 @@ export type {
   SalesOrderFilter,
   SalesOrderLine,
   SalesOrderStatus,
-  SoDraftLine,
+  SoLine as SoDraftLine,
   SoItemUnit,
   SoPriority,
   SoStatusTab,
