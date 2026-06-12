@@ -51,7 +51,7 @@ const shellRoute = createRoute({
       await ensureSession()
     } catch (error) {
       if (shouldWaitForAuthRedirect(error)) {
-        redirectToAuthLogin()
+        redirectToAuthLogin({ force: true })
         return await waitForAuthRedirect()
       }
 

@@ -1,3 +1,4 @@
+export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
   createDefaultSoFilter,

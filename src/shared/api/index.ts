@@ -1,5 +1,7 @@
 export {
   API_BASE_URL,
+  API_ORIGIN,
+  KEYCLOAK_AUTHORIZATION_URL,
   api,
   clearAuthRedirectAttempt,
   isAuthRedirectInProgress,

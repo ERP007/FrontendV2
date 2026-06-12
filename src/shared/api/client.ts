@@ -6,9 +6,11 @@ import { queryClient } from '@/shared/api/query-client'
 
 import type { ErrorResponse } from '@/shared/api/error'
 
-const DEFAULT_API_BASE_URL = '/api'
-const AUTH_LOGIN_PATH = '/auth/login'
+const API_PATH_PREFIX = '/api'
+const DEFAULT_API_ORIGIN = ''
+const KEYCLOAK_AUTHORIZATION_PATH = '/oauth2/authorization/keycloak'
 const LOGIN_PATH = '/login'
+const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
 
 let authRedirectInProgress = false
 
@@ -26,44 +28,62 @@ export function clearAuthRedirectAttempt() {
   }
 
   try {
-    window.sessionStorage.removeItem('erp007.authRedirectAttempted')
+    window.sessionStorage.removeItem(AUTH_REDIRECT_ATTEMPT_KEY)
   } catch {
     // Ignore storage failures.
   }
 }
 
-function normalizeApiBaseUrl(value: string) {
+function hasAuthRedirectAttempt() {
+  try {
+    return window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function markAuthRedirectAttempt() {
+  try {
+    window.sessionStorage.setItem(AUTH_REDIRECT_ATTEMPT_KEY, 'true')
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function normalizeApiOrigin(value: string) {
   const trimmed = value.trim().replace(/\/+$/, '')
 
-  if (!trimmed || trimmed === '/') {
-    return DEFAULT_API_BASE_URL
+  if (!trimmed || trimmed === '/' || trimmed === API_PATH_PREFIX) {
+    return DEFAULT_API_ORIGIN
   }
 
   if (/^https?:\/\//i.test(trimmed)) {
     const url = new URL(trimmed)
 
-    if (url.pathname === '') {
-      url.pathname = DEFAULT_API_BASE_URL
-    }
+    url.hash = ''
+    url.search = ''
 
-    if (url.pathname === '/') {
-      url.pathname = DEFAULT_API_BASE_URL
+    if (url.pathname === '/' || url.pathname === API_PATH_PREFIX) {
+      url.pathname = ''
     }
 
     return url.toString().replace(/\/+$/, '')
   }
 
-  return trimmed
+  return trimmed.replace(new RegExp(`${API_PATH_PREFIX}$`), '')
 }
 
-export const API_BASE_URL = normalizeApiBaseUrl(
-  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL,
+export const API_ORIGIN = normalizeApiOrigin(
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ORIGIN,
 )
 
-function buildApiUrl(path: string) {
+function buildBackendUrl(path: string) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return `${API_BASE_URL}${normalizedPath}`
+  return `${API_ORIGIN}${normalizedPath}`
 }
+
+export const API_BASE_URL = buildBackendUrl(API_PATH_PREFIX)
+export const KEYCLOAK_AUTHORIZATION_URL = buildBackendUrl(KEYCLOAK_AUTHORIZATION_PATH)
 
 export function redirectToAuthLogin({ force = false }: { force?: boolean } = {}) {
   if (typeof window === 'undefined') {
@@ -79,15 +99,21 @@ export function redirectToAuthLogin({ force = false }: { force?: boolean } = {})
   }
 
   authRedirectInProgress = true
-  clearAuthRedirectAttempt()
-  window.location.assign(buildApiUrl(AUTH_LOGIN_PATH))
+
+  if (hasAuthRedirectAttempt()) {
+    window.location.assign(`${LOGIN_PATH}?auth_error=session`)
+    return true
+  }
+
+  markAuthRedirectAttempt()
+  window.location.assign(KEYCLOAK_AUTHORIZATION_URL)
   return true
 }
 
 function handleGlobalError(error: ErrorResponse) {
   if (error.status === 401) {
-    const isRedirecting = redirectToAuthLogin()
     queryClient.clear()
+    const isRedirecting = redirectToAuthLogin({ force: true })
     return isRedirecting
   }
 
