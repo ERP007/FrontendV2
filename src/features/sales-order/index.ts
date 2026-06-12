@@ -38,6 +38,7 @@ export type {
 } from './model/types'
 export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
+export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
 export type { SoBranchOption } from './ui/SoFilterBar'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'

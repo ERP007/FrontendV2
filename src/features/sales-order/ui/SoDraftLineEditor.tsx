@@ -1,25 +1,20 @@
 import { Plus, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgCard, FgSelect } from '@/shared/ui'
 
-import { SO_ITEM_CATALOG } from '../model/fixtures'
 import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/types'
 
-import type { SoCatalogItem } from '../model/fixtures'
 import type { SoDraftLine, SoPriority } from '../model/types'
 
 const MAX_LINES = 30
 
-function searchCatalog(query: string): SoCatalogItem[] {
-  const keyword = query.trim().toLowerCase()
-  if (!keyword) return SO_ITEM_CATALOG.slice(0, 6)
-
-  return SO_ITEM_CATALOG.filter(
-    (item) => item.name.toLowerCase().includes(keyword) || item.sku.toLowerCase().includes(keyword),
-  ).slice(0, 6)
+export interface SoDraftLineSearchPanelProps {
+  onSelect: (patch: Partial<SoDraftLine>) => void
+  query: string
 }
 
 function stockTone(stock: number, safety: number): { className: string; label: string } {
@@ -36,9 +31,10 @@ const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as SoPriority[]).map((p
 export interface SoDraftLineEditorProps {
   lines: SoDraftLine[]
   onChange: (lines: SoDraftLine[]) => void
+  renderSearchPanel: (props: SoDraftLineSearchPanelProps) => ReactNode
 }
 
-export function SoDraftLineEditor({ lines, onChange }: SoDraftLineEditorProps) {
+export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraftLineEditorProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   function updateLine(index: number, patch: Partial<SoDraftLine>) {
@@ -54,15 +50,8 @@ export function SoDraftLineEditor({ lines, onChange }: SoDraftLineEditorProps) {
     onChange([...lines, emptySoDraftLine()])
   }
 
-  function selectItem(index: number, item: SoCatalogItem) {
-    updateLine(index, {
-      branchStock: item.branchStock,
-      itemName: item.name,
-      safetySource: item.safetySource,
-      safetyStock: item.safetyStock,
-      sku: item.sku,
-      unit: item.unit,
-    })
+  function handleSelect(index: number, patch: Partial<SoDraftLine>) {
+    updateLine(index, patch)
     setActiveIndex(null)
   }
 
@@ -99,7 +88,6 @@ export function SoDraftLineEditor({ lines, onChange }: SoDraftLineEditorProps) {
       <div className="divide-y divide-line-soft border-x border-b border-line">
         {lines.map((line, index) => {
           const isActive = activeIndex === index
-          const results = searchCatalog(line.itemName)
           const tone =
             line.branchStock !== null && line.safetyStock !== null
               ? stockTone(line.branchStock, line.safetyStock)
@@ -145,31 +133,10 @@ export function SoDraftLineEditor({ lines, onChange }: SoDraftLineEditorProps) {
                 </div>
                 {isActive ? (
                   <div className="absolute inset-x-0 top-full z-30 mt-1.5 overflow-hidden rounded-control border border-line bg-surface shadow-popover">
-                    <p className="border-b border-line-soft px-3.5 py-2 text-meta font-semibold text-faint">
-                      검색 결과 {results.length}건
-                    </p>
-                    {results.map((item) => (
-                      <button
-                        key={item.sku}
-                        className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault()
-                          selectItem(index, item)
-                        }}
-                      >
-                        <span className="min-w-0">
-                          <span className="block truncate text-label font-semibold text-ink">{item.name}</span>
-                          <span className="block text-meta font-medium text-faint">{item.sku}</span>
-                        </span>
-                        <span className="shrink-0 text-meta font-semibold text-muted">
-                          현재고 {formatNumber(item.branchStock)} {item.unit}
-                        </span>
-                      </button>
-                    ))}
-                    {results.length === 0 ? (
-                      <p className="px-3.5 py-3 text-meta text-faint">일치하는 부품이 없습니다</p>
-                    ) : null}
+                    {renderSearchPanel({
+                      onSelect: (patch) => handleSelect(index, patch),
+                      query: line.itemName,
+                    })}
                   </div>
                 ) : null}
               </div>

@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { AlertTriangle, Box, Calendar, Clock, Lock, Send } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
+import { useItemsInfiniteQuery } from '@/features/item'
+import type { ItemListItem } from '@/features/item'
 import {
   emptySoDraftLine,
   MY_BRANCH,
@@ -13,6 +15,7 @@ import {
 } from '@/features/sales-order'
 import type { SoDraftFormValues, SoDraftLine } from '@/features/sales-order'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { formatNumber } from '@/shared/lib/format'
 import {
   FgBadge,
@@ -33,6 +36,93 @@ const emptyDraftValues: SoDraftFormValues = {
   desiredAt: '',
   note: '',
   receiveWarehouse: '',
+}
+
+function itemToLinePatch(item: ItemListItem): Partial<SoDraftLine> {
+  return {
+    branchStock: null,
+    itemName: item.name,
+    safetySource: null,
+    safetyStock: item.safetyStock,
+    sku: item.sku,
+    unit: item.unit,
+  }
+}
+
+interface ItemSearchPanelProps {
+  onSelect: (patch: Partial<SoDraftLine>) => void
+  query: string
+}
+
+function ItemSearchPanel({ onSelect, query }: ItemSearchPanelProps) {
+  const debouncedQuery = useDebouncedValue(query, 300)
+  const search = debouncedQuery.trim()
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useItemsInfiniteQuery({ search: search || undefined })
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage()
+        }
+      },
+      { rootMargin: '40px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const items = data?.pages.flatMap((page) => page.content) ?? []
+  const totalElements = data?.pages[0]?.totalElements ?? 0
+  const isInitialLoading = isFetching && !data
+
+  return (
+    <div className="max-h-72 overflow-y-auto">
+      <p className="border-b border-line-soft px-3.5 py-2 text-meta font-semibold text-faint">
+        검색 결과 {formatNumber(totalElements)}건
+      </p>
+      {items.map((item) => (
+        <button
+          key={item.sku}
+          className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
+          type="button"
+          onMouseDown={(event) => {
+            event.preventDefault()
+            onSelect(itemToLinePatch(item))
+          }}
+        >
+          <span className="min-w-0">
+            <span className="block truncate text-label font-semibold text-ink">{item.name}</span>
+            <span className="block text-meta font-medium text-faint">{item.sku}</span>
+          </span>
+          <span className="shrink-0 text-meta font-semibold text-muted">
+            안전재고 {formatNumber(item.safetyStock)} {item.unit}
+          </span>
+        </button>
+      ))}
+      {isInitialLoading ? (
+        <p className="px-3.5 py-3 text-meta text-faint">불러오는 중…</p>
+      ) : items.length === 0 ? (
+        <p className="px-3.5 py-3 text-meta text-faint">일치하는 부품이 없습니다</p>
+      ) : null}
+      <div ref={sentinelRef} className="h-px" />
+      {isFetchingNextPage ? (
+        <p className="px-3.5 py-2 text-meta text-faint">더 불러오는 중…</p>
+      ) : null}
+    </div>
+  )
 }
 
 export function BranchSalesOrderCreatePage() {
@@ -165,7 +255,11 @@ export function BranchSalesOrderCreatePage() {
           </div>
         </FgCard>
 
-        <SoDraftLineEditor lines={lines} onChange={setLines} />
+        <SoDraftLineEditor
+          lines={lines}
+          renderSearchPanel={(props) => <ItemSearchPanel {...props} />}
+          onChange={setLines}
+        />
         {linesError ? <FgNotice tone="danger">{linesError}</FgNotice> : null}
 
         <FgCard className="flex items-center justify-between gap-4" compact>

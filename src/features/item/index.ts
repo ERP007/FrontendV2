@@ -1,4 +1,4 @@
-export { useItemsQuery } from './api/use-items-query'
+export { useItemsInfiniteQuery, useItemsQuery } from './api/use-items-query'
 export { filterItems } from './model/filter-items'
 export { ITEM_FIXTURES } from './model/fixtures'
 export {
