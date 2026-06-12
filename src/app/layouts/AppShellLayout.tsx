@@ -27,6 +27,7 @@ export function AppShellLayout() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { data: session } = useSession()
+  const isAdmin = session?.userRole === 'ADMIN'
 
   const item = (to: string, label: string, icon?: ReactNode): FgNavItem => ({
     active: pathname === to || pathname.startsWith(`${to}/`),
@@ -68,10 +69,14 @@ export function AppShellLayout() {
         item('/warehouses', '창고 · 지점', <Building2 aria-hidden className={iconClassName} />),
       ],
     },
-    {
-      label: '관리',
-      items: [item('/users', '사용자', <Users aria-hidden className={iconClassName} />)],
-    },
+    ...(isAdmin
+      ? [
+          {
+            label: '관리',
+            items: [item('/users', '사용자', <Users aria-hidden className={iconClassName} />)],
+          },
+        ]
+      : []),
   ]
 
   const bottomItems: FgNavItem[] = [
