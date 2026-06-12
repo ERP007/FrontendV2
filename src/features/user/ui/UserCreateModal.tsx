@@ -1,44 +1,52 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, Clock, IdCard, Lock, Mail, User as UserIcon } from 'lucide-react'
-import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { useEffect, useMemo } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
 import { ROLE_LABELS } from '@/shared/config/session'
 import type { UserRole } from '@/shared/config/session'
-import { FgButton, FgInput, FgModal, FgSegmentedControl, FgSelect } from '@/shared/ui'
+import { FgButton, FgInput, FgModal, FgNotice, FgSegmentedControl, FgSelect } from '@/shared/ui'
 
-import { BELONG_OPTIONS } from '../model/fixtures'
 import { RANK_OPTIONS } from '../model/types'
+import { getUserTenancyRoles, USER_TENANCY_OPTIONS } from '../model/user-tenancy'
 import { userFormSchema } from '../model/user-schema'
 
 import type { UserFormValues } from '../model/types'
 
 const FORM_ID = 'user-create-form'
 
-const roleOptions = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
-  label: `${role} · ${ROLE_LABELS[role]}`,
-  value: role,
+const tenancyOptions = USER_TENANCY_OPTIONS.map((option) => ({
+  label: option.label,
+  supportingText: option.code,
+  value: option.code,
 }))
-
-const belongOptions = BELONG_OPTIONS.map((name) => ({ label: name, value: name }))
 const rankOptions = RANK_OPTIONS.map((rank) => ({ label: rank, value: rank }))
 
 export interface UserCreateModalProps {
   /** 자동 채번된 다음 사번 (예: HMC0011) */
+  errorMessage?: string | null
+  loading?: boolean
   nextEmpNo: string
   onClose: () => void
-  onSubmit: (values: UserFormValues) => void
+  onSubmit: (values: UserFormValues) => Promise<void> | void
   open: boolean
 }
 
-export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCreateModalProps) {
+export function UserCreateModal({
+  errorMessage,
+  loading = false,
+  nextEmpNo,
+  onClose,
+  onSubmit,
+  open,
+}: UserCreateModalProps) {
   const {
     control,
     formState: { errors },
     handleSubmit,
     register,
     reset,
-    watch,
+    setValue,
   } = useForm<UserFormValues>({
     defaultValues: {
       email: '',
@@ -48,10 +56,23 @@ export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCrea
       passwordMode: 'AUTO',
       rank: '',
       role: 'BRANCH_STAFF',
-      warehouseName: '',
+      tenancyCode: '',
     },
     resolver: zodResolver(userFormSchema),
   })
+
+  const passwordMode = useWatch({ control, name: 'passwordMode' })
+  const role = useWatch({ control, name: 'role' })
+  const tenancyCode = useWatch({ control, name: 'tenancyCode' })
+
+  const roleOptions = useMemo(
+    () =>
+      getUserTenancyRoles(tenancyCode).map((nextRole) => ({
+        label: `${nextRole} · ${ROLE_LABELS[nextRole]}`,
+        value: nextRole,
+      })),
+    [tenancyCode],
+  )
 
   useEffect(() => {
     if (open) {
@@ -63,12 +84,18 @@ export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCrea
         passwordMode: 'AUTO',
         rank: '',
         role: 'BRANCH_STAFF',
-        warehouseName: '',
+        tenancyCode: '',
       })
     }
   }, [nextEmpNo, open, reset])
 
-  const passwordMode = watch('passwordMode')
+  useEffect(() => {
+    const nextRole = roleOptions[0]?.value
+
+    if (nextRole && !roleOptions.some((option) => option.value === role)) {
+      setValue('role', nextRole as UserRole)
+    }
+  }, [role, roleOptions, setValue])
 
   return (
     <FgModal
@@ -79,10 +106,13 @@ export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCrea
             등록 후 첫 로그인 시 비밀번호 변경이 강제됩니다.
           </span>
           <span className="flex items-center gap-2">
-            <FgButton onClick={onClose}>취소</FgButton>
+            <FgButton disabled={loading} onClick={onClose}>
+              취소
+            </FgButton>
             <FgButton
               form={FORM_ID}
               leftIcon={<Check aria-hidden className="h-4 w-4" />}
+              loading={loading}
               type="submit"
               variant="primary"
             >
@@ -95,10 +125,15 @@ export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCrea
       size="lg"
       title="사용자 추가"
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose()
+        if (!nextOpen && !loading) onClose()
       }}
     >
       <form className="grid grid-cols-2 gap-x-6 gap-y-5" id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
+        {errorMessage ? (
+          <FgNotice className="col-span-2" tone="danger">
+            {errorMessage}
+          </FgNotice>
+        ) : null}
         <FgInput
           error={errors.empNo?.message}
           hint="자동 채번된 사번입니다."
@@ -126,12 +161,12 @@ export function UserCreateModal({ nextEmpNo, onClose, onSubmit, open }: UserCrea
         />
         <Controller
           control={control}
-          name="warehouseName"
+          name="tenancyCode"
           render={({ field }) => (
             <FgSelect
-              error={errors.warehouseName?.message}
+              error={errors.tenancyCode?.message}
               label="소속"
-              options={belongOptions}
+              options={tenancyOptions}
               placeholder="소속 선택"
               required
               value={field.value || undefined}
