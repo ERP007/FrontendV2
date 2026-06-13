@@ -80,12 +80,11 @@ export const DEFAULT_ITEM_FILTER: ItemFilter = {
 }
 
 export interface ItemFormValues {
-  autoGenerateCode: boolean
-  code: string
-  defaultSafetyStock: number
-  description: string
+  categoryCode: string
   majorCategory: string
-  middleCategory: string
   name: string
+  safetyStock: number
+  sku: string
   unit: ItemUnit
+  unitPrice: number
 }

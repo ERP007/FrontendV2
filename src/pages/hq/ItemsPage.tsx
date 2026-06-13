@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Loader2, Plus } from 'lucide-react'
 
 import {
   DEFAULT_ITEM_FILTER,
+  ItemCreateModal,
   ItemFilterBar,
   ItemTable,
   useItemCategoriesQuery,
@@ -22,6 +23,8 @@ export function ItemsPage() {
   const [debouncedKeyword, setDebouncedKeyword] = useState(DEFAULT_ITEM_FILTER.keyword)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const { data: session } = useSession()
   const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
@@ -48,6 +51,12 @@ export function ItemsPage() {
     isFetching: isMiddleCategoryFetching,
     isLoading: isMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(selectedMajorCategoryCode)
+  const {
+    data: createMiddleCategories = [],
+    isFetching: isCreateMiddleCategoryFetching,
+    isFetched: isCreateMiddleCategoryFetched,
+    isLoading: isCreateMiddleCategoryLoading,
+  } = useItemSubCategoriesQuery(createMajorCategoryCode || undefined)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
 
   const majorCategoryOptions = useMemo(
@@ -66,6 +75,17 @@ export function ItemsPage() {
       })),
     [middleCategories],
   )
+  const createMiddleCategoryOptions = useMemo(
+    () =>
+      createMiddleCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [createMiddleCategories],
+  )
+  const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
+    setCreateMajorCategoryCode(categoryCode)
+  }, [])
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
@@ -93,7 +113,11 @@ export function ItemsPage() {
       <FgPageHeader
         actions={
           canCreateItem ? (
-            <FgButton leftIcon={<Plus aria-hidden className="h-4 w-4" />} variant="primary">
+            <FgButton
+              leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+              variant="primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
               부품 추가
             </FgButton>
           ) : undefined
@@ -140,6 +164,19 @@ export function ItemsPage() {
           setPage(1)
         }}
       />
+      {canCreateItem ? (
+        <ItemCreateModal
+          isMajorCategoryLoading={isMajorCategoryLoading}
+          isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
+          isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
+          majorCategoryOptions={majorCategoryOptions}
+          middleCategoryOptions={createMiddleCategoryOptions}
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onMajorCategoryChange={handleCreateMajorCategoryChange}
+          onSubmit={() => undefined}
+        />
+      ) : null}
     </div>
   )
 }

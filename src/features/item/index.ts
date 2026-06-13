@@ -18,5 +18,6 @@ export type {
   ItemSubCategory,
   ItemUnit,
 } from './model/types'
+export { ItemCreateModal } from './ui/ItemCreateModal'
 export { ItemFilterBar } from './ui/ItemFilterBar'
 export { ItemTable } from './ui/ItemTable'
