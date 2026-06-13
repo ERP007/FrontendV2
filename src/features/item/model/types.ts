@@ -47,6 +47,12 @@ export interface ItemUnitOption {
   unit: ItemUnit
 }
 
+export interface ItemSkuCheckResult {
+  available: boolean
+  message: string
+  sku: string
+}
+
 export type ItemSortKey =
   | 'sku,asc'
   | 'sku,desc'

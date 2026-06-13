@@ -3,11 +3,13 @@ import { Loader2, Plus } from 'lucide-react'
 
 import {
   DEFAULT_ITEM_FILTER,
+  getItemSkuCheckErrorMessage,
   ItemCreateModal,
   ItemFilterBar,
   ItemTable,
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
+  useItemSkuCheckMutation,
   useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
@@ -64,6 +66,7 @@ export function ItemsPage() {
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const skuCheckMutation = useItemSkuCheckMutation()
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -100,6 +103,16 @@ export function ItemsPage() {
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
   }, [])
+  const handleSkuCheck = useCallback(
+    async (sku: string) => {
+      try {
+        return await skuCheckMutation.mutateAsync(sku)
+      } catch (error) {
+        throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
+      }
+    },
+    [skuCheckMutation],
+  )
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
@@ -178,17 +191,19 @@ export function ItemsPage() {
           setPage(1)
         }}
       />
-      {canCreateItem ? (
+      {canCreateItem && isCreateModalOpen ? (
         <ItemCreateModal
           isMajorCategoryLoading={isMajorCategoryLoading}
           isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
           isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
+          isSkuChecking={skuCheckMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           middleCategoryOptions={createMiddleCategoryOptions}
-          open={isCreateModalOpen}
+          open
           onClose={() => setIsCreateModalOpen(false)}
           onMajorCategoryChange={handleCreateMajorCategoryChange}
+          onSkuCheck={handleSkuCheck}
           onSubmit={() => undefined}
           unitOptions={unitOptions}
         />

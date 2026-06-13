@@ -2,6 +2,10 @@ export {
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
 } from './api/use-item-categories-query'
+export {
+  getItemSkuCheckErrorMessage,
+  useItemSkuCheckMutation,
+} from './api/use-item-sku-check-mutation'
 export { useItemUnitsQuery } from './api/use-item-units-query'
 export { useItemsQuery } from './api/use-items-query'
 export {
@@ -16,6 +20,7 @@ export type {
   ItemFormValues,
   ItemListParams,
   ItemListResponse,
+  ItemSkuCheckResult,
   ItemSubCategory,
   ItemUnit,
   ItemUnitOption,
