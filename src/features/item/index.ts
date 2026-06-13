@@ -3,6 +3,10 @@ export {
   useItemSubCategoriesQuery,
 } from './api/use-item-categories-query'
 export {
+  getCreateItemErrorMessage,
+  useCreateItemMutation,
+} from './api/use-create-item-mutation'
+export {
   getItemSkuCheckErrorMessage,
   useItemSkuCheckMutation,
 } from './api/use-item-sku-check-mutation'
@@ -14,6 +18,8 @@ export {
   ITEM_UNIT_OPTIONS,
 } from './model/types'
 export type {
+  CreateItemRequest,
+  CreateItemResponse,
   Item,
   ItemCategory,
   ItemFilter,

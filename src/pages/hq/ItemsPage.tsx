@@ -1,19 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Loader2, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   DEFAULT_ITEM_FILTER,
+  getCreateItemErrorMessage,
   getItemSkuCheckErrorMessage,
   ItemCreateModal,
   ItemFilterBar,
   ItemTable,
+  useCreateItemMutation,
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
   useItemSkuCheckMutation,
   useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
-import type { ItemFilter, ItemListParams } from '@/features/item'
+import type { ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
@@ -66,6 +70,7 @@ export function ItemsPage() {
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
 
   const majorCategoryOptions = useMemo(
@@ -112,6 +117,25 @@ export function ItemsPage() {
       }
     },
     [skuCheckMutation],
+  )
+  const handleCreateItem = useCallback(
+    async (values: ItemFormValues) => {
+      try {
+        await createItemMutation.mutateAsync(values)
+        await queryClient.invalidateQueries({ queryKey: ['items'] })
+        setIsCreateModalOpen(false)
+        toast.success('부품이 등록되었습니다.')
+      } catch (error) {
+        if (isErrorResponse(error)) {
+          if (error.status !== 400 && error.status !== 409) {
+            return
+          }
+        }
+
+        toast.error(getCreateItemErrorMessage(error))
+      }
+    },
+    [createItemMutation],
   )
 
   const items = data?.content ?? []
@@ -196,6 +220,7 @@ export function ItemsPage() {
           isMajorCategoryLoading={isMajorCategoryLoading}
           isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
           isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
+          isSubmitting={createItemMutation.isPending}
           isSkuChecking={skuCheckMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
@@ -204,7 +229,7 @@ export function ItemsPage() {
           onClose={() => setIsCreateModalOpen(false)}
           onMajorCategoryChange={handleCreateMajorCategoryChange}
           onSkuCheck={handleSkuCheck}
-          onSubmit={() => undefined}
+          onSubmit={handleCreateItem}
           unitOptions={unitOptions}
         />
       ) : null}

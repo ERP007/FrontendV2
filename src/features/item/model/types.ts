@@ -53,6 +53,30 @@ export interface ItemSkuCheckResult {
   sku: string
 }
 
+export interface CreateItemRequest {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface CreateItemResponse {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  parentCategoryCode: string
+  parentCategoryName: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
 export type ItemSortKey =
   | 'sku,asc'
   | 'sku,desc'

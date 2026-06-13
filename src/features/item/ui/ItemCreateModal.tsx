@@ -27,6 +27,7 @@ export interface ItemCreateModalProps {
   isMajorCategoryLoading?: boolean
   isMiddleCategoryFetched?: boolean
   isMiddleCategoryLoading?: boolean
+  isSubmitting?: boolean
   isSkuChecking?: boolean
   isUnitLoading?: boolean
   majorCategoryOptions: FgSelectOption[]
@@ -47,6 +48,7 @@ export function ItemCreateModal({
   isMajorCategoryLoading = false,
   isMiddleCategoryFetched = false,
   isMiddleCategoryLoading = false,
+  isSubmitting = false,
   isSkuChecking = false,
   isUnitLoading = false,
   majorCategoryOptions,
@@ -152,6 +154,22 @@ export function ItemCreateModal({
   const skuCheckHint = currentSkuCheckState?.status === 'available' ? skuCheckMessage : undefined
   const skuRegistration = register('sku')
 
+  async function submit(values: ItemFormValues) {
+    const submitSku = values.sku.trim()
+    const hasAvailableSku =
+      currentSkuCheckState?.status === 'available' && currentSkuCheckState.sku === submitSku
+
+    if (!hasAvailableSku) {
+      toast.error('SKU 중복 확인을 먼저 완료해주세요.')
+      return
+    }
+
+    await onSubmit({
+      ...values,
+      sku: submitSku,
+    })
+  }
+
   return (
     <FgModal
       footer={
@@ -165,6 +183,8 @@ export function ItemCreateModal({
             <FgButton
               form={FORM_ID}
               leftIcon={<Check aria-hidden className="h-4 w-4" />}
+              loading={isSubmitting}
+              disabled={isSkuChecking}
               type="submit"
               variant="primary"
             >
@@ -180,7 +200,7 @@ export function ItemCreateModal({
         if (!nextOpen) onClose()
       }}
     >
-      <form className="grid grid-cols-2 gap-x-6 gap-y-5" id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
+      <form className="grid grid-cols-2 gap-x-6 gap-y-5" id={FORM_ID} onSubmit={handleSubmit(submit)}>
         <div className="flex items-start gap-2">
           <FgInput
             error={errors.sku?.message ?? skuCheckError}
@@ -195,7 +215,7 @@ export function ItemCreateModal({
           />
           <FgButton
             className="mt-7 h-11 px-3"
-            disabled={!normalizedSku}
+            disabled={!normalizedSku || isSubmitting}
             loading={isSkuChecking && currentSkuCheckState?.status === 'checking'}
             onClick={() => void handleSkuCheckClick()}
           >
