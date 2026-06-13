@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 
 import {
   DEFAULT_ITEM_FILTER,
@@ -10,16 +10,20 @@ import {
   useItemsQuery,
 } from '@/features/item'
 import type { ItemFilter, ItemListParams } from '@/features/item'
+import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
-import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
+import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
+const ITEM_CREATE_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF'])
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
   const [debouncedKeyword, setDebouncedKeyword] = useState(DEFAULT_ITEM_FILTER.keyword)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { data: session } = useSession()
+  const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -87,6 +91,13 @@ export function ItemsPage() {
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={
+          canCreateItem ? (
+            <FgButton leftIcon={<Plus aria-hidden className="h-4 w-4" />} variant="primary">
+              부품 추가
+            </FgButton>
+          ) : undefined
+        }
         breadcrumbs={breadcrumbs}
         title="부품 마스터"
       />
