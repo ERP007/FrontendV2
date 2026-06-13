@@ -7,13 +7,10 @@ import { FgButton, FgInput, FgModal, FgSelect } from '@/shared/ui'
 import type { FgSelectOption } from '@/shared/ui'
 
 import { itemFormSchema } from '../model/item-schema'
-import { ITEM_UNIT_OPTIONS } from '../model/types'
 
 import type { ItemFormValues } from '../model/types'
 
 const FORM_ID = 'item-create-form'
-
-const unitOptions = ITEM_UNIT_OPTIONS.map((unit) => ({ label: unit, value: unit }))
 
 const emptyValues: ItemFormValues = {
   categoryCode: '',
@@ -29,24 +26,28 @@ export interface ItemCreateModalProps {
   isMajorCategoryLoading?: boolean
   isMiddleCategoryFetched?: boolean
   isMiddleCategoryLoading?: boolean
+  isUnitLoading?: boolean
   majorCategoryOptions: FgSelectOption[]
   middleCategoryOptions: FgSelectOption[]
   onClose: () => void
   onMajorCategoryChange: (categoryCode: string) => void
   onSubmit: (values: ItemFormValues) => Promise<void> | void
   open: boolean
+  unitOptions: FgSelectOption[]
 }
 
 export function ItemCreateModal({
   isMajorCategoryLoading = false,
   isMiddleCategoryFetched = false,
   isMiddleCategoryLoading = false,
+  isUnitLoading = false,
   majorCategoryOptions,
   middleCategoryOptions,
   onClose,
   onMajorCategoryChange,
   onSubmit,
   open,
+  unitOptions,
 }: ItemCreateModalProps) {
   const {
     control,
@@ -177,16 +178,22 @@ export function ItemCreateModal({
         <Controller
           control={control}
           name="unit"
-          render={({ field }) => (
-            <FgSelect
-              error={errors.unit?.message}
-              label="단위"
-              options={unitOptions}
-              required
-              value={field.value}
-              onValueChange={field.onChange}
-            />
-          )}
+          render={({ field }) => {
+            const hasSelectedUnit = unitOptions.some((option) => option.value === field.value)
+
+            return (
+              <FgSelect
+                error={errors.unit?.message}
+                disabled={isUnitLoading || unitOptions.length === 0}
+                label="단위"
+                options={unitOptions}
+                placeholder={isUnitLoading ? '단위 불러오는 중' : '단위 없음'}
+                required
+                value={hasSelectedUnit ? field.value : undefined}
+                onValueChange={field.onChange}
+              />
+            )
+          }}
         />
         <FgInput
           error={errors.safetyStock?.message}

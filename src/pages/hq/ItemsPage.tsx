@@ -8,6 +8,7 @@ import {
   ItemTable,
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
+  useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
 import type { ItemFilter, ItemListParams } from '@/features/item'
@@ -57,6 +58,11 @@ export function ItemsPage() {
     isFetched: isCreateMiddleCategoryFetched,
     isLoading: isCreateMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(createMajorCategoryCode || undefined)
+  const {
+    data: itemUnits = [],
+    isFetching: isItemUnitsFetching,
+    isLoading: isItemUnitsLoading,
+  } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
 
   const majorCategoryOptions = useMemo(
@@ -82,6 +88,14 @@ export function ItemsPage() {
         value: category.categoryCode,
       })),
     [createMiddleCategories],
+  )
+  const unitOptions = useMemo(
+    () =>
+      itemUnits.map((itemUnit) => ({
+        label: itemUnit.name,
+        value: itemUnit.unit,
+      })),
+    [itemUnits],
   )
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
@@ -169,12 +183,14 @@ export function ItemsPage() {
           isMajorCategoryLoading={isMajorCategoryLoading}
           isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
           isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
+          isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           middleCategoryOptions={createMiddleCategoryOptions}
           open={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onMajorCategoryChange={handleCreateMajorCategoryChange}
           onSubmit={() => undefined}
+          unitOptions={unitOptions}
         />
       ) : null}
     </div>

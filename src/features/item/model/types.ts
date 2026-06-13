@@ -42,6 +42,11 @@ export const ITEM_CATEGORIES: Record<string, string[]> = {
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
+export interface ItemUnitOption {
+  name: string
+  unit: ItemUnit
+}
+
 export type ItemSortKey =
   | 'sku,asc'
   | 'sku,desc'

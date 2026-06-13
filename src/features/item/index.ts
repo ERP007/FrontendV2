@@ -2,6 +2,7 @@ export {
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
 } from './api/use-item-categories-query'
+export { useItemUnitsQuery } from './api/use-item-units-query'
 export { useItemsQuery } from './api/use-items-query'
 export {
   DEFAULT_ITEM_FILTER,
@@ -17,6 +18,7 @@ export type {
   ItemListResponse,
   ItemSubCategory,
   ItemUnit,
+  ItemUnitOption,
 } from './model/types'
 export { ItemCreateModal } from './ui/ItemCreateModal'
 export { ItemFilterBar } from './ui/ItemFilterBar'
