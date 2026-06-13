@@ -11,7 +11,7 @@ export interface Item {
   createdAt: string
   defaultSafetyStock: number
   description: string | null
-  id: number
+  id: number | string
   majorCategory: string
   middleCategory: string
   name: string
@@ -19,21 +19,36 @@ export interface Item {
   updatedAt: string
 }
 
+export interface ItemCategory {
+  categoryCode: string
+  categoryName: string
+  displayOrder: number
+}
+
+export interface ItemSubCategory extends ItemCategory {
+  parentCategoryCode: string
+}
+
 /** 분류 트리: 대분류 → 중분류 목록 */
 export const ITEM_CATEGORIES: Record<string, string[]> = {
-  엔진: ['윤활계통', '흡배기', '점화', '냉각'],
-  변속: ['오일/액', '기어'],
-  구동: ['클러치', '드라이브샤프트'],
-  제동: ['패드/슈', '디스크/드럼'],
-  현가: ['댐퍼', '스프링'],
-  전장: ['전원', '등화', '센서'],
-  공조: ['컴프레서', '필터'],
-  외장: ['미러', '램프'],
+  엔진: ['윤활계통', '필터'],
+  점화: [],
+  제동: [],
+  동력전달: [],
+  '현가·조향': [],
+  전장: [],
+  '외장·기타': [],
 }
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
-export type ItemSortKey = 'updatedAt' | 'code'
+export type ItemSortKey =
+  | 'sku,asc'
+  | 'sku,desc'
+  | 'name,asc'
+  | 'name,desc'
+  | 'updatedAt,desc'
+  | 'updatedAt,asc'
 
 export interface ItemFilter {
   keyword: string
@@ -43,11 +58,24 @@ export interface ItemFilter {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE'
 }
 
+export interface ItemListParams extends ItemFilter {
+  page: number
+  size: number
+}
+
+export interface ItemListResponse {
+  content: Item[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
 export const DEFAULT_ITEM_FILTER: ItemFilter = {
   keyword: '',
   majorCategory: 'ALL',
   middleCategory: 'ALL',
-  sort: 'updatedAt',
+  sort: 'updatedAt,desc',
   status: 'ALL',
 }
 
