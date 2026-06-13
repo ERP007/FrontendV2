@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
-import type { ColumnDef, RowData, SortingState } from '@tanstack/react-table'
+import type { ColumnDef, OnChangeFn, RowData, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
@@ -46,10 +46,14 @@ export interface FgDataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
   emptyState?: ReactNode
+  enableSortingRemoval?: boolean
   header?: ReactNode
   isRowSelected?: (row: TData) => boolean
+  manualSorting?: boolean
   onRowClick?: (row: TData) => void
+  onSortingChange?: (sorting: SortingState) => void
   rowClassName?: (row: TData) => string | undefined
+  sorting?: SortingState
 }
 
 export function FgDataTable<TData>({
@@ -57,21 +61,38 @@ export function FgDataTable<TData>({
   columns,
   data,
   emptyState,
+  enableSortingRemoval = true,
   header,
   isRowSelected,
+  manualSorting = false,
   onRowClick,
+  onSortingChange,
   rowClassName,
+  sorting,
 }: FgDataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
+  const currentSorting = sorting ?? internalSorting
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const nextSorting = typeof updater === 'function' ? updater(currentSorting) : updater
+
+    if (onSortingChange) {
+      onSortingChange(nextSorting)
+      return
+    }
+
+    setInternalSorting(nextSorting)
+  }
 
   const table = useReactTable({
     columns,
     data,
     defaultColumn: { enableSorting: false },
+    enableSortingRemoval,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: { sorting },
+    manualSorting,
+    onSortingChange: handleSortingChange,
+    state: { sorting: currentSorting },
   })
 
   const rows = table.getRowModel().rows

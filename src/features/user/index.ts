@@ -2,6 +2,12 @@ export {
   getCreateUserErrorMessage,
   useCreateUserMutation,
 } from './api/use-create-user-mutation'
+export {
+  getUsersErrorMessage,
+  useUsersQuery,
+  usersQueryKey,
+  usersQueryKeys,
+} from './api/use-users-query'
 export { filterUsers } from './model/filter-users'
 export {
   BELONG_OPTIONS,
