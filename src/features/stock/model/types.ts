@@ -107,6 +107,17 @@ export interface MovementFilter {
   warehouseCode: 'ALL' | string
 }
 
+/** swagger SafetyStockEditResponse — 안전재고 조정 모달 프리필. */
+export interface SafetyStockEdit {
+  itemName: string
+  itemUnit: ItemUnit
+  quantity: number
+  safetyStock: number
+  sku: string
+  version: number
+  warehouseCode: string
+}
+
 /** swagger StockAdjustmentRequest 대응 폼 값 */
 export interface AdjustmentFormValues {
   adjustmentType: AdjustmentType

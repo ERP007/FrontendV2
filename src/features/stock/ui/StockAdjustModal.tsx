@@ -31,9 +31,17 @@ export interface StockAdjustModalProps {
   skuRows: Stock[]
   /** 조정 대상으로 선택된 부품 행 */
   stock: Stock | null
+  submitting?: boolean
 }
 
-export function StockAdjustModal({ onClose, onSubmit, open, skuRows, stock }: StockAdjustModalProps) {
+export function StockAdjustModal({
+  onClose,
+  onSubmit,
+  open,
+  skuRows,
+  stock,
+  submitting = false,
+}: StockAdjustModalProps) {
   const {
     control,
     formState: { errors },
@@ -94,11 +102,14 @@ export function StockAdjustModal({ onClose, onSubmit, open, skuRows, stock }: St
             조정은 즉시 반영되며 재고 이력에 기록됩니다.
           </span>
           <span className="flex items-center gap-2">
-            <FgButton onClick={onClose}>취소</FgButton>
+            <FgButton disabled={submitting} onClick={onClose}>
+              취소
+            </FgButton>
             <FgButton
-              disabled={isNegative}
+              disabled={isNegative || submitting}
               form={FORM_ID}
               leftIcon={<Check aria-hidden className="h-4 w-4" />}
+              loading={submitting}
               type="submit"
               variant="primary"
             >

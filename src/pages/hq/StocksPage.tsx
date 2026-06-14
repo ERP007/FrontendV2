@@ -1,29 +1,38 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Download, SlidersHorizontal } from 'lucide-react'
+import { Download, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   DEFAULT_STOCK_FILTER,
+  SafetyStockModal,
+  StockAdjustModal,
   StockDetailPanel,
   StockFilterBar,
   StockKpiCards,
   StockTable,
+  useSafetyStockEditQuery,
+  useSafetyStockMutation,
+  useStockAdjustMutation,
   useStockKpiQuery,
   useStockListQuery,
   useStockSkuDetailQuery,
 } from '@/features/stock'
-import type { Stock, StockFilter } from '@/features/stock'
+import type { AdjustmentFormValues, Stock, StockFilter } from '@/features/stock'
 import {
   DEFAULT_WAREHOUSE_FILTER,
   DEFAULT_WAREHOUSE_SORT,
   useWarehouseListQuery,
 } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgButton, FgCard, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 조회' }]
+
+/** 재고 조정·안전재고 조정을 수행할 수 있는 역할(백엔드 인가와 동일). */
+const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 
 export function StocksPage() {
   const navigate = useNavigate()
@@ -33,6 +42,11 @@ export function StocksPage() {
   const [pageSize, setPageSize] = useState(20)
   // 첫 진입 시 우측 상세 패널은 비워둔다(선택 전).
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null)
+  const [adjustOpen, setAdjustOpen] = useState(false)
+  const [safetyOpen, setSafetyOpen] = useState(false)
+
+  const sessionQuery = useSession()
+  const canManage = MANAGER_ROLES.has(sessionQuery.data?.userRole ?? '')
 
   // 검색어는 300ms 디바운스. 창고·상태·정렬·페이지는 즉시 반영한다.
   const debouncedKeyword = useDebouncedValue(filter.keyword, 300)
@@ -49,6 +63,15 @@ export function StocksPage() {
     ...DEFAULT_WAREHOUSE_FILTER,
     sort: DEFAULT_WAREHOUSE_SORT,
   })
+  const adjustMutation = useStockAdjustMutation()
+
+  // 안전재고 프리필: 모달이 열린 동안 선택 행의 (창고, sku)로 현재 안전재고·version을 조회한다.
+  const safetyTarget =
+    safetyOpen && selectedStock
+      ? { sku: selectedStock.sku, warehouseCode: selectedStock.warehouseCode }
+      : null
+  const safetyEditQuery = useSafetyStockEditQuery(safetyTarget)
+  const safetyMutation = useSafetyStockMutation()
 
   const stocks = listQuery.data?.content ?? []
   const totalElements = listQuery.data?.totalElements ?? 0
@@ -64,14 +87,58 @@ export function StocksPage() {
     [warehouseListQuery.data],
   )
 
+  // 조정 모달의 창고 선택·현재고: 선택한 sku의 창고별 재고(상세 응답)에서 구성한다.
+  const skuRows = useMemo<Stock[]>(() => {
+    if (detail) {
+      return detail.warehouse.map((warehouse) => ({
+        id: warehouse.warehouseId,
+        itemName: detail.itemName,
+        itemUnit: detail.itemUnit,
+        lastAdjustedAt: '',
+        quantity: warehouse.quantity,
+        safetyStock: warehouse.safetyStock,
+        sku: detail.sku,
+        status: warehouse.status,
+        warehouseCode: warehouse.warehouseCode,
+        warehouseId: warehouse.warehouseId,
+        warehouseName: warehouse.warehouseName,
+      }))
+    }
+    return selectedStock ? [selectedStock] : []
+  }, [detail, selectedStock])
+
   function handleFilterChange(next: StockFilter) {
     setFilter(next)
     setPage(1)
   }
 
-  function handleAdjust() {
-    // 재고 조정은 커밋 분리를 위해 별도 단계에서 구현한다(이번은 조회만).
-    toast.info('재고 조정은 다음 단계에서 제공됩니다.')
+  function handleAdjustSubmit(values: AdjustmentFormValues) {
+    if (!selectedStock) return
+
+    adjustMutation.mutate(
+      { ...values, sku: selectedStock.sku },
+      {
+        onSuccess: () => {
+          setAdjustOpen(false)
+          toast.success('재고 조정이 저장되었습니다.')
+        },
+      },
+    )
+  }
+
+  function handleSafetySubmit(safetyStock: number) {
+    const edit = safetyEditQuery.data
+    if (!edit) return
+
+    safetyMutation.mutate(
+      { safetyStock, sku: edit.sku, version: edit.version, warehouseCode: edit.warehouseCode },
+      {
+        onSuccess: () => {
+          setSafetyOpen(false)
+          toast.success('안전 재고가 수정되었습니다.')
+        },
+      },
+    )
   }
 
   const rangeStart = totalElements === 0 ? 0 : (page - 1) * pageSize + 1
@@ -88,14 +155,25 @@ export function StocksPage() {
             >
               내보내기
             </FgButton>
-            <FgButton
-              disabled={!selectedStock}
-              leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={handleAdjust}
-            >
-              재고 조정
-            </FgButton>
+            {canManage ? (
+              <>
+                <FgButton
+                  disabled={!selectedStock}
+                  leftIcon={<ShieldCheck aria-hidden className="h-4 w-4" />}
+                  onClick={() => setSafetyOpen(true)}
+                >
+                  안전 재고 조정
+                </FgButton>
+                <FgButton
+                  disabled={!selectedStock}
+                  leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
+                  variant="primary"
+                  onClick={() => setAdjustOpen(true)}
+                >
+                  재고 조정
+                </FgButton>
+              </>
+            ) : null}
           </>
         }
         breadcrumbs={breadcrumbs}
@@ -147,13 +225,30 @@ export function StocksPage() {
         </div>
         <div className="w-96 shrink-0">
           <StockDetailPanel
+            canAdjust={canManage}
             detail={detail}
             loading={detailQuery.isLoading}
-            onAdjust={handleAdjust}
+            onAdjust={() => setAdjustOpen(true)}
             onViewHistory={() => void navigate({ to: '/stock-movements' })}
           />
         </div>
       </div>
+      <StockAdjustModal
+        open={adjustOpen}
+        skuRows={skuRows}
+        stock={selectedStock}
+        submitting={adjustMutation.isPending}
+        onClose={() => setAdjustOpen(false)}
+        onSubmit={handleAdjustSubmit}
+      />
+      <SafetyStockModal
+        edit={safetyEditQuery.data ?? null}
+        loading={safetyEditQuery.isLoading}
+        open={safetyOpen}
+        submitting={safetyMutation.isPending}
+        onClose={() => setSafetyOpen(false)}
+        onSubmit={handleSafetySubmit}
+      />
     </div>
   )
 }
