@@ -50,13 +50,13 @@ export interface MovementHistoryEntry {
   type: MovementType
 }
 
-/** swagger StockSkuDetailResponse */
+/** swagger StockSkuDetailResponse — majorCategory/middleCategory는 Item 통합 비활성/실패 시 null. */
 export interface StockSkuDetail {
   history: MovementHistoryEntry[]
   itemName: string
   itemUnit: ItemUnit
-  majorCategory: string
-  middleCategory: string
+  majorCategory: string | null
+  middleCategory: string | null
   sku: string
   totalQuantity: number
   totalSafetyStock: number

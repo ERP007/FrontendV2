@@ -1,8 +1,9 @@
+export { useStockKpiQuery } from './api/use-stock-kpi-query'
+export { useStockListQuery } from './api/use-stock-list-query'
+export { useStockSkuDetailQuery } from './api/use-stock-sku-detail-query'
 export { adjustmentFormSchema } from './model/adjustment-schema'
-export { buildStockSkuDetail, deriveStockKpi } from './model/derive'
 export { createDefaultMovementFilter, filterMovements, groupMovementsByDate } from './model/filter-movements'
 export type { MovementDateGroup } from './model/filter-movements'
-export { filterStocks } from './model/filter-stocks'
 export { ITEM_CATEGORY_META, MOVEMENT_FIXTURES, STOCK_FIXTURES } from './model/fixtures'
 export {
   ADJUSTMENT_REASON_LABELS,
