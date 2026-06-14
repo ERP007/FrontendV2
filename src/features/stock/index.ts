@@ -1,3 +1,4 @@
+export { useMovementListQuery } from './api/use-movement-list-query'
 export { useSafetyStockEditQuery } from './api/use-safety-stock-edit-query'
 export { useSafetyStockMutation } from './api/use-safety-stock-mutation'
 export { useStockAdjustMutation } from './api/use-stock-adjust-mutation'
@@ -12,6 +13,7 @@ export { ITEM_CATEGORY_META, MOVEMENT_FIXTURES, STOCK_FIXTURES } from './model/f
 export {
   ADJUSTMENT_REASON_LABELS,
   ADJUSTMENT_TYPE_LABELS,
+  DEFAULT_MOVEMENT_SORT,
   DEFAULT_STOCK_FILTER,
   MOVEMENT_TYPE_LABELS,
   movementSourceLabel,
@@ -26,6 +28,8 @@ export type {
   ItemUnit,
   Movement,
   MovementFilter,
+  MovementSort,
+  MovementSortField,
   MovementType,
   SafetyStockEdit,
   Stock,

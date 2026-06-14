@@ -64,13 +64,14 @@ export interface StockSkuDetail {
 }
 
 /**
- * swagger MovementResponse 기준.
- * executorName은 swagger에 없는 표시용 필드 — 연동 시 백엔드 확장 또는 User 서비스 조인 필요.
+ * swagger MovementResponse 기준(GET /inventory/stocks/movements).
+ * 목록 응답에는 executorName이 없어 옵셔널이다 — 없으면 화면에서 executorEmpNo로 대체한다.
+ * (백엔드 확장 또는 User 서비스 조인 시 채워짐)
  */
 export interface Movement {
   delta: number
   executorEmpNo: string
-  executorName: string
+  executorName?: string
   id: number
   itemName: string
   occurredAt: string
@@ -106,6 +107,21 @@ export interface MovementFilter {
   type: 'ALL' | MovementType
   warehouseCode: 'ALL' | string
 }
+
+/**
+ * 백엔드 MovementSort가 지원하는 정렬 속성. 화면은 이 중 일시(occurredAt) 정렬만 노출한다.
+ * (delta는 백엔드 지원이나 현재 UI 미노출 — 필요 시 헤더만 추가하면 된다.)
+ */
+export type MovementSortField = 'occurredAt' | 'delta'
+export type MovementSortDirection = 'asc' | 'desc'
+
+export interface MovementSort {
+  direction: MovementSortDirection
+  field: MovementSortField
+}
+
+/** 백엔드 기본 정렬(occurredAt,desc)과 일치시킨다. */
+export const DEFAULT_MOVEMENT_SORT: MovementSort = { direction: 'desc', field: 'occurredAt' }
 
 /** swagger SafetyStockEditResponse — 안전재고 조정 모달 프리필. */
 export interface SafetyStockEdit {
