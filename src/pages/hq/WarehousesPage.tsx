@@ -141,7 +141,10 @@ export function WarehousesPage() {
       <WarehouseFilterBar
         filter={filter}
         onChange={setFilter}
-        onReset={() => setFilter(DEFAULT_WAREHOUSE_FILTER)}
+        onReset={() => {
+          setFilter(DEFAULT_WAREHOUSE_FILTER)
+          setSort(DEFAULT_WAREHOUSE_SORT)
+        }}
       />
       {listQuery.isError ? (
         <FgCard className="p-6 text-center text-muted">

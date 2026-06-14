@@ -1,4 +1,4 @@
-import { Building2, Eye, Pencil, Power, Warehouse as WarehouseIcon } from 'lucide-react'
+import { Building2, Pencil, Power, Warehouse as WarehouseIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type { ColumnDef, OnChangeFn, SortingState } from '@tanstack/react-table'
 
@@ -111,12 +111,6 @@ export function WarehouseTable({
                   disabled: !canManage,
                   icon: <Pencil aria-hidden className="h-4 w-4" />,
                   label: '수정',
-                  onSelect: () => onEdit(row.original),
-                },
-                {
-                  disabled: !canManage,
-                  icon: <Eye aria-hidden className="h-4 w-4" />,
-                  label: '상세 보기',
                   onSelect: () => onEdit(row.original),
                 },
                 {
