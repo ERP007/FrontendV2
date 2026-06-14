@@ -127,6 +127,16 @@ export interface AdjustmentFormValues {
   warehouseCode: string
 }
 
+/** swagger StockCreateRequest 대응 폼 값 (ADMIN 재고 신규 생성). */
+export interface StockCreateFormValues {
+  itemName: string
+  itemUnit: ItemUnit
+  quantity: number
+  safetyStock: number
+  sku: string
+  warehouseCode: string
+}
+
 export const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
   LOW: '부족',
   NORMAL: '충분',

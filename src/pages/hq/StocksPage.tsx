@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Download, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -7,6 +7,7 @@ import {
   DEFAULT_STOCK_FILTER,
   SafetyStockModal,
   StockAdjustModal,
+  StockCreateModal,
   StockDetailPanel,
   StockFilterBar,
   StockKpiCards,
@@ -14,11 +15,12 @@ import {
   useSafetyStockEditQuery,
   useSafetyStockMutation,
   useStockAdjustMutation,
+  useStockCreateMutation,
   useStockKpiQuery,
   useStockListQuery,
   useStockSkuDetailQuery,
 } from '@/features/stock'
-import type { AdjustmentFormValues, Stock, StockFilter } from '@/features/stock'
+import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter } from '@/features/stock'
 import {
   DEFAULT_WAREHOUSE_FILTER,
   DEFAULT_WAREHOUSE_SORT,
@@ -31,7 +33,7 @@ import { FgButton, FgCard, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 조회' }]
 
-/** 재고 조정·안전재고 조정을 수행할 수 있는 역할(백엔드 인가와 동일). */
+/** 재고 조정·안전재고 조정 가능 역할. 재고 신규 생성은 ADMIN 전용으로 더 좁다. */
 const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 
 export function StocksPage() {
@@ -44,9 +46,12 @@ export function StocksPage() {
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null)
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [safetyOpen, setSafetyOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const sessionQuery = useSession()
-  const canManage = MANAGER_ROLES.has(sessionQuery.data?.userRole ?? '')
+  const userRole = sessionQuery.data?.userRole ?? ''
+  const canManage = MANAGER_ROLES.has(userRole)
+  const canCreate = userRole === 'ADMIN'
 
   // 검색어는 300ms 디바운스. 창고·상태·정렬·페이지는 즉시 반영한다.
   const debouncedKeyword = useDebouncedValue(filter.keyword, 300)
@@ -58,12 +63,13 @@ export function StocksPage() {
   const kpiQuery = useStockKpiQuery()
   const listQuery = useStockListQuery(listParams)
   const detailQuery = useStockSkuDetailQuery(selectedStock?.sku ?? null)
-  // 창고 필터 옵션: 전체 창고 목록(서버 페이지네이션과 무관하게 전량 필요).
+  // 창고 필터·재고추가 옵션: 전체 창고 목록(서버 페이지네이션과 무관하게 전량 필요).
   const warehouseListQuery = useWarehouseListQuery({
     ...DEFAULT_WAREHOUSE_FILTER,
     sort: DEFAULT_WAREHOUSE_SORT,
   })
   const adjustMutation = useStockAdjustMutation()
+  const createMutation = useStockCreateMutation()
 
   // 안전재고 프리필: 모달이 열린 동안 선택 행의 (창고, sku)로 현재 안전재고·version을 조회한다.
   const safetyTarget =
@@ -141,6 +147,15 @@ export function StocksPage() {
     )
   }
 
+  function handleCreateSubmit(values: StockCreateFormValues) {
+    createMutation.mutate(values, {
+      onSuccess: () => {
+        setCreateOpen(false)
+        toast.success('재고가 등록되었습니다.')
+      },
+    })
+  }
+
   const rangeStart = totalElements === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, totalElements)
 
@@ -173,6 +188,15 @@ export function StocksPage() {
                   재고 조정
                 </FgButton>
               </>
+            ) : null}
+            {canCreate ? (
+              <FgButton
+                leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+                variant="primary"
+                onClick={() => setCreateOpen(true)}
+              >
+                재고 추가
+              </FgButton>
             ) : null}
           </>
         }
@@ -248,6 +272,13 @@ export function StocksPage() {
         submitting={safetyMutation.isPending}
         onClose={() => setSafetyOpen(false)}
         onSubmit={handleSafetySubmit}
+      />
+      <StockCreateModal
+        open={createOpen}
+        submitting={createMutation.isPending}
+        warehouses={warehouseOptions}
+        onClose={() => setCreateOpen(false)}
+        onSubmit={handleCreateSubmit}
       />
     </div>
   )

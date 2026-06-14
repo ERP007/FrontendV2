@@ -1,6 +1,7 @@
 export { useSafetyStockEditQuery } from './api/use-safety-stock-edit-query'
 export { useSafetyStockMutation } from './api/use-safety-stock-mutation'
 export { useStockAdjustMutation } from './api/use-stock-adjust-mutation'
+export { useStockCreateMutation } from './api/use-stock-create-mutation'
 export { useStockKpiQuery } from './api/use-stock-kpi-query'
 export { useStockListQuery } from './api/use-stock-list-query'
 export { useStockSkuDetailQuery } from './api/use-stock-sku-detail-query'
@@ -28,6 +29,7 @@ export type {
   MovementType,
   SafetyStockEdit,
   Stock,
+  StockCreateFormValues,
   StockFilter,
   StockKpi,
   StockSkuDetail,
@@ -38,6 +40,7 @@ export { MovementTable } from './ui/MovementTable'
 export { MovementTypeBadge, StockStatusBadge } from './ui/StockBadges'
 export { SafetyStockModal } from './ui/SafetyStockModal'
 export { StockAdjustModal } from './ui/StockAdjustModal'
+export { StockCreateModal } from './ui/StockCreateModal'
 export { StockDetailPanel } from './ui/StockDetailPanel'
 export { StockFilterBar } from './ui/StockFilterBar'
 export type { StockWarehouseOption } from './ui/StockFilterBar'
