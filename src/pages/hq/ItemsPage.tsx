@@ -1,25 +1,39 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Loader2, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 import {
   DEFAULT_ITEM_FILTER,
+  getCreateItemErrorMessage,
+  getItemSkuCheckErrorMessage,
+  ItemCreateModal,
   ItemFilterBar,
   ItemTable,
+  useCreateItemMutation,
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
+  useItemSkuCheckMutation,
+  useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
-import type { ItemFilter, ItemListParams } from '@/features/item'
+import type { ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import { isErrorResponse, queryClient } from '@/shared/api'
+import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
-import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
+import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
+const ITEM_CREATE_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF'])
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
   const [debouncedKeyword, setDebouncedKeyword] = useState(DEFAULT_ITEM_FILTER.keyword)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const { data: session } = useSession()
+  const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -44,7 +58,20 @@ export function ItemsPage() {
     isFetching: isMiddleCategoryFetching,
     isLoading: isMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(selectedMajorCategoryCode)
+  const {
+    data: createMiddleCategories = [],
+    isFetching: isCreateMiddleCategoryFetching,
+    isFetched: isCreateMiddleCategoryFetched,
+    isLoading: isCreateMiddleCategoryLoading,
+  } = useItemSubCategoriesQuery(createMajorCategoryCode || undefined)
+  const {
+    data: itemUnits = [],
+    isFetching: isItemUnitsFetching,
+    isLoading: isItemUnitsLoading,
+  } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const createItemMutation = useCreateItemMutation()
+  const skuCheckMutation = useItemSkuCheckMutation()
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -61,6 +88,54 @@ export function ItemsPage() {
         value: category.categoryCode,
       })),
     [middleCategories],
+  )
+  const createMiddleCategoryOptions = useMemo(
+    () =>
+      createMiddleCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [createMiddleCategories],
+  )
+  const unitOptions = useMemo(
+    () =>
+      itemUnits.map((itemUnit) => ({
+        label: itemUnit.name,
+        value: itemUnit.unit,
+      })),
+    [itemUnits],
+  )
+  const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
+    setCreateMajorCategoryCode(categoryCode)
+  }, [])
+  const handleSkuCheck = useCallback(
+    async (sku: string) => {
+      try {
+        return await skuCheckMutation.mutateAsync(sku)
+      } catch (error) {
+        throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
+      }
+    },
+    [skuCheckMutation],
+  )
+  const handleCreateItem = useCallback(
+    async (values: ItemFormValues) => {
+      try {
+        await createItemMutation.mutateAsync(values)
+        await queryClient.invalidateQueries({ queryKey: ['items'] })
+        setIsCreateModalOpen(false)
+        toast.success('부품이 등록되었습니다.')
+      } catch (error) {
+        if (isErrorResponse(error)) {
+          if (error.status !== 400 && error.status !== 409) {
+            return
+          }
+        }
+
+        toast.error(getCreateItemErrorMessage(error))
+      }
+    },
+    [createItemMutation],
   )
 
   const items = data?.content ?? []
@@ -87,6 +162,17 @@ export function ItemsPage() {
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={
+          canCreateItem ? (
+            <FgButton
+              leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+              variant="primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              부품 추가
+            </FgButton>
+          ) : undefined
+        }
         breadcrumbs={breadcrumbs}
         title="부품 마스터"
       />
@@ -129,6 +215,24 @@ export function ItemsPage() {
           setPage(1)
         }}
       />
+      {canCreateItem && isCreateModalOpen ? (
+        <ItemCreateModal
+          isMajorCategoryLoading={isMajorCategoryLoading}
+          isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
+          isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
+          isSubmitting={createItemMutation.isPending}
+          isSkuChecking={skuCheckMutation.isPending}
+          isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
+          majorCategoryOptions={majorCategoryOptions}
+          middleCategoryOptions={createMiddleCategoryOptions}
+          open
+          onClose={() => setIsCreateModalOpen(false)}
+          onMajorCategoryChange={handleCreateMajorCategoryChange}
+          onSkuCheck={handleSkuCheck}
+          onSubmit={handleCreateItem}
+          unitOptions={unitOptions}
+        />
+      ) : null}
     </div>
   )
 }

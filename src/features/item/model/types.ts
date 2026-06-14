@@ -42,6 +42,41 @@ export const ITEM_CATEGORIES: Record<string, string[]> = {
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
+export interface ItemUnitOption {
+  name: string
+  unit: ItemUnit
+}
+
+export interface ItemSkuCheckResult {
+  available: boolean
+  message: string
+  sku: string
+}
+
+export interface CreateItemRequest {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface CreateItemResponse {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  parentCategoryCode: string
+  parentCategoryName: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
 export type ItemSortKey =
   | 'sku,asc'
   | 'sku,desc'
@@ -80,12 +115,11 @@ export const DEFAULT_ITEM_FILTER: ItemFilter = {
 }
 
 export interface ItemFormValues {
-  autoGenerateCode: boolean
-  code: string
-  defaultSafetyStock: number
-  description: string
+  categoryCode: string
   majorCategory: string
-  middleCategory: string
   name: string
+  safetyStock: number
+  sku: string
   unit: ItemUnit
+  unitPrice: number
 }
