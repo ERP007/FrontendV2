@@ -18,6 +18,12 @@ export interface Warehouse {
   version: number
 }
 
+/**
+ * 목록 조회 응답 항목(swagger WarehouseResponse).
+ * 상세 응답(WarehouseDetailResponse)과 달리 address·branchId·version은 포함하지 않는다.
+ */
+export type WarehouseListItem = Omit<Warehouse, 'address' | 'branchId' | 'version'>
+
 /** swagger BranchLocationResponse */
 export interface BranchLocation {
   id: number
@@ -47,3 +53,15 @@ export interface WarehouseFormValues {
   name: string
   type: WarehouseType
 }
+
+/** 헤더 클릭 정렬 대상. 백엔드 WarehouseSort 지원 컬럼(code/name/type)으로 한정한다. */
+export type WarehouseSortField = 'code' | 'name' | 'type'
+export type WarehouseSortDirection = 'asc' | 'desc'
+
+export interface WarehouseSort {
+  direction: WarehouseSortDirection
+  field: WarehouseSortField
+}
+
+/** 백엔드 기본 정렬(code,asc)과 일치시킨다. */
+export const DEFAULT_WAREHOUSE_SORT: WarehouseSort = { direction: 'asc', field: 'code' }
