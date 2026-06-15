@@ -48,8 +48,8 @@ export function SoFilterBar({
         leftIcon={<Search aria-hidden className="h-4 w-4" />}
         placeholder={searchPlaceholder}
         rootClassName="flex-1"
-        value={filter.keyword}
-        onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
+        value={filter.search}
+        onChange={(event) => onChange({ ...filter, search: event.target.value })}
       />
       <FgSelect
         className="w-40"
@@ -71,16 +71,16 @@ export function SoFilterBar({
         leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
         rootClassName="w-44"
         type="date"
-        value={filter.from}
-        onChange={(event) => onChange({ ...filter, from: event.target.value })}
+        value={filter.startDate}
+        onChange={(event) => onChange({ ...filter, startDate: event.target.value })}
       />
       <span className="text-faint">~</span>
       <FgInput
         leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
         rootClassName="w-44"
         type="date"
-        value={filter.to}
-        onChange={(event) => onChange({ ...filter, to: event.target.value })}
+        value={filter.endDate}
+        onChange={(event) => onChange({ ...filter, endDate: event.target.value })}
       />
       <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
         초기화

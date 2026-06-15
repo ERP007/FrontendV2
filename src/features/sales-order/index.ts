@@ -9,11 +9,18 @@ export type {
   CreateSalesOrderRequest,
   SalesOrderResponse,
 } from './api/use-create-sales-order-mutation'
+export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
+export type {
+  BranchSalesOrderListItem,
+  BranchSalesOrderListParams,
+  BranchSalesOrderSortDirection,
+  BranchSalesOrderSortField,
+} from './api/use-branch-sales-orders-query'
+export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
   createDefaultSoFilter,
-  deriveSoBranchKpi,
   deriveSoHqKpi,
   filterSalesOrders,
 } from './model/filter-sales-orders'
@@ -27,8 +34,11 @@ export {
   IN_PROGRESS_STATUSES,
   isSoDelayed,
   REJECT_REASON_OPTIONS,
+  SO_BRANCH_STATUS_LABELS,
+  SO_BRANCH_STATUS_ORDER,
   SO_PRIORITY_LABELS,
   SO_STATUS_LABELS,
+  SO_TAB_STATUS_MAP,
   soShortageCount,
   soShortageTotal,
   soTotalApproved,
@@ -46,6 +56,7 @@ export type {
   SoPriority,
   SoStatusTab,
 } from './model/types'
+export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
 export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
 export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
