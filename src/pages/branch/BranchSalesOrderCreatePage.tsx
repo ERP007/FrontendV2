@@ -175,6 +175,7 @@ export function BranchSalesOrderCreatePage() {
 
   const createDraftMutation = useCreateSalesOrderDraftMutation()
   const createSalesOrderMutation = useCreateSalesOrderMutation()
+  const isSubmitting = createDraftMutation.isPending || createSalesOrderMutation.isPending
 
   const urgentCount = lines.filter((line) => line.itemCode !== null && line.priority === 'URGENT').length
   const totalQuantity = lines.reduce((sum, line) => sum + (line.itemCode ? line.quantity : 0), 0)
@@ -259,14 +260,14 @@ export function BranchSalesOrderCreatePage() {
         actions={
           <>
             <FgButton
-              disabled={createDraftMutation.isPending}
+              disabled={isSubmitting}
               leftIcon={<Box aria-hidden className="h-4 w-4" />}
               onClick={handleDraftSave}
             >
               임시저장
             </FgButton>
             <FgButton
-              disabled={createSalesOrderMutation.isPending}
+              disabled={isSubmitting}
               leftIcon={<Send aria-hidden className="h-4 w-4" />}
               variant="primary"
               onClick={submit}
@@ -381,7 +382,7 @@ export function BranchSalesOrderCreatePage() {
             취소
           </FgButton>
           <FgButton
-            disabled={createDraftMutation.isPending}
+            disabled={isSubmitting}
             leftIcon={<Box aria-hidden className="h-4 w-4" />}
             type="button"
             onClick={handleDraftSave}
@@ -389,7 +390,7 @@ export function BranchSalesOrderCreatePage() {
             임시저장
           </FgButton>
           <FgButton
-            disabled={createSalesOrderMutation.isPending}
+            disabled={isSubmitting}
             leftIcon={<Send aria-hidden className="h-4 w-4" />}
             type="submit"
             variant="primary"
