@@ -18,6 +18,7 @@ export interface FgModalProps {
   className?: string
   description?: ReactNode
   footer?: ReactNode
+  headerActions?: ReactNode
   icon?: ReactNode
   onOpenChange?: (open: boolean) => void
   open?: boolean
@@ -32,6 +33,7 @@ export function FgModal({
   className,
   description,
   footer,
+  headerActions,
   icon,
   onOpenChange,
   open,
@@ -64,11 +66,14 @@ export function FgModal({
                 <Dialog.Description className="mt-3 text-label text-muted">{description}</Dialog.Description>
               ) : null}
             </div>
-            <Dialog.Close asChild>
-              <FgButton aria-label="닫기" size="icon" variant="default">
-                <X aria-hidden className="h-5 w-5" />
-              </FgButton>
-            </Dialog.Close>
+            <div className="flex shrink-0 items-center gap-2">
+              {headerActions}
+              <Dialog.Close asChild>
+                <FgButton aria-label="닫기" size="icon" variant="default">
+                  <X aria-hidden className="h-5 w-5" />
+                </FgButton>
+              </Dialog.Close>
+            </div>
           </header>
           <div className="max-h-screen overflow-y-auto px-6 py-6 fg-scrollbar">{children}</div>
           {footer ? <footer className="flex items-center justify-end gap-2 border-t border-line-soft bg-background px-6 py-4">{footer}</footer> : null}

@@ -6,6 +6,9 @@ import {
   DEFAULT_ITEM_FILTER,
   getCreateItemErrorMessage,
   getItemSkuCheckErrorMessage,
+  getMockBranchWarehouseCode,
+  getMockItemStockRows,
+  getMockVisibleItemStockRows,
   ItemCreateModal,
   ItemDetailModal,
   ItemFilterBar,
@@ -26,6 +29,7 @@ import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
 const ITEM_CREATE_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF'])
+const ALL_WAREHOUSES = 'ALL'
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
@@ -35,6 +39,7 @@ export function ItemsPage() {
   const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
+  const [detailWarehouseCode, setDetailWarehouseCode] = useState(ALL_WAREHOUSES)
   const { data: session } = useSession()
   const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
@@ -112,8 +117,58 @@ export function ItemsPage() {
     () => (detailTarget ? toItemDetailPreview(detailTarget) : null),
     [detailTarget],
   )
+  const detailAllStockRows = useMemo(
+    () => (detailTarget ? getMockItemStockRows(detailTarget.code) : []),
+    [detailTarget],
+  )
+  const detailStockRows = useMemo(
+    () =>
+      detailTarget
+        ? getMockVisibleItemStockRows({
+            canManage: canCreateItem,
+            sku: detailTarget.code,
+            tenancyCode: session?.tenancyCode,
+            warehouseCode: detailWarehouseCode,
+          })
+        : [],
+    [canCreateItem, detailTarget, detailWarehouseCode, session?.tenancyCode],
+  )
+  const detailWarehouseOptions = useMemo(
+    () => [
+      { label: '전체 창고', value: ALL_WAREHOUSES },
+      ...detailAllStockRows.map((row) => ({
+        label: row.warehouseName,
+        supportingText: row.warehouseCode,
+        value: row.warehouseCode,
+      })),
+    ],
+    [detailAllStockRows],
+  )
+  const detailStockScopeLabel = useMemo(() => {
+    if (!detailTarget) {
+      return undefined
+    }
+
+    if (canCreateItem) {
+      if (detailWarehouseCode === ALL_WAREHOUSES) {
+        return '전체 창고'
+      }
+
+      const selectedWarehouse = detailAllStockRows.find((row) => row.warehouseCode === detailWarehouseCode)
+      return selectedWarehouse ? `${selectedWarehouse.warehouseName} 기준` : '선택 창고 기준'
+    }
+
+    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode)
+    const branchWarehouse = detailAllStockRows.find((row) => row.warehouseCode === branchWarehouseCode)
+
+    return branchWarehouse ? `${branchWarehouse.warehouseName} 기준` : '본인 지점 창고 기준'
+  }, [canCreateItem, detailAllStockRows, detailTarget, detailWarehouseCode, session?.tenancyCode])
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
+  }, [])
+  const handleSelectItem = useCallback((item: Item) => {
+    setDetailTarget(item)
+    setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [])
   const handleSkuCheck = useCallback(
     async (sku: string) => {
@@ -210,7 +265,7 @@ export function ItemsPage() {
           </span>
         }
         items={items}
-        onSelect={setDetailTarget}
+        onSelect={handleSelectItem}
       />
       <FgPagination
         page={page}
@@ -248,11 +303,17 @@ export function ItemsPage() {
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           open
-          stockRows={[]}
-          stockScopeLabel={canCreateItem ? '전체 창고' : '본인 지점 창고 기준'}
+          stockRows={detailStockRows}
+          stockScopeLabel={detailStockScopeLabel}
           subCategoryOptions={middleCategoryOptions}
           unitOptions={unitOptions}
-          onClose={() => setDetailTarget(null)}
+          warehouseOptions={canCreateItem ? detailWarehouseOptions : undefined}
+          warehouseValue={canCreateItem ? detailWarehouseCode : undefined}
+          onClose={() => {
+            setDetailTarget(null)
+            setDetailWarehouseCode(ALL_WAREHOUSES)
+          }}
+          onWarehouseChange={canCreateItem ? setDetailWarehouseCode : undefined}
         />
       ) : null}
     </div>

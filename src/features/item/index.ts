@@ -18,6 +18,13 @@ export {
   ITEM_UNIT_OPTIONS,
 } from './model/types'
 export { toItemDetailPreview } from './model/detail-preview'
+export {
+  getMockBranchWarehouseCode,
+  getMockItemStockRows,
+  getMockVisibleItemStockRows,
+  ITEM_STOCK_FIXTURES,
+} from './model/detail-stock-fixtures'
+export type { ItemStockFixtureRow } from './model/detail-stock-fixtures'
 export type {
   CreateItemRequest,
   CreateItemResponse,

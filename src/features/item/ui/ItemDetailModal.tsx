@@ -3,6 +3,7 @@ import { Check, Info, Loader2, Package, Power, RotateCcw } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import type { ColumnDef } from '@tanstack/react-table'
+import type { ReactNode } from 'react'
 
 import { formatCurrency, formatDate, formatNumber } from '@/shared/lib/format'
 import {
@@ -225,35 +226,59 @@ export function ItemDetailModal({
     })
   }
 
+  function renderSubmitButton(size: 'md' | 'sm'): ReactNode {
+    if (!detail?.active) {
+      return null
+    }
+
+    return (
+      <FgButton
+        form={FORM_ID}
+        leftIcon={<Check aria-hidden className="h-4 w-4" />}
+        loading={isSubmitting}
+        disabled={!onSubmit || isStatusChanging}
+        size={size}
+        type="submit"
+        variant="primary"
+      >
+        수정
+      </FgButton>
+    )
+  }
+
+  function renderStatusButton(size: 'md' | 'sm'): ReactNode {
+    if (!detail) {
+      return null
+    }
+
+    return (
+      <FgButton
+        disabled={!onToggleActive || isSubmitting}
+        leftIcon={detail.active ? <Power aria-hidden className="h-4 w-4" /> : <RotateCcw aria-hidden className="h-4 w-4" />}
+        loading={isStatusChanging}
+        size={size}
+        variant={detail.active ? 'danger' : 'soft'}
+        onClick={() => {
+          if (onToggleActive) void onToggleActive(detail)
+        }}
+      >
+        {detail.active ? '비활성화' : '활성화'}
+      </FgButton>
+    )
+  }
+
+  const headerActions = detail && canManage ? (
+    <>
+      {renderSubmitButton('sm')}
+      {renderStatusButton('sm')}
+    </>
+  ) : null
+
   const footer = (
     <>
       <FgButton onClick={onClose}>닫기</FgButton>
       {detail && canManage ? (
-        <>
-          <FgButton
-            disabled={!onToggleActive || isSubmitting}
-            leftIcon={detail.active ? <Power aria-hidden className="h-4 w-4" /> : <RotateCcw aria-hidden className="h-4 w-4" />}
-            loading={isStatusChanging}
-            variant={detail.active ? 'danger' : 'soft'}
-            onClick={() => {
-              if (onToggleActive) void onToggleActive(detail)
-            }}
-          >
-            {detail.active ? '비활성화' : '활성화'}
-          </FgButton>
-          {detail.active ? (
-            <FgButton
-              form={FORM_ID}
-              leftIcon={<Check aria-hidden className="h-4 w-4" />}
-              loading={isSubmitting}
-              disabled={!onSubmit || isStatusChanging}
-              type="submit"
-              variant="primary"
-            >
-              수정
-            </FgButton>
-          ) : null}
-        </>
+        renderSubmitButton('md')
       ) : null}
     </>
   )
@@ -261,6 +286,7 @@ export function ItemDetailModal({
   return (
     <FgModal
       footer={footer}
+      headerActions={headerActions}
       open={open}
       size="lg"
       title={canManage ? '부품 상세' : '부품 상세 조회'}
