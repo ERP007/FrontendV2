@@ -6,6 +6,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { PasswordChangePage } from '@/pages/auth/PasswordChangePage'
 import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArrivalPage'
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
+import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
 import { BranchSalesOrdersPage } from '@/pages/branch/BranchSalesOrdersPage'
 import { MyPage } from '@/pages/common/MyPage'
 import { DashboardPage } from '@/pages/hq/DashboardPage'
@@ -173,6 +174,12 @@ const branchSalesOrderArrivalRoute = createRoute({
   path: '/branch/sales-orders/$soNo/arrival',
 })
 
+const branchSalesOrderDetailRoute = createRoute({
+  component: BranchSalesOrderDetailPage,
+  getParentRoute: () => shellRoute,
+  path: '/branch/sales-orders/$soNo',
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   passwordChangeRoute,
@@ -194,6 +201,7 @@ const routeTree = rootRoute.addChildren([
     branchSalesOrdersRoute,
     branchSalesOrderCreateRoute,
     branchSalesOrderArrivalRoute,
+    branchSalesOrderDetailRoute,
   ]),
 ])
 

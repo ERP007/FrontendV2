@@ -164,7 +164,9 @@ export function BranchSalesOrdersPage() {
         onArrival={(order) =>
           void navigate({ params: { soNo: order.code }, to: '/branch/sales-orders/$soNo/arrival' })
         }
-        onOpen={(order) => void navigate({ params: { soNo: order.code }, to: '/sales-orders/$soNo' })}
+        onOpen={(order) =>
+          void navigate({ params: { soNo: order.code }, to: '/branch/sales-orders/$soNo' })
+        }
         onSortChange={(sortField, sortDirection) =>
           patchParams({ page: 1, sortDirection, sortField })
         }

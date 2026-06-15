@@ -9,6 +9,12 @@ export type {
   CreateSalesOrderRequest,
   SalesOrderResponse,
 } from './api/use-create-sales-order-mutation'
+export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
+export type {
+  BranchSalesOrderDetail,
+  BranchSalesOrderDetailLine,
+  BranchSalesOrderWarehouseRef,
+} from './api/use-branch-sales-order-query'
 export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
 export type {
   BranchSalesOrderListItem,
@@ -17,6 +23,11 @@ export type {
   BranchSalesOrderSortField,
 } from './api/use-branch-sales-orders-query'
 export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
+export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
+export type {
+  SalesOrderHistoryActor,
+  SalesOrderHistoryEntry,
+} from './api/use-sales-order-histories-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
@@ -30,6 +41,7 @@ export { soDraftFormSchema } from './model/so-draft-schema'
 export type { SoDraftFormValues } from './model/so-draft-schema'
 export {
   ARRIVAL_DIFF_REASON_OPTIONS,
+  CARRIER_TYPE_LABELS,
   emptySoDraftLine,
   IN_PROGRESS_STATUSES,
   isSoDelayed,
@@ -46,6 +58,7 @@ export {
   TRANSPORT_OPTIONS,
 } from './model/types'
 export type {
+  CarrierType,
   SalesOrder,
   SalesOrderEvent,
   SalesOrderFilter,
@@ -57,6 +70,7 @@ export type {
   SoStatusTab,
 } from './model/types'
 export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
+export { SoHistoryTimeline } from './ui/SoHistoryTimeline'
 export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
 export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'

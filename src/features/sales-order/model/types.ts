@@ -13,6 +13,14 @@ export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
 export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
 
+export type CarrierType = 'VEHICLE' | 'DELIVERY_SERVICE' | 'OTHER'
+
+export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
+  DELIVERY_SERVICE: '택배',
+  OTHER: '기타',
+  VEHICLE: '차량',
+}
+
 export interface SalesOrderLine {
   /** 본사 출고 창고 가용 재고 (검토 시점) */
   availableStock: number
