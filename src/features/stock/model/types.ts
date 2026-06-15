@@ -18,6 +18,8 @@ export interface Stock {
   safetyStock: number
   sku: string
   status: StockStatus
+  /** 창고 활성 여부. false면 비활성 창고 재고 → 부품명·코드를 흐리게 표시. (구 응답 호환 위해 옵셔널) */
+  warehouseActive?: boolean
   warehouseCode: string
   warehouseId: number
   warehouseName: string
@@ -36,6 +38,8 @@ export interface WarehouseStock {
   quantity: number
   safetyStock: number
   status: StockStatus
+  /** 창고 활성 여부. false면 비활성 창고 → 상세 패널에서 흐리게 표시. (구 응답 호환 위해 옵셔널) */
+  warehouseActive?: boolean
   warehouseCode: string
   warehouseId: number
   warehouseName: string

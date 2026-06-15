@@ -81,7 +81,12 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
             return (
               <div key={warehouse.warehouseId}>
                 <div className="flex items-center justify-between gap-2 text-label">
-                  <span className="font-medium text-ink-2">{warehouse.warehouseName}</span>
+                  <span className="flex items-center gap-1.5 font-medium text-ink-2">
+                    {warehouse.warehouseName}
+                    {warehouse.warehouseActive === false ? (
+                      <span className="rounded-badge bg-line-soft px-1.5 py-0.5 text-badge text-faint">비활성</span>
+                    ) : null}
+                  </span>
                   <span
                     className={cn(
                       'font-bold',

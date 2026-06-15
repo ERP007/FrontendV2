@@ -27,18 +27,34 @@ export function StockTable({ header, onSelect, selectedId, stocks }: StockTableP
     () => [
       {
         accessorKey: 'sku',
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.sku}</span>,
+        // 비활성 창고 재고는 부품명·코드를 흐리게 표시한다(IV-01).
+        cell: ({ row }) => (
+          <span className={cn('font-semibold', row.original.warehouseActive === false ? 'text-faint' : 'text-ink')}>
+            {row.original.sku}
+          </span>
+        ),
         header: '부품 코드',
         size: 140,
       },
       {
         accessorKey: 'itemName',
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.itemName}</span>,
+        cell: ({ row }) => (
+          <span className={cn('font-semibold', row.original.warehouseActive === false ? 'text-faint' : 'text-ink')}>
+            {row.original.itemName}
+          </span>
+        ),
         header: '부품명',
       },
       {
         accessorKey: 'warehouseName',
-        cell: ({ row }) => <span className="font-medium text-ink-2">{row.original.warehouseName}</span>,
+        cell: ({ row }) => (
+          <span className="flex items-center gap-1.5 font-medium text-ink-2">
+            {row.original.warehouseName}
+            {row.original.warehouseActive === false ? (
+              <span className="rounded-badge bg-line-soft px-1.5 py-0.5 text-badge text-faint">비활성</span>
+            ) : null}
+          </span>
+        ),
         header: '창고',
         size: 130,
       },
