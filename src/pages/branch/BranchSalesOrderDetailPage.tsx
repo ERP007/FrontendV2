@@ -22,7 +22,7 @@ const MOCK_SO: BranchSalesOrderDetail = {
     { id: 5, itemCode: 'HMC-AC-40229', itemName: '와이퍼 블레이드 24"', requestQuantity: 10, unit: 'EA' },
     { id: 6, itemCode: 'HMC-CL-50710', itemName: '엔진 쿨런트 1L', requestQuantity: 10, unit: 'L' },
   ],
-  status: 'DRAFT',
+  status: 'APPROVED',
   toWarehouse: { code: 'WH-04A', name: '강남 1지점 · 부품창고' },
 }
 
