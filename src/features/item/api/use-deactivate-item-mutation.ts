@@ -40,3 +40,15 @@ export function useDeactivateItemMutation() {
     },
   })
 }
+
+export function useActivateItemMutation() {
+  return useMutation({
+    mutationFn: async (sku: string) => {
+      const response = await api.patch<ItemStatusChangeResponse>(
+        `/items/${encodeURIComponent(sku)}/activate`,
+      )
+
+      return response.data
+    },
+  })
+}

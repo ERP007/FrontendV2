@@ -12,6 +12,7 @@ export {
 } from './api/use-item-sku-check-mutation'
 export {
   getItemStatusChangeErrorMessage,
+  useActivateItemMutation,
   useDeactivateItemMutation,
 } from './api/use-deactivate-item-mutation'
 export {

@@ -16,6 +16,7 @@ import {
   ItemFilterBar,
   ItemTable,
   itemDetailQueryKey,
+  useActivateItemMutation,
   useCreateItemMutation,
   useDeactivateItemMutation,
   useItemCategoriesQuery,
@@ -98,6 +99,7 @@ export function ItemsPage() {
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
   const updateItemMutation = useUpdateItemMutation()
+  const activateItemMutation = useActivateItemMutation()
   const deactivateItemMutation = useDeactivateItemMutation()
 
   const majorCategoryOptions = useMemo(
@@ -287,18 +289,18 @@ export function ItemsPage() {
     async (detail: ItemDetail) => {
       setDetailFormError(null)
 
-      if (!detail.active) {
-        toast.error('활성화 API는 다음 단계에서 연결합니다.')
-        return
-      }
-
       try {
-        await deactivateItemMutation.mutateAsync(detail.sku)
+        if (detail.active) {
+          await deactivateItemMutation.mutateAsync(detail.sku)
+        } else {
+          await activateItemMutation.mutateAsync(detail.sku)
+        }
+
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['items'] }),
           queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
         ])
-        toast.success('부품이 비활성화되었습니다.')
+        toast.success(detail.active ? '부품이 비활성화되었습니다.' : '부품이 활성화되었습니다.')
       } catch (error) {
         if (!isErrorResponse(error)) {
           toast.error(getItemStatusChangeErrorMessage(error))
@@ -326,7 +328,7 @@ export function ItemsPage() {
         }
       }
     },
-    [deactivateItemMutation],
+    [activateItemMutation, deactivateItemMutation],
   )
 
   const items = data?.content ?? []
@@ -431,7 +433,7 @@ export function ItemsPage() {
           detail={itemDetail ?? null}
           formError={detailFormError}
           isLoading={isItemDetailLoading}
-          isStatusChanging={deactivateItemMutation.isPending}
+          isStatusChanging={activateItemMutation.isPending || deactivateItemMutation.isPending}
           isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
           isSubmitting={updateItemMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
