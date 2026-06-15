@@ -541,10 +541,13 @@ export function ItemDetailModal({
           </section>
         </div>
       ) : (
-        <FgEmptyState
-          description="목록에서 부품을 다시 선택해 주세요"
-          title="선택된 부품이 없습니다"
-        />
+        <div className="space-y-4">
+          {formError ? <FgNotice tone="danger">{formError}</FgNotice> : null}
+          <FgEmptyState
+            description="목록에서 부품을 다시 선택해 주세요"
+            title="선택된 부품이 없습니다"
+          />
+        </div>
       )}
     </FgModal>
   )

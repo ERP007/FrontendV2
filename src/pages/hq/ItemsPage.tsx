@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import {
   DEFAULT_ITEM_FILTER,
   getCreateItemErrorMessage,
+  getItemDetailErrorMessage,
   getItemSkuCheckErrorMessage,
   getItemStatusChangeErrorMessage,
   getUpdateItemErrorMessage,
@@ -26,6 +27,8 @@ import {
   useItemUnitsQuery,
   useItemsQuery,
   useUpdateItemMutation,
+  isItemNotFoundError,
+  isLocalItemFormError,
 } from '@/features/item'
 import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
@@ -45,6 +48,7 @@ export function ItemsPage() {
   const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
   const [detailMajorCategoryCode, setDetailMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [createFormError, setCreateFormError] = useState<string | null>(null)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
   const [detailFormError, setDetailFormError] = useState<string | null>(null)
   const [detailWarehouseCode, setDetailWarehouseCode] = useState(ALL_WAREHOUSES)
@@ -197,39 +201,54 @@ export function ItemsPage() {
     setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [])
   useEffect(() => {
-    if (!detailTarget || !isErrorResponse(itemDetailError) || itemDetailError.status !== 404) {
+    if (!detailTarget || !isErrorResponse(itemDetailError)) {
       return
     }
 
-    setDetailTarget(null)
-    setDetailFormError(null)
-    setDetailWarehouseCode(ALL_WAREHOUSES)
+    if (isItemNotFoundError(itemDetailError)) {
+      setDetailTarget(null)
+      setDetailFormError(null)
+      setDetailWarehouseCode(ALL_WAREHOUSES)
+      return
+    }
+
+    if (itemDetailError.status === 400) {
+      setDetailFormError(getItemDetailErrorMessage(itemDetailError))
+    }
   }, [detailTarget, itemDetailError])
   const handleSkuCheck = useCallback(
     async (sku: string) => {
       try {
         return await skuCheckMutation.mutateAsync(sku)
       } catch (error) {
-        throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
+        if (isLocalItemFormError(error)) {
+          throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
+        }
+
+        throw error
       }
     },
     [skuCheckMutation],
   )
   const handleCreateItem = useCallback(
     async (values: ItemFormValues) => {
+      setCreateFormError(null)
+
       try {
         await createItemMutation.mutateAsync(values)
         await queryClient.invalidateQueries({ queryKey: ['items'] })
         setIsCreateModalOpen(false)
+        setCreateFormError(null)
         toast.success('부품이 등록되었습니다.')
       } catch (error) {
-        if (isErrorResponse(error)) {
-          if (error.status !== 400 && error.status !== 409) {
-            return
-          }
+        if (!isErrorResponse(error)) {
+          toast.error(getCreateItemErrorMessage(error))
+          return
         }
 
-        toast.error(getCreateItemErrorMessage(error))
+        if (isLocalItemFormError(error)) {
+          setCreateFormError(getCreateItemErrorMessage(error))
+        }
       }
     },
     [createItemMutation],
@@ -260,7 +279,7 @@ export function ItemsPage() {
           throw error
         }
 
-        if (error.errorCode === 'ITM-019') {
+        if (isItemNotFoundError(error)) {
           await queryClient.invalidateQueries({ queryKey: ['items'] })
           setDetailTarget(null)
           setDetailFormError(null)
@@ -276,7 +295,7 @@ export function ItemsPage() {
           ])
         }
 
-        if (error.status === 400 || error.status === 409) {
+        if (isLocalItemFormError(error)) {
           setDetailFormError(getUpdateItemErrorMessage(error))
         }
 
@@ -307,7 +326,7 @@ export function ItemsPage() {
           return
         }
 
-        if (error.errorCode === 'ITM-019') {
+        if (isItemNotFoundError(error)) {
           await queryClient.invalidateQueries({ queryKey: ['items'] })
           setDetailTarget(null)
           setDetailFormError(null)
@@ -323,7 +342,7 @@ export function ItemsPage() {
           ])
         }
 
-        if (error.status === 400 || error.status === 409) {
+        if (isLocalItemFormError(error)) {
           toast.error(getItemStatusChangeErrorMessage(error))
         }
       }
@@ -360,7 +379,10 @@ export function ItemsPage() {
             <FgButton
               leftIcon={<Plus aria-hidden className="h-4 w-4" />}
               variant="primary"
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => {
+                setCreateFormError(null)
+                setIsCreateModalOpen(true)
+              }}
             >
               부품 추가
             </FgButton>
@@ -411,6 +433,7 @@ export function ItemsPage() {
       />
       {canCreateItem && isCreateModalOpen ? (
         <ItemCreateModal
+          formError={createFormError}
           isMajorCategoryLoading={isMajorCategoryLoading}
           isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
           isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
@@ -420,7 +443,10 @@ export function ItemsPage() {
           majorCategoryOptions={majorCategoryOptions}
           middleCategoryOptions={createMiddleCategoryOptions}
           open
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false)
+            setCreateFormError(null)
+          }}
           onMajorCategoryChange={handleCreateMajorCategoryChange}
           onSkuCheck={handleSkuCheck}
           onSubmit={handleCreateItem}

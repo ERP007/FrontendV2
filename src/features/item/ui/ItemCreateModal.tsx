@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { FgButton, FgInput, FgModal, FgSelect } from '@/shared/ui'
+import { FgButton, FgInput, FgModal, FgNotice, FgSelect } from '@/shared/ui'
 import type { FgSelectOption } from '@/shared/ui'
 
 import { itemFormSchema } from '../model/item-schema'
@@ -24,6 +24,7 @@ const emptyValues: ItemFormValues = {
 }
 
 export interface ItemCreateModalProps {
+  formError?: string | null
   isMajorCategoryLoading?: boolean
   isMiddleCategoryFetched?: boolean
   isMiddleCategoryLoading?: boolean
@@ -45,6 +46,7 @@ type SkuCheckState =
   | null
 
 export function ItemCreateModal({
+  formError,
   isMajorCategoryLoading = false,
   isMiddleCategoryFetched = false,
   isMiddleCategoryLoading = false,
@@ -131,6 +133,11 @@ export function ItemCreateModal({
         toast.error(result.message || '이미 사용 중인 SKU입니다.')
       }
     } catch (error) {
+      if (!(error instanceof Error)) {
+        setSkuCheckState(null)
+        return
+      }
+
       const message = error instanceof Error && error.message
         ? error.message
         : '부품 코드 중복 확인 중 오류가 발생했습니다.'
@@ -140,7 +147,9 @@ export function ItemCreateModal({
         sku: nextSku,
         status: 'error',
       })
-      toast.error(message)
+      if (message) {
+        toast.error(message)
+      }
     }
   }
 
@@ -201,6 +210,11 @@ export function ItemCreateModal({
       }}
     >
       <form className="grid grid-cols-2 gap-x-6 gap-y-5" id={FORM_ID} onSubmit={handleSubmit(submit)}>
+        {formError ? (
+          <FgNotice className="col-span-2" tone="danger">
+            {formError}
+          </FgNotice>
+        ) : null}
         <div className="flex items-start gap-2">
           <FgInput
             error={errors.sku?.message ?? skuCheckError}

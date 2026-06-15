@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 
 import {
   DEFAULT_ITEM_FILTER,
+  getItemDetailErrorMessage,
   getMockBranchWarehouseCode,
   getMockItemStockRows,
   getMockVisibleItemStockRows,
@@ -13,6 +14,7 @@ import {
   useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemsQuery,
+  isItemNotFoundError,
 } from '@/features/item'
 import type { Item, ItemFilter, ItemListParams } from '@/features/item'
 import { isErrorResponse } from '@/shared/api'
@@ -28,6 +30,7 @@ export function BranchItemsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
+  const [detailFormError, setDetailFormError] = useState<string | null>(null)
   const { data: session } = useSession()
 
   useEffect(() => {
@@ -104,13 +107,22 @@ export function BranchItemsPage() {
 
   const handleSelectItem = useCallback((item: Item) => {
     setDetailTarget(item)
+    setDetailFormError(null)
   }, [])
   useEffect(() => {
-    if (!detailTarget || !isErrorResponse(itemDetailError) || itemDetailError.status !== 404) {
+    if (!detailTarget || !isErrorResponse(itemDetailError)) {
       return
     }
 
-    setDetailTarget(null)
+    if (isItemNotFoundError(itemDetailError)) {
+      setDetailTarget(null)
+      setDetailFormError(null)
+      return
+    }
+
+    if (itemDetailError.status === 400) {
+      setDetailFormError(getItemDetailErrorMessage(itemDetailError))
+    }
   }, [detailTarget, itemDetailError])
 
   const items = data?.content ?? []
@@ -181,6 +193,7 @@ export function BranchItemsPage() {
         <ItemDetailModal
           canManage={false}
           detail={itemDetail ?? null}
+          formError={detailFormError}
           isLoading={isItemDetailLoading}
           majorCategoryOptions={majorCategoryOptions}
           open
@@ -188,7 +201,10 @@ export function BranchItemsPage() {
           stockScopeLabel={detailStockScopeLabel}
           subCategoryOptions={middleCategoryOptions}
           unitOptions={[]}
-          onClose={() => setDetailTarget(null)}
+          onClose={() => {
+            setDetailTarget(null)
+            setDetailFormError(null)
+          }}
         />
       ) : null}
     </div>
