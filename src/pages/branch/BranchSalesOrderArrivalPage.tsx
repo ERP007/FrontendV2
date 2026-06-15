@@ -5,7 +5,11 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
-import { CARRIER_TYPE_LABELS, useSalesOrderDeliverMutation } from '@/features/sales-order'
+import {
+  CARRIER_TYPE_LABELS,
+  MOCK_BRANCH_SALES_ORDER_DETAIL,
+  useSalesOrderDeliverMutation,
+} from '@/features/sales-order'
 import type { BranchSalesOrderDetail } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
@@ -17,24 +21,6 @@ import {
   FgInput,
   FgPageHeader,
 } from '@/shared/ui'
-
-const MOCK_SO: BranchSalesOrderDetail = {
-  approvedAt: '2026-06-12T09:25:00.000Z',
-  carrierType: 'VEHICLE',
-  code: 'SO-2026-0001',
-  fromWarehouse: { code: 'WH-HQ-001', name: '본사 중앙창고' },
-  invoiceNumber: 'HMC-44219-026',
-  lines: [
-    { id: 1, itemCode: 'HMC-EN-00214', itemName: '엔진오일 필터 (2.0L gasoline)', requestQuantity: 80, unit: 'EA' },
-    { id: 2, itemCode: 'HMC-BR-01102', itemName: '브레이크 패드 세트 (전륜)', requestQuantity: 40, unit: 'SET' },
-    { id: 3, itemCode: 'HMC-EN-10331', itemName: '에어 클리너 카트리지', requestQuantity: 60, unit: 'EA' },
-    { id: 4, itemCode: 'HMC-SP-00673', itemName: '스파크 플러그 (이리듐)', requestQuantity: 48, unit: 'EA' },
-    { id: 5, itemCode: 'HMC-AC-40229', itemName: '와이퍼 블레이드 24"', requestQuantity: 10, unit: 'EA' },
-    { id: 6, itemCode: 'HMC-CL-50710', itemName: '엔진 쿨런트 1L', requestQuantity: 10, unit: 'L' },
-  ],
-  status: 'APPROVED',
-  toWarehouse: { code: 'WH-04A', name: '강남 1지점 · 부품창고' },
-}
 
 function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
@@ -53,12 +39,13 @@ export function BranchSalesOrderArrivalPage() {
   const navigate = useNavigate()
   const router = useRouter()
 
-  const so: BranchSalesOrderDetail = { ...MOCK_SO, code: params.soNo ?? MOCK_SO.code }
+  const so: BranchSalesOrderDetail = {
+    ...MOCK_BRANCH_SALES_ORDER_DETAIL,
+    code: params.soNo ?? MOCK_BRANCH_SALES_ORDER_DETAIL.code,
+  }
   const { data: me } = useMeQuery()
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
-  // const [diffReason, setDiffReason] = useState('')
-  // const [memo, setMemo] = useState('')
 
   const deliverMutation = useSalesOrderDeliverMutation(so.code)
 
@@ -222,26 +209,6 @@ export function BranchSalesOrderArrivalPage() {
               </span>
             </div>
           </div>
-          {/*
-          <div className="space-y-2">
-            <span className="block text-label text-ink-2">차이 사유</span>
-            <FgSelect
-              disabled
-              options={ARRIVAL_DIFF_REASON_OPTIONS.map((option) => ({ label: option, value: option }))}
-              placeholder="차이 발생 시 선택"
-              value={diffReason || undefined}
-              onValueChange={setDiffReason}
-            />
-          </div>
-          <FgTextarea
-            label="메모"
-            maxLength={300}
-            placeholder="포장 상태, 파손 부위, 본사 전달 사항 등"
-            rows={3}
-            value={memo}
-            onChange={(event) => setMemo(event.target.value)}
-          />
-          */}
         </div>
       </FgCard>
 

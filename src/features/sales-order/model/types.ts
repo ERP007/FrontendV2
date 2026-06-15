@@ -125,14 +125,6 @@ export const REJECT_REASON_OPTIONS = [
   '기타',
 ] as const
 
-export const ARRIVAL_DIFF_REASON_OPTIONS = [
-  '배송 누락',
-  '파손',
-  '오배송',
-  '수량 오류',
-  '기타',
-] as const
-
 export interface SalesOrderFilter {
   branchCode: 'ALL' | string
   endDate: string

@@ -41,20 +41,13 @@ export {
   filterSalesOrders,
 } from './model/filter-sales-orders'
 export type { SoBranchKpi, SoHqKpi } from './model/filter-sales-orders'
-export { MY_BRANCH, SALES_ORDER_FIXTURES, SO_HQ_WAREHOUSE_OPTIONS } from './model/fixtures'
+export { SALES_ORDER_FIXTURES } from './model/fixtures'
+export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
 export { soDraftFormSchema } from './model/so-draft-schema'
 export type { SoDraftFormValues } from './model/so-draft-schema'
 export {
-  ARRIVAL_DIFF_REASON_OPTIONS,
   CARRIER_TYPE_LABELS,
   emptySoDraftLine,
-  IN_PROGRESS_STATUSES,
-  isSoDelayed,
-  REJECT_REASON_OPTIONS,
-  SO_BRANCH_STATUS_LABELS,
-  SO_BRANCH_STATUS_ORDER,
-  SO_PRIORITY_LABELS,
-  SO_STATUS_LABELS,
   SO_TAB_STATUS_MAP,
   soShortageCount,
   soShortageTotal,
@@ -82,6 +75,6 @@ export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
 export type { SoBranchOption } from './ui/SoFilterBar'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'
-export { SoArrivalLines, SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
+export { SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
 export { SoBranchTable, SoTable } from './ui/SoTable'
 export { SoTimeline } from './ui/SoTimeline'
