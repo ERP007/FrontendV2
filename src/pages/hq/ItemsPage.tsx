@@ -6,6 +6,7 @@ import {
   DEFAULT_ITEM_FILTER,
   getCreateItemErrorMessage,
   getItemSkuCheckErrorMessage,
+  getItemStatusChangeErrorMessage,
   getUpdateItemErrorMessage,
   getMockBranchWarehouseCode,
   getMockItemStockRows,
@@ -16,6 +17,7 @@ import {
   ItemTable,
   itemDetailQueryKey,
   useCreateItemMutation,
+  useDeactivateItemMutation,
   useItemCategoriesQuery,
   useItemDetailQuery,
   useItemSubCategoriesQuery,
@@ -24,7 +26,7 @@ import {
   useItemsQuery,
   useUpdateItemMutation,
 } from '@/features/item'
-import type { Item, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -96,6 +98,7 @@ export function ItemsPage() {
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
   const updateItemMutation = useUpdateItemMutation()
+  const deactivateItemMutation = useDeactivateItemMutation()
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -280,6 +283,51 @@ export function ItemsPage() {
     },
     [itemDetail, updateItemMutation],
   )
+  const handleToggleItemActive = useCallback(
+    async (detail: ItemDetail) => {
+      setDetailFormError(null)
+
+      if (!detail.active) {
+        toast.error('활성화 API는 다음 단계에서 연결합니다.')
+        return
+      }
+
+      try {
+        await deactivateItemMutation.mutateAsync(detail.sku)
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['items'] }),
+          queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
+        ])
+        toast.success('부품이 비활성화되었습니다.')
+      } catch (error) {
+        if (!isErrorResponse(error)) {
+          toast.error(getItemStatusChangeErrorMessage(error))
+          return
+        }
+
+        if (error.errorCode === 'ITM-019') {
+          await queryClient.invalidateQueries({ queryKey: ['items'] })
+          setDetailTarget(null)
+          setDetailFormError(null)
+          setDetailMajorCategoryCode('')
+          setDetailWarehouseCode(ALL_WAREHOUSES)
+          return
+        }
+
+        if (error.errorCode === 'ITM-017' || error.errorCode === 'ITM-020') {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['items'] }),
+            queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
+          ])
+        }
+
+        if (error.status === 400 || error.status === 409) {
+          toast.error(getItemStatusChangeErrorMessage(error))
+        }
+      }
+    },
+    [deactivateItemMutation],
+  )
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
@@ -383,6 +431,7 @@ export function ItemsPage() {
           detail={itemDetail ?? null}
           formError={detailFormError}
           isLoading={isItemDetailLoading}
+          isStatusChanging={deactivateItemMutation.isPending}
           isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
           isSubmitting={updateItemMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
@@ -402,6 +451,7 @@ export function ItemsPage() {
           }}
           onCategoryChange={setDetailMajorCategoryCode}
           onSubmit={handleUpdateItem}
+          onToggleActive={handleToggleItemActive}
           onWarehouseChange={canCreateItem ? setDetailWarehouseCode : undefined}
         />
       ) : null}
