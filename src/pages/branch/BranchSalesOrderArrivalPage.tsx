@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
-import { ARRIVAL_DIFF_REASON_OPTIONS, CARRIER_TYPE_LABELS } from '@/features/sales-order'
+import { CARRIER_TYPE_LABELS, useSalesOrderDeliverMutation } from '@/features/sales-order'
 import type { BranchSalesOrderDetail } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
@@ -16,8 +16,6 @@ import {
   FgDomainStatusBadge,
   FgInput,
   FgPageHeader,
-  FgSelect,
-  FgTextarea,
 } from '@/shared/ui'
 
 const MOCK_SO: BranchSalesOrderDetail = {
@@ -59,16 +57,23 @@ export function BranchSalesOrderArrivalPage() {
   const { data: me } = useMeQuery()
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
-  const [diffReason, setDiffReason] = useState('')
-  const [memo, setMemo] = useState('')
+  // const [diffReason, setDiffReason] = useState('')
+  // const [memo, setMemo] = useState('')
+
+  const deliverMutation = useSalesOrderDeliverMutation(so.code)
 
   const totalQuantity = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
 
-  function handleConfirm() {
-    toast.success(
-      `${so.code} 도착이 확정되었습니다. ${so.toWarehouse.name} 재고에 +${formatNumber(totalQuantity)} 반영됩니다.`,
-    )
-    void navigate({ to: '/branch/sales-orders' })
+  async function handleConfirm() {
+    try {
+      const result = await deliverMutation.mutateAsync({ deliveredDate: arrivalDate })
+      toast.success(
+        `${result.code} 도착이 확정되었습니다.`,
+      )
+      void navigate({ to: '/branch/sales-orders' })
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
   }
 
   return (
@@ -217,6 +222,7 @@ export function BranchSalesOrderArrivalPage() {
               </span>
             </div>
           </div>
+          {/*
           <div className="space-y-2">
             <span className="block text-label text-ink-2">차이 사유</span>
             <FgSelect
@@ -235,6 +241,7 @@ export function BranchSalesOrderArrivalPage() {
             value={memo}
             onChange={(event) => setMemo(event.target.value)}
           />
+          */}
         </div>
       </FgCard>
 
@@ -248,9 +255,10 @@ export function BranchSalesOrderArrivalPage() {
             취소
           </FgButton>
           <FgButton
+            disabled={deliverMutation.isPending}
             leftIcon={<Check aria-hidden className="h-4 w-4" />}
             variant="primary"
-            onClick={handleConfirm}
+            onClick={() => void handleConfirm()}
           >
             도착 확정
           </FgButton>

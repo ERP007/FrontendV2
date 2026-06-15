@@ -23,6 +23,11 @@ export type {
   BranchSalesOrderSortField,
 } from './api/use-branch-sales-orders-query'
 export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
+export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-mutation'
+export type {
+  DeliverSalesOrderRequest,
+  DeliverSalesOrderResponse,
+} from './api/use-sales-order-deliver-mutation'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
 export type {
   SalesOrderHistoryActor,
