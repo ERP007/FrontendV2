@@ -69,6 +69,25 @@ export const DEFAULT_USER_FILTER: UserFilter = {
   tenancyCode: 'ALL',
 }
 
+export type UserPosition = 'MANAGER' | 'STAFF'
+
+/** GET /api/users/me 응답 */
+export interface Me {
+  createdAt: string
+  email: string
+  employeeNo: string
+  joinedAt: string
+  lastChangedPassAt: string
+  lastLoginAt: string
+  name: string
+  position: UserPosition
+  role: UserRole
+  status: UserStatus
+  tenancyCode: string
+  tenancyName: string
+  userId: string
+}
+
 export type PasswordIssueMode = 'AUTO' | 'MANUAL'
 
 export interface UserFormValues {

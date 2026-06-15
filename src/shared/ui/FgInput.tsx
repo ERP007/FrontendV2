@@ -80,7 +80,7 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
           {rightIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{rightIcon}</span> : null}
         </div>
         {helperText ? (
-          <p id={helperId} className={cn('text-meta text-faint', error && 'text-danger')}>
+          <p id={helperId} className={cn('whitespace-pre-line text-meta text-faint', error && 'text-danger')}>
             {helperText}
           </p>
         ) : null}

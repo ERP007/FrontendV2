@@ -2,6 +2,7 @@ export {
   getCreateUserErrorMessage,
   useCreateUserMutation,
 } from './api/use-create-user-mutation'
+export { meQueryKey, useMeQuery } from './api/use-me-query'
 export {
   getUsersErrorMessage,
   useUsersQuery,
@@ -34,6 +35,7 @@ export type {
   FetchUsersParams,
   MyPageResponse,
   SuspendToggleResponse,
+  Me,
   User,
   UserActivity,
   UserApiRole,
@@ -45,6 +47,7 @@ export type {
   UserRoleFilter,
   UserSortBy,
   UserSortDirection,
+  UserPosition,
   UserStatus,
   UserStatusFilter,
   UserSuspensionRequest,

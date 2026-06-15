@@ -219,7 +219,7 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
           <FgDropdownMenu
             items={[
               {
-                disabled: row.original.status !== 'SHIPPED',
+                disabled: row.original.status !== 'APPROVED',
                 icon: <PackageCheck aria-hidden className="h-4 w-4" />,
                 label: '도착 확인',
                 onSelect: () => onArrival(row.original),
