@@ -6,11 +6,17 @@ import { toast } from 'sonner'
 import {
   DEFAULT_USER_FILTER,
   getCreateUserErrorMessage,
+  getResetPasswordErrorMessage,
+  getToggleUserSuspensionErrorMessage,
   getUsersErrorMessage,
   UserCreateModal,
   UserFilterBar,
+  UserPasswordResetModal,
+  UserSuspendToggleModal,
   UserTable,
   useCreateUserMutation,
+  useResetUserPasswordMutation,
+  useToggleUserSuspensionMutation,
   useUsersQuery,
   usersQueryKey,
 } from '@/features/user'
@@ -22,6 +28,7 @@ import type {
   UserSortBy,
   UserSortDirection,
 } from '@/features/user'
+import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgPageHeader, FgPagination } from '@/shared/ui'
 
@@ -32,6 +39,12 @@ type ToastId = string | number
 interface UserListSortState {
   direction: UserSortDirection
   key: UserSortBy
+}
+
+interface TemporaryPasswordToastOptions {
+  message: string
+  temporaryPassword: string
+  title: string
 }
 
 function hasTrailingHangulJamo(value: string) {
@@ -85,7 +98,7 @@ async function copyTemporaryPassword(password: string, toastId: ToastId) {
   }
 }
 
-function showUserCreationResultToast(temporaryPassword: string) {
+function showTemporaryPasswordToast({ message, temporaryPassword, title }: TemporaryPasswordToastOptions) {
   const maskedPassword = maskTemporaryPassword(temporaryPassword)
 
   toast.custom(
@@ -96,8 +109,8 @@ function showUserCreationResultToast(temporaryPassword: string) {
             <CheckCircle2 aria-hidden className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-body font-extrabold text-ink">사용자 등록 완료</p>
-            <p className="mt-1 text-label text-muted">초기 비밀번호를 안전하게 전달해 주세요.</p>
+            <p className="text-body font-extrabold text-ink">{title}</p>
+            <p className="mt-1 text-label text-muted">{message}</p>
           </div>
         </div>
         <div className="mt-4 rounded-control border border-line-soft bg-background px-3.5 py-3">
@@ -126,6 +139,14 @@ function showUserCreationResultToast(temporaryPassword: string) {
   )
 }
 
+function showUserCreationResultToast(temporaryPassword: string) {
+  showTemporaryPasswordToast({
+    message: '초기 비밀번호를 안전하게 전달해 주세요.',
+    temporaryPassword,
+    title: '사용자 등록 완료',
+  })
+}
+
 export function UsersPage() {
   const [filter, setFilter] = useState<UserFilter>(DEFAULT_USER_FILTER)
   const [query, setQuery] = useState('')
@@ -134,8 +155,15 @@ export function UsersPage() {
   const [pageSize, setPageSize] = useState(10)
   const [createOpen, setCreateOpen] = useState(false)
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
+  const [resetPasswordTarget, setResetPasswordTarget] = useState<UserListItem | null>(null)
+  const [resetPasswordErrorMessage, setResetPasswordErrorMessage] = useState<string | null>(null)
+  const [suspendToggleTarget, setSuspendToggleTarget] = useState<UserListItem | null>(null)
+  const [suspendToggleErrorMessage, setSuspendToggleErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const createUserMutation = useCreateUserMutation()
+  const resetUserPasswordMutation = useResetUserPasswordMutation()
+  const toggleUserSuspensionMutation = useToggleUserSuspensionMutation()
 
   useEffect(() => {
     const nextQuery = filter.keyword.trim()
@@ -212,6 +240,84 @@ export function UsersPage() {
     }
   }
 
+  function openResetPasswordModal(user: UserListItem) {
+    setResetPasswordErrorMessage(null)
+    setResetPasswordTarget(user)
+  }
+
+  function closeResetPasswordModal() {
+    if (resetUserPasswordMutation.isPending) {
+      return
+    }
+
+    setResetPasswordErrorMessage(null)
+    setResetPasswordTarget(null)
+  }
+
+  async function handleResetPasswordConfirm() {
+    if (!resetPasswordTarget) {
+      return
+    }
+
+    setResetPasswordErrorMessage(null)
+
+    try {
+      const response = await resetUserPasswordMutation.mutateAsync(resetPasswordTarget.userId)
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setResetPasswordTarget(null)
+
+      if (response.temporaryPassword) {
+        showTemporaryPasswordToast({
+          message: '새 임시 비밀번호를 안전하게 전달해 주세요.',
+          temporaryPassword: response.temporaryPassword,
+          title: '비밀번호 초기화 완료',
+        })
+        return
+      }
+
+      toast.success('비밀번호가 초기화되었습니다.')
+    } catch (error) {
+      setResetPasswordErrorMessage(getResetPasswordErrorMessage(error))
+    }
+  }
+
+  function openSuspendToggleModal(user: UserListItem) {
+    setSuspendToggleErrorMessage(null)
+    setSuspendToggleTarget(user)
+  }
+
+  function closeSuspendToggleModal() {
+    if (toggleUserSuspensionMutation.isPending) {
+      return
+    }
+
+    setSuspendToggleErrorMessage(null)
+    setSuspendToggleTarget(null)
+  }
+
+  async function handleSuspendToggleConfirm() {
+    if (!suspendToggleTarget) {
+      return
+    }
+
+    setSuspendToggleErrorMessage(null)
+
+    try {
+      const response = await toggleUserSuspensionMutation.mutateAsync({
+        suspended: suspendToggleTarget.status !== 'SUSPENDED',
+        userId: suspendToggleTarget.userId,
+      })
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setSuspendToggleTarget(null)
+
+      toast.success(response.status === 'SUSPENDED' ? '사용자가 정지되었습니다.' : '사용자 정지가 해제되었습니다.')
+    } catch (error) {
+      setSuspendToggleErrorMessage(getToggleUserSuspensionErrorMessage(error))
+    }
+  }
+
   const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const rangeEnd = totalCount === 0 ? 0 : Math.min(rangeStart + users.length - 1, totalCount)
 
@@ -247,6 +353,7 @@ export function UsersPage() {
         onReset={() => handleFilterChange(DEFAULT_USER_FILTER)}
       />
       <UserTable
+        currentEmployeeNo={session?.employeeNo}
         errorMessage={usersErrorMessage}
         header={
           <>
@@ -268,9 +375,12 @@ export function UsersPage() {
         sortBy={sort.key}
         sortDirection={sort.direction}
         users={users}
+        onResetPassword={openResetPasswordModal}
         onSortChange={handleSortChange}
+        onToggleSuspension={openSuspendToggleModal}
       />
       <FgPagination
+        layout="totalLeft"
         page={currentPage}
         pageSize={pageSize}
         pageSizeOptions={[10, 20, 30, 50]}
@@ -292,6 +402,22 @@ export function UsersPage() {
           setCreateOpen(false)
         }}
         onSubmit={handleCreate}
+      />
+      <UserPasswordResetModal
+        errorMessage={resetPasswordErrorMessage}
+        loading={resetUserPasswordMutation.isPending}
+        open={resetPasswordTarget !== null}
+        user={resetPasswordTarget}
+        onClose={closeResetPasswordModal}
+        onConfirm={handleResetPasswordConfirm}
+      />
+      <UserSuspendToggleModal
+        errorMessage={suspendToggleErrorMessage}
+        loading={toggleUserSuspensionMutation.isPending}
+        open={suspendToggleTarget !== null}
+        user={suspendToggleTarget}
+        onClose={closeSuspendToggleModal}
+        onConfirm={handleSuspendToggleConfirm}
       />
     </div>
   )

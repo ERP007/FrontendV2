@@ -1,5 +1,6 @@
-import { KeyRound, Pencil, UserX } from 'lucide-react'
+import { Ban, Eye, KeyRound, RotateCcw } from 'lucide-react'
 import { useMemo } from 'react'
+import { toast } from 'sonner'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
@@ -13,7 +14,10 @@ export interface UserTableProps {
   errorMessage?: string | null
   header?: ReactNode
   loading?: boolean
+  onEditUser?: (user: UserListItem) => void
+  onResetPassword?: (user: UserListItem) => void
   onSortChange?: (sortBy: UserSortBy, sortDirection: UserSortDirection) => void
+  onToggleSuspension?: (user: UserListItem) => void
   sortBy?: UserSortBy
   sortDirection?: UserSortDirection
   users: UserListItem[]
@@ -34,7 +38,10 @@ export function UserTable({
   errorMessage,
   header,
   loading = false,
+  onEditUser,
+  onResetPassword,
   onSortChange,
+  onToggleSuspension,
   sortBy,
   sortDirection,
   users,
@@ -44,7 +51,9 @@ export function UserTable({
     () => [
       {
         accessorKey: 'employeeNo',
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.employeeNo.toUpperCase()}</span>,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap font-extrabold text-ink">{row.original.employeeNo.toUpperCase()}</span>
+        ),
         enableSorting: true,
         header: '사번',
         size: 110,
@@ -57,11 +66,11 @@ export function UserTable({
             normalizeEmployeeNo(row.original.employeeNo) === normalizeEmployeeNo(currentEmployeeNo)
 
           return (
-            <span className="flex items-center gap-2.5">
+            <span className="flex min-w-56 items-center gap-3.5 whitespace-nowrap pr-7">
               <FgAvatar size="sm" />
-              <span className="font-semibold text-ink">{row.original.name}</span>
+              <strong className="shrink-0 whitespace-nowrap font-extrabold text-ink">{row.original.name}</strong>
               {isSelf ? (
-                <span className="rounded-pill bg-primary-soft px-2 py-0.5 text-micro text-primary-strong">
+                <span className="inline-flex h-6 shrink-0 items-center justify-center whitespace-nowrap rounded-pill border border-primary-line bg-primary-soft px-2.5 text-micro font-extrabold text-primary-strong">
                   본인
                 </span>
               ) : null}
@@ -70,57 +79,116 @@ export function UserTable({
         },
         enableSorting: true,
         header: '이름',
-        size: 160,
+        size: 240,
       },
       {
         accessorKey: 'email',
-        cell: ({ row }) => <span className="font-medium text-muted">{row.original.email}</span>,
+        cell: ({ row }) => <span className="block truncate font-medium text-muted">{row.original.email}</span>,
         header: '이메일',
+        size: 260,
       },
       {
         accessorKey: 'department',
-        cell: ({ row }) => <span className="font-medium text-ink-2">{row.original.department}</span>,
+        cell: ({ row }) => <span className="whitespace-nowrap font-medium text-ink-2">{row.original.department}</span>,
         header: '소속',
-        size: 140,
+        size: 160,
       },
       {
         accessorKey: 'role',
         cell: ({ row }) => (
-          <span className="text-table font-semibold tracking-wide text-ink-2">{row.original.role}</span>
+          <span className="whitespace-nowrap text-table font-extrabold tracking-wide text-ink-2">{row.original.role}</span>
         ),
         header: 'Role',
-        size: 170,
+        size: 180,
       },
       {
         accessorKey: 'status',
         cell: ({ row }) => <FgStatusBadge status={row.original.status} />,
         header: '상태',
-        size: 130,
+        meta: { cellClassName: 'whitespace-nowrap', headClassName: 'whitespace-nowrap' },
+        size: 140,
       },
       {
         accessorKey: 'joinedAt',
-        cell: ({ row }) => <span className="font-medium text-muted">{formatDate(row.original.joinedAt)}</span>,
+        cell: ({ row }) => <span className="whitespace-nowrap font-medium text-muted">{formatDate(row.original.joinedAt)}</span>,
         enableSorting: true,
         header: '가입일',
-        size: 110,
+        size: 130,
       },
       {
-        cell: () => (
-          <FgDropdownMenu
-            items={[
-              { icon: <Pencil aria-hidden className="h-4 w-4" />, label: '정보 수정' },
-              { icon: <KeyRound aria-hidden className="h-4 w-4" />, label: '비밀번호 초기화' },
-              { danger: true, icon: <UserX aria-hidden className="h-4 w-4" />, label: '계정 정지' },
-            ]}
-          />
-        ),
+        cell: ({ row }) => {
+          const user = row.original
+          const isSelf =
+            currentEmployeeNo &&
+            normalizeEmployeeNo(user.employeeNo) === normalizeEmployeeNo(currentEmployeeNo)
+          const isSuspended = user.status === 'SUSPENDED'
+          const isAdmin = user.role === 'ADMIN'
+          const resetPasswordBlockMessage = isSelf
+            ? '본인 계정의 비밀번호를 초기화할 수 없습니다.'
+            : null
+          const suspendBlockMessage = isSelf
+            ? '본인 계정의 정지 상태를 변경할 수 없습니다.'
+            : isAdmin && !isSuspended
+              ? '관리자 계정을 정지할 수 없습니다.'
+              : null
+          const suspensionLabel = isSuspended ? '정지 해제' : '계정 정지'
+          const handleResetPasswordSelect = () => {
+            if (resetPasswordBlockMessage) {
+              toast.error(resetPasswordBlockMessage)
+              return
+            }
+
+            onResetPassword?.(user)
+          }
+          const handleSuspendToggleSelect = () => {
+            if (suspendBlockMessage) {
+              toast.error(suspendBlockMessage)
+              return
+            }
+
+            onToggleSuspension?.(user)
+          }
+          const actionItems = [
+            ...(onEditUser
+              ? [
+                  {
+                    icon: <Eye aria-hidden className="h-4 w-4" />,
+                    label: '유저 상세',
+                    onSelect: () => onEditUser(user),
+                  },
+                ]
+              : []),
+            {
+              ariaDisabled: Boolean(resetPasswordBlockMessage),
+              disabled: !onResetPassword,
+              icon: <KeyRound aria-hidden className="h-4 w-4" />,
+              label: '비밀번호 초기화',
+              onSelect: handleResetPasswordSelect,
+            },
+            {
+              ariaDisabled: Boolean(suspendBlockMessage),
+              danger: !isSuspended,
+              disabled: !onToggleSuspension,
+              icon: isSuspended ? (
+                <RotateCcw aria-hidden className="h-4 w-4" />
+              ) : (
+                <Ban aria-hidden className="h-4 w-4" />
+              ),
+              label: suspensionLabel,
+              onSelect: handleSuspendToggleSelect,
+              separatorBefore: true,
+            },
+          ]
+
+          return <FgDropdownMenu items={actionItems} />
+        },
         header: '액션',
         id: 'actions',
         meta: { align: 'center' },
         size: 70,
       },
     ],
-    [currentEmployeeNo],
+    [currentEmployeeNo, onEditUser, onResetPassword, onToggleSuspension],
   )
 
   const emptyState = errorMessage ? (

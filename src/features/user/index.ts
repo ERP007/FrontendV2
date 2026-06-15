@@ -4,6 +4,14 @@ export {
 } from './api/use-create-user-mutation'
 export { meQueryKey, useMeQuery } from './api/use-me-query'
 export {
+  getResetPasswordErrorMessage,
+  useResetUserPasswordMutation,
+} from './api/use-reset-user-password-mutation'
+export {
+  getToggleUserSuspensionErrorMessage,
+  useToggleUserSuspensionMutation,
+} from './api/use-toggle-user-suspension-mutation'
+export {
   getUsersErrorMessage,
   useUsersQuery,
   usersQueryKey,
@@ -57,4 +65,6 @@ export type {
 export { MyActivityCard, MyPasswordCard, MyProfileCard } from './ui/MyPageCards'
 export { UserCreateModal } from './ui/UserCreateModal'
 export { UserFilterBar } from './ui/UserFilterBar'
+export { UserPasswordResetModal } from './ui/UserPasswordResetModal'
+export { UserSuspendToggleModal } from './ui/UserSuspendToggleModal'
 export { UserTable } from './ui/UserTable'
