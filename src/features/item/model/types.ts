@@ -53,6 +53,49 @@ export interface ItemSkuCheckResult {
   sku: string
 }
 
+export type ItemStockStatus = 'NORMAL' | 'LOW' | 'OUT'
+
+export interface ItemDetail {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  safetyStock: number
+  sku: string
+  subCategoryCode: string
+  subCategoryName: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
+export interface ItemDetailFormValues {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  subCategoryCode: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface UpdateItemRequest {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  subCategoryCode: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface ItemStockRow {
+  currentStock: number
+  safetyStock: number
+  status?: ItemStockStatus
+  warehouseCode: string
+  warehouseName: string
+}
+
 export interface CreateItemRequest {
   categoryCode: string
   name: string
@@ -122,4 +165,16 @@ export interface ItemFormValues {
   sku: string
   unit: ItemUnit
   unitPrice: number
+}
+
+export function resolveItemStockStatus(stock: Pick<ItemStockRow, 'currentStock' | 'safetyStock' | 'status'>): ItemStockStatus {
+  if (stock.status) {
+    return stock.status
+  }
+
+  if (stock.currentStock === 0) {
+    return 'OUT'
+  }
+
+  return stock.currentStock < stock.safetyStock ? 'LOW' : 'NORMAL'
 }

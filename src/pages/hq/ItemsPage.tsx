@@ -7,8 +7,10 @@ import {
   getCreateItemErrorMessage,
   getItemSkuCheckErrorMessage,
   ItemCreateModal,
+  ItemDetailModal,
   ItemFilterBar,
   ItemTable,
+  toItemDetailPreview,
   useCreateItemMutation,
   useItemCategoriesQuery,
   useItemSubCategoriesQuery,
@@ -16,7 +18,7 @@ import {
   useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
-import type { ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import type { Item, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -32,6 +34,7 @@ export function ItemsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [detailTarget, setDetailTarget] = useState<Item | null>(null)
   const { data: session } = useSession()
   const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
@@ -104,6 +107,10 @@ export function ItemsPage() {
         value: itemUnit.unit,
       })),
     [itemUnits],
+  )
+  const detail = useMemo(
+    () => (detailTarget ? toItemDetailPreview(detailTarget) : null),
+    [detailTarget],
   )
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
@@ -203,6 +210,7 @@ export function ItemsPage() {
           </span>
         }
         items={items}
+        onSelect={setDetailTarget}
       />
       <FgPagination
         page={page}
@@ -231,6 +239,20 @@ export function ItemsPage() {
           onSkuCheck={handleSkuCheck}
           onSubmit={handleCreateItem}
           unitOptions={unitOptions}
+        />
+      ) : null}
+      {detailTarget ? (
+        <ItemDetailModal
+          canManage={canCreateItem}
+          detail={detail}
+          isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
+          majorCategoryOptions={majorCategoryOptions}
+          open
+          stockRows={[]}
+          stockScopeLabel={canCreateItem ? '전체 창고' : '본인 지점 창고 기준'}
+          subCategoryOptions={middleCategoryOptions}
+          unitOptions={unitOptions}
+          onClose={() => setDetailTarget(null)}
         />
       ) : null}
     </div>

@@ -17,20 +17,28 @@ export {
   ITEM_CATEGORIES,
   ITEM_UNIT_OPTIONS,
 } from './model/types'
+export { toItemDetailPreview } from './model/detail-preview'
 export type {
   CreateItemRequest,
   CreateItemResponse,
   Item,
   ItemCategory,
+  ItemDetail,
+  ItemDetailFormValues,
   ItemFilter,
   ItemFormValues,
   ItemListParams,
   ItemListResponse,
   ItemSkuCheckResult,
+  ItemStockRow,
+  ItemStockStatus,
   ItemSubCategory,
   ItemUnit,
   ItemUnitOption,
+  UpdateItemRequest,
 } from './model/types'
+export { resolveItemStockStatus } from './model/types'
 export { ItemCreateModal } from './ui/ItemCreateModal'
+export { ItemDetailModal } from './ui/ItemDetailModal'
 export { ItemFilterBar } from './ui/ItemFilterBar'
 export { ItemTable } from './ui/ItemTable'

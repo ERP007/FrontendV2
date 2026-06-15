@@ -12,10 +12,11 @@ export interface ItemTableProps {
   emptyState?: ReactNode
   header?: ReactNode
   items: Item[]
+  onSelect?: (item: Item) => void
   onToggleActive?: (item: Item) => void
 }
 
-export function ItemTable({ emptyState, header, items, onToggleActive }: ItemTableProps) {
+export function ItemTable({ emptyState, header, items, onSelect, onToggleActive }: ItemTableProps) {
   const columns = useMemo<ColumnDef<Item>[]>(
     () => {
       const baseColumns: ColumnDef<Item>[] = [
@@ -121,5 +122,13 @@ export function ItemTable({ emptyState, header, items, onToggleActive }: ItemTab
     [onToggleActive],
   )
 
-  return <FgDataTable columns={columns} data={items} emptyState={emptyState} header={header} />
+  return (
+    <FgDataTable
+      columns={columns}
+      data={items}
+      emptyState={emptyState}
+      header={header}
+      onRowClick={onSelect}
+    />
+  )
 }
