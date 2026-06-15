@@ -46,11 +46,12 @@ export interface FgDataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
   emptyState?: ReactNode
+  enableSortingRemoval?: boolean
   header?: ReactNode
   isRowSelected?: (row: TData) => boolean
   manualSorting?: boolean
   onRowClick?: (row: TData) => void
-  onSortingChange?: OnChangeFn<SortingState>
+  onSortingChange?: (sorting: SortingState) => void
   rowClassName?: (row: TData) => string | undefined
   sorting?: SortingState
 }
@@ -60,27 +61,38 @@ export function FgDataTable<TData>({
   columns,
   data,
   emptyState,
+  enableSortingRemoval = true,
   header,
   isRowSelected,
-  manualSorting,
+  manualSorting = false,
   onRowClick,
   onSortingChange,
   rowClassName,
   sorting,
 }: FgDataTableProps<TData>) {
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
-  const isControlled = sorting !== undefined
-  const effectiveSorting = isControlled ? sorting : internalSorting
+  const currentSorting = sorting ?? internalSorting
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const nextSorting = typeof updater === 'function' ? updater(currentSorting) : updater
+
+    if (onSortingChange) {
+      onSortingChange(nextSorting)
+      return
+    }
+
+    setInternalSorting(nextSorting)
+  }
 
   const table = useReactTable({
     columns,
     data,
     defaultColumn: { enableSorting: false },
+    enableSortingRemoval,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualSorting,
-    onSortingChange: isControlled ? onSortingChange : setInternalSorting,
-    state: { sorting: effectiveSorting },
+    onSortingChange: handleSortingChange,
+    state: { sorting: currentSorting },
   })
 
   const rows = table.getRowModel().rows

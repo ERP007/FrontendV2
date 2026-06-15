@@ -30,7 +30,7 @@ export interface User {
   joinedAt: string
   name: string
   rank: string | null
-  role: UserRole
+  role: UserApiRole
   status: UserStatus
   warehouseName: string
 }
@@ -57,16 +57,16 @@ export const RANK_OPTIONS = ['사원', '주임', '대리', '과장', '차장', '
 
 export interface UserFilter {
   keyword: string
-  role: 'ALL' | UserRole
-  status: 'ALL' | UserStatus
-  warehouseName: 'ALL' | string
+  role: UserRoleFilter
+  status: UserStatusFilter
+  tenancyCode: UserTenancyCodeFilter
 }
 
 export const DEFAULT_USER_FILTER: UserFilter = {
   keyword: '',
   role: 'ALL',
   status: 'ALL',
-  warehouseName: 'ALL',
+  tenancyCode: 'ALL',
 }
 
 export type UserPosition = 'MANAGER' | 'STAFF'

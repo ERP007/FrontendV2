@@ -279,9 +279,8 @@ export function SoBranchTable({
       manualSorting
       sorting={sorting}
       onRowClick={onOpen}
-      onSortingChange={(updater) => {
+      onSortingChange={(next) => {
         if (!onSortChange) return
-        const next = typeof updater === 'function' ? updater(sorting) : updater
         const head = next[0]
         if (!head) return
         if (head.id !== 'requestedAt' && head.id !== 'desiredArrivalDate') return

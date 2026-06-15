@@ -1,4 +1,5 @@
 import type { User, UserFilter } from './types'
+import { getUserTenancyLabel } from './user-tenancy'
 
 export function filterUsers(users: User[], filter: UserFilter): User[] {
   const keyword = filter.keyword.trim().toLowerCase()
@@ -12,7 +13,11 @@ export function filterUsers(users: User[], filter: UserFilter): User[] {
 
     if (filter.role !== 'ALL' && user.role !== filter.role) return false
     if (filter.status !== 'ALL' && user.status !== filter.status) return false
-    if (filter.warehouseName !== 'ALL' && user.warehouseName !== filter.warehouseName) return false
+    if (filter.tenancyCode !== 'ALL') {
+      const tenancyLabel = getUserTenancyLabel(filter.tenancyCode)
+
+      if (user.warehouseName !== tenancyLabel && user.warehouseName !== filter.tenancyCode) return false
+    }
 
     return true
   })
