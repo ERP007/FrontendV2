@@ -3,6 +3,10 @@ import { AlertTriangle, ClipboardCheck, ClipboardList, FileEdit, Truck } from 'l
 import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgKpiCard } from '@/shared/ui'
 
+import { cn } from '@/shared/lib/cn'
+
+import type { SalesOrderStatus } from '../model/types'
+
 import type { SoBranchKpi, SoHqKpi } from '../model/filter-sales-orders'
 
 export function SoHqKpiCards({ kpi }: { kpi: SoHqKpi }) {
@@ -38,39 +42,66 @@ export function SoHqKpiCards({ kpi }: { kpi: SoHqKpi }) {
   )
 }
 
-export function SoBranchKpiCards({ kpi }: { kpi: SoBranchKpi }) {
+export interface SoBranchKpiCardsProps {
+  activeStatus?: SalesOrderStatus
+  kpi: SoBranchKpi
+  onSelect?: (status: SalesOrderStatus | undefined) => void
+}
+
+export function SoBranchKpiCards({ activeStatus, kpi, onSelect }: SoBranchKpiCardsProps) {
+  const cards: Array<{
+    footer?: string
+    icon: typeof ClipboardList
+    label: string
+    metric: number
+    status: SalesOrderStatus | undefined
+  }> = [
+    { icon: ClipboardList, label: '전체 요청', metric: kpi.totalCount, status: undefined },
+    { footer: '작성 중', icon: FileEdit, label: '임시저장', metric: kpi.draftCount, status: 'DRAFT' },
+    {
+      footer: '본사 검토 중',
+      icon: ClipboardCheck,
+      label: '출고 대기',
+      metric: kpi.requestedCount,
+      status: 'REQUESTED',
+    },
+    {
+      footer: '출고 완료 및 미수령',
+      icon: Truck,
+      label: '도착 대기',
+      metric: kpi.approvedCount,
+      status: 'APPROVED',
+    },
+  ]
+
   return (
     <div className="grid grid-cols-4 gap-5">
-      <FgKpiCard
-        icon={<ClipboardList aria-hidden className="h-4 w-4" />}
-        label="전체 요청"
-        metric={formatNumber(kpi.totalCount)}
-      />
-      <FgKpiCard
-        footer="작성 중"
-        icon={<FileEdit aria-hidden className="h-4 w-4" />}
-        label="임시저장"
-        metric={formatNumber(kpi.draftCount)}
-      />
-      <FgKpiCard
-        footer="본사 검토 중"
-        icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
-        label="출고 대기"
-        metric={formatNumber(kpi.requestedCount)}
-      />
-      <FgKpiCard
-        footer="출고 완료 및 미수령"
-        icon={<Truck aria-hidden className="h-4 w-4" />}
-        label="도착 대기"
-        metric={
-          kpi.approvedCount > 0 ? (
-            <span className="text-primary-strong">{formatNumber(kpi.approvedCount)}</span>
-          ) : (
-            formatNumber(kpi.approvedCount)
-          )
-        }
-        tone={kpi.approvedCount > 0 ? 'primary' : undefined}
-      />
+      {cards.map((card) => {
+        const Icon = card.icon
+        const isActive = card.status === activeStatus
+        const isApprovedHighlight = card.status === 'APPROVED' && kpi.approvedCount > 0
+        return (
+          <FgKpiCard
+            key={card.label}
+            className={cn(
+              onSelect && 'cursor-pointer transition-colors',
+              isActive && 'border-primary ring-2 ring-primary',
+            )}
+            footer={card.footer}
+            icon={<Icon aria-hidden className="h-4 w-4" />}
+            label={card.label}
+            metric={
+              isApprovedHighlight ? (
+                <span className="text-primary-strong">{formatNumber(card.metric)}</span>
+              ) : (
+                formatNumber(card.metric)
+              )
+            }
+            tone={isApprovedHighlight ? 'primary' : undefined}
+            onClick={onSelect ? () => onSelect(card.status) : undefined}
+          />
+        )
+      })}
     </div>
   )
 }

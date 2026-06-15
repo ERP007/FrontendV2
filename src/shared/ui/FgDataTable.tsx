@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
-import type { ColumnDef, RowData, SortingState } from '@tanstack/react-table'
+import type { ColumnDef, OnChangeFn, RowData, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
@@ -48,8 +48,11 @@ export interface FgDataTableProps<TData> {
   emptyState?: ReactNode
   header?: ReactNode
   isRowSelected?: (row: TData) => boolean
+  manualSorting?: boolean
   onRowClick?: (row: TData) => void
+  onSortingChange?: OnChangeFn<SortingState>
   rowClassName?: (row: TData) => string | undefined
+  sorting?: SortingState
 }
 
 export function FgDataTable<TData>({
@@ -59,10 +62,15 @@ export function FgDataTable<TData>({
   emptyState,
   header,
   isRowSelected,
+  manualSorting,
   onRowClick,
+  onSortingChange,
   rowClassName,
+  sorting,
 }: FgDataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
+  const isControlled = sorting !== undefined
+  const effectiveSorting = isControlled ? sorting : internalSorting
 
   const table = useReactTable({
     columns,
@@ -70,8 +78,9 @@ export function FgDataTable<TData>({
     defaultColumn: { enableSorting: false },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: { sorting },
+    manualSorting,
+    onSortingChange: isControlled ? onSortingChange : setInternalSorting,
+    state: { sorting: effectiveSorting },
   })
 
   const rows = table.getRowModel().rows

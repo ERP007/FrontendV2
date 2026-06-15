@@ -71,6 +71,31 @@ export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
   REQUESTED: 'REQUESTED',
 }
 
+export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
+  'DRAFT',
+  'REQUESTED',
+  'APPROVED',
+  'DELIVERED',
+  'CANCELED',
+  'REJECTED',
+]
+
+export const SO_BRANCH_STATUS_LABELS: Record<SalesOrderStatus, string> = {
+  APPROVED: '도착 대기',
+  CANCELED: '취소',
+  DELIVERED: '입고',
+  DRAFT: '임시저장',
+  REJECTED: '거절',
+  REQUESTED: '출고 대기',
+}
+
+export const SO_TAB_STATUS_MAP: Record<SoStatusTab, SalesOrderStatus[] | undefined> = {
+  ALL: undefined,
+  CLOSED: ['REJECTED', 'CANCELED'],
+  DONE: ['DELIVERED'],
+  IN_PROGRESS: ['REQUESTED', 'APPROVED'],
+}
+
 export const SO_PRIORITY_LABELS: Record<SoPriority, string> = {
   NORMAL: '일반',
   URGENT: '긴급',
@@ -102,10 +127,10 @@ export const ARRIVAL_DIFF_REASON_OPTIONS = [
 
 export interface SalesOrderFilter {
   branchCode: 'ALL' | string
-  from: string
-  keyword: string
+  endDate: string
+  search: string
+  startDate: string
   status: 'ALL' | SalesOrderStatus
-  to: string
 }
 
 /** SO-04 상태 탭 */
