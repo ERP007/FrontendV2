@@ -10,7 +10,7 @@ import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/types'
 
 import type { SoLine, SoPriority } from '../model/types'
 
-const MAX_LINES = 30
+const MAX_LINES = 50
 
 export interface SoDraftLineSearchPanelProps {
   onSelect: (patch: Partial<SoLine>) => void

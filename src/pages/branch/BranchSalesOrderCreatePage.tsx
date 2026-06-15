@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useRouter } from '@tanstack/react-router'
-import { AlertTriangle, Box, Calendar, Clock, Lock, Send } from 'lucide-react'
+import { AlertTriangle, Box, Calendar, Lock, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -35,8 +35,6 @@ import {
   FgSelect,
   FgTextarea,
 } from '@/shared/ui'
-
-const DRAFT_REQ_NO = 'REQ-2026-0513'
 
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
 
@@ -165,6 +163,7 @@ export function BranchSalesOrderCreatePage() {
     formState: { errors },
     handleSubmit,
     register,
+    watch,
   } = useForm<SoDraftFormValues>({
     defaultValues: emptyDraftValues,
     resolver: zodResolver(soDraftFormSchema),
@@ -177,6 +176,14 @@ export function BranchSalesOrderCreatePage() {
 
   const urgentCount = lines.filter((line) => line.itemCode !== null && line.priority === 'URGENT').length
   const totalQuantity = lines.reduce((sum, line) => sum + (line.itemCode ? line.quantity : 0), 0)
+  const filledUnits = Array.from(
+    new Set(lines.filter((line) => line.itemCode !== null && line.unit).map((line) => line.unit as string)),
+  )
+  const totalUnitLabel = filledUnits.length === 1 ? filledUnits[0] : '(복합)'
+
+  const notifyInvalid = () => {
+    toast.error('필수 입력값을 확인해주세요.')
+  }
 
   const submit = handleSubmit(() => {
     const completed = lines.filter((line) => line.itemCode !== null)
@@ -191,9 +198,9 @@ export function BranchSalesOrderCreatePage() {
     }
 
     setLinesError(null)
-    toast.success(`${DRAFT_REQ_NO} 발주 요청이 제출되었습니다. 본사 승인을 기다립니다.`)
+    toast.success(`발주 요청이 제출되었습니다. 본사 승인을 기다립니다.`)
     void navigate({ to: '/branch/sales-orders' })
-  })
+  }, notifyInvalid)
 
   const handleDraftSave = handleSubmit(async (values) => {
     const payloadLines = lines
@@ -223,7 +230,7 @@ export function BranchSalesOrderCreatePage() {
     } catch {
       // 전역 인터셉터가 toast 처리
     }
-  })
+  }, notifyInvalid)
 
   return (
     <div className="fg-content">
@@ -255,7 +262,6 @@ export function BranchSalesOrderCreatePage() {
           <div className="mb-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <h2 className="text-section text-ink">요청 정보</h2>
-              <FgBadge variant="outline">{DRAFT_REQ_NO} (임시)</FgBadge>
             </div>
             <span className="text-meta font-medium text-faint">
               요청자 · {me?.name ?? '—'} / {me?.tenancyName ?? '—'} · {roleLabel(me?.role)}
@@ -279,11 +285,16 @@ export function BranchSalesOrderCreatePage() {
             </div>
             <FgInput
               error={errors.desiredArrivalDate?.message}
+              inputClassName="appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
               label="도착 희망일"
               leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
               required
               type="date"
               {...register('desiredArrivalDate')}
+              onClick={(event) => {
+                const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void }
+                input.showPicker?.()
+              }}
             />
             <Controller
               control={control}
@@ -309,6 +320,8 @@ export function BranchSalesOrderCreatePage() {
             <FgTextarea
               error={errors.memo?.message}
               label="메모"
+              labelTrailing={`${(watch('memo') ?? '').length} / 500`}
+              maxLength={500}
               placeholder="요청 사유, 우선 출고 사항 등을 본사에 전달"
               rows={3}
               {...register('memo')}
@@ -326,9 +339,8 @@ export function BranchSalesOrderCreatePage() {
         {linesError ? <FgNotice tone="danger">{linesError}</FgNotice> : null}
 
         <FgCard className="flex items-center justify-between gap-4" compact>
-          <span className="flex items-center gap-1.5 text-label font-medium text-muted">
-            <Clock aria-hidden className="h-4 w-4 text-faint" />
-            제출 후 본사 승인까지 평균 9시간 · 총 {formatNumber(totalQuantity)} EA
+          <span className="text-label font-medium text-muted">
+            총 {formatNumber(totalQuantity)} {totalUnitLabel}
           </span>
           <span
             className={
