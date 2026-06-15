@@ -12,9 +12,11 @@ import {
   SoDraftLineEditor,
   soDraftFormSchema,
   useCreateSalesOrderDraftMutation,
+  useCreateSalesOrderMutation,
 } from '@/features/sales-order'
 import type {
   CreateSalesOrderDraftRequest,
+  CreateSalesOrderRequest,
   SoDraftFormValues,
   SoDraftLine,
 } from '@/features/sales-order'
@@ -26,7 +28,6 @@ import { roleLabel } from '@/shared/config/session'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { formatNumber } from '@/shared/lib/format'
 import {
-  FgBadge,
   FgButton,
   FgCard,
   FgInput,
@@ -173,6 +174,7 @@ export function BranchSalesOrderCreatePage() {
   const [linesError, setLinesError] = useState<string | null>(null)
 
   const createDraftMutation = useCreateSalesOrderDraftMutation()
+  const createSalesOrderMutation = useCreateSalesOrderMutation()
 
   const urgentCount = lines.filter((line) => line.itemCode !== null && line.priority === 'URGENT').length
   const totalQuantity = lines.reduce((sum, line) => sum + (line.itemCode ? line.quantity : 0), 0)
@@ -185,8 +187,10 @@ export function BranchSalesOrderCreatePage() {
     toast.error('필수 입력값을 확인해주세요.')
   }
 
-  const submit = handleSubmit(() => {
-    const completed = lines.filter((line) => line.itemCode !== null)
+  const submit = handleSubmit(async (values) => {
+    const completed = lines.filter(
+      (line): line is SoDraftLine & { itemCode: string } => line.itemCode !== null,
+    )
 
     if (completed.length === 0) {
       setLinesError('요청 품목을 1개 이상 추가하세요.')
@@ -198,8 +202,25 @@ export function BranchSalesOrderCreatePage() {
     }
 
     setLinesError(null)
-    toast.success(`발주 요청이 제출되었습니다. 본사 승인을 기다립니다.`)
-    void navigate({ to: '/branch/sales-orders' })
+
+    const payload: CreateSalesOrderRequest = {
+      desiredArrivalDate: values.desiredArrivalDate,
+      lines: completed.map((line) => ({
+        itemCode: line.itemCode,
+        priority: line.priority,
+        quantity: line.quantity,
+      })),
+      memo: values.memo,
+      warehouseCode: values.warehouseCode,
+    }
+
+    try {
+      const order = await createSalesOrderMutation.mutateAsync(payload)
+      toast.success(`${order.code} 발주 요청이 제출되었습니다.`)
+      void navigate({ to: '/branch/sales-orders' })
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
   }, notifyInvalid)
 
   const handleDraftSave = handleSubmit(async (values) => {
@@ -245,6 +266,7 @@ export function BranchSalesOrderCreatePage() {
               임시저장
             </FgButton>
             <FgButton
+              disabled={createSalesOrderMutation.isPending}
               leftIcon={<Send aria-hidden className="h-4 w-4" />}
               variant="primary"
               onClick={submit}
@@ -367,6 +389,7 @@ export function BranchSalesOrderCreatePage() {
             임시저장
           </FgButton>
           <FgButton
+            disabled={createSalesOrderMutation.isPending}
             leftIcon={<Send aria-hidden className="h-4 w-4" />}
             type="submit"
             variant="primary"

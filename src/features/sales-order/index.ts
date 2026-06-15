@@ -4,6 +4,11 @@ export type {
   SalesOrderDraftLinePayload,
   SalesOrderDraftResponse,
 } from './api/use-create-sales-order-draft-mutation'
+export { useCreateSalesOrderMutation } from './api/use-create-sales-order-mutation'
+export type {
+  CreateSalesOrderRequest,
+  SalesOrderResponse,
+} from './api/use-create-sales-order-mutation'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
