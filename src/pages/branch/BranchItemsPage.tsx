@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 
 import {
   DEFAULT_ITEM_FILTER,
-  getItemDetailErrorMessage,
+  getItemErrorDetail,
   getMockBranchWarehouseCode,
   getMockItemStockRows,
   getMockVisibleItemStockRows,
@@ -14,7 +14,7 @@ import {
   useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemsQuery,
-  isItemNotFoundError,
+  isItemErrorCode,
 } from '@/features/item'
 import type { Item, ItemFilter, ItemListParams } from '@/features/item'
 import { isErrorResponse } from '@/shared/api'
@@ -23,6 +23,7 @@ import { formatNumber } from '@/shared/lib/format'
 import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
+const ITEM_DETAIL_ERROR_FALLBACK = '부품 상세 조회 중 오류가 발생했습니다.'
 
 export function BranchItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
@@ -114,14 +115,14 @@ export function BranchItemsPage() {
       return
     }
 
-    if (isItemNotFoundError(itemDetailError)) {
+    if (itemDetailError.status === 404 || isItemErrorCode(itemDetailError, 'ITM-019')) {
       setDetailTarget(null)
       setDetailFormError(null)
       return
     }
 
     if (itemDetailError.status === 400) {
-      setDetailFormError(getItemDetailErrorMessage(itemDetailError))
+      setDetailFormError(getItemErrorDetail(itemDetailError, ITEM_DETAIL_ERROR_FALLBACK))
     }
   }, [detailTarget, itemDetailError])
 

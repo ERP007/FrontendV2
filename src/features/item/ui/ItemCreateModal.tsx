@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { FgButton, FgInput, FgModal, FgNotice, FgSelect } from '@/shared/ui'
 import type { FgSelectOption } from '@/shared/ui'
 
+import { getItemErrorDetail } from '../model/item-error-policy'
 import { itemFormSchema } from '../model/item-schema'
 
 import type { ItemFormValues, ItemSkuCheckResult } from '../model/types'
@@ -133,14 +134,7 @@ export function ItemCreateModal({
         toast.error(result.message || '이미 사용 중인 SKU입니다.')
       }
     } catch (error) {
-      if (!(error instanceof Error)) {
-        setSkuCheckState(null)
-        return
-      }
-
-      const message = error instanceof Error && error.message
-        ? error.message
-        : '부품 코드 중복 확인 중 오류가 발생했습니다.'
+      const message = getItemErrorDetail(error, '부품 코드 중복 확인 중 오류가 발생했습니다.')
 
       setSkuCheckState({
         message,

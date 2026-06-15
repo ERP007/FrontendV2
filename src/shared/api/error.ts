@@ -18,7 +18,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function parseJsonString(value: string) {
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue || (!trimmedValue.startsWith('{') && !trimmedValue.startsWith('['))) {
+    return null
+  }
+
+  try {
+    return JSON.parse(trimmedValue) as unknown
+  } catch {
+    return null
+  }
+}
+
 function normalizeErrorResponseShape(value: unknown, fallbackStatus = 0): ErrorResponse | null {
+  if (typeof value === 'string') {
+    const parsedValue = parseJsonString(value)
+
+    return parsedValue ? normalizeErrorResponseShape(parsedValue, fallbackStatus) : null
+  }
+
   if (!isRecord(value)) {
     return null
   }
@@ -61,12 +81,6 @@ export function isErrorResponse(value: unknown): value is ErrorResponse {
 }
 
 export function normalizeErrorResponse(error: unknown): ErrorResponse {
-  const normalizedError = normalizeErrorResponseShape(error)
-
-  if (normalizedError) {
-    return normalizedError
-  }
-
   if (axios.isAxiosError(error)) {
     const responseData = error.response?.data
     const normalizedResponseData = normalizeErrorResponseShape(responseData, error.response?.status ?? 0)
@@ -75,12 +89,30 @@ export function normalizeErrorResponse(error: unknown): ErrorResponse {
       return normalizedResponseData
     }
 
+    const requestResponseText = typeof error.request?.responseText === 'string'
+      ? error.request.responseText
+      : null
+    const normalizedRequestResponse = normalizeErrorResponseShape(
+      requestResponseText,
+      error.response?.status ?? 0,
+    )
+
+    if (normalizedRequestResponse) {
+      return normalizedRequestResponse
+    }
+
     return {
       status: error.response?.status ?? 0,
       detail: error.message || '요청 처리 중 오류가 발생했습니다.',
       errorCode: error.response ? UNKNOWN_ERROR_CODE : NETWORK_ERROR_CODE,
       timestamp: getTimestamp(),
     }
+  }
+
+  const normalizedError = normalizeErrorResponseShape(error)
+
+  if (normalizedError) {
+    return normalizedError
   }
 
   if (error instanceof Error) {

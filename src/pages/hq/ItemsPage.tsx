@@ -4,11 +4,7 @@ import { toast } from 'sonner'
 
 import {
   DEFAULT_ITEM_FILTER,
-  getCreateItemErrorMessage,
-  getItemDetailErrorMessage,
-  getItemSkuCheckErrorMessage,
-  getItemStatusChangeErrorMessage,
-  getUpdateItemErrorMessage,
+  getItemErrorDetail,
   getMockBranchWarehouseCode,
   getMockItemStockRows,
   getMockVisibleItemStockRows,
@@ -27,8 +23,7 @@ import {
   useItemUnitsQuery,
   useItemsQuery,
   useUpdateItemMutation,
-  isItemNotFoundError,
-  isLocalItemFormError,
+  isItemErrorCode,
 } from '@/features/item'
 import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
@@ -39,6 +34,10 @@ import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
 const ITEM_CREATE_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF'])
 const ALL_WAREHOUSES = 'ALL'
+const CREATE_ITEM_ERROR_FALLBACK = '부품 등록 중 오류가 발생했습니다.'
+const ITEM_DETAIL_ERROR_FALLBACK = '부품 상세 조회 중 오류가 발생했습니다.'
+const UPDATE_ITEM_ERROR_FALLBACK = '부품 수정 중 오류가 발생했습니다.'
+const ITEM_STATUS_CHANGE_ERROR_FALLBACK = '부품 상태 변경 중 오류가 발생했습니다.'
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
@@ -205,7 +204,7 @@ export function ItemsPage() {
       return
     }
 
-    if (isItemNotFoundError(itemDetailError)) {
+    if (itemDetailError.status === 404 || isItemErrorCode(itemDetailError, 'ITM-019')) {
       setDetailTarget(null)
       setDetailFormError(null)
       setDetailWarehouseCode(ALL_WAREHOUSES)
@@ -213,21 +212,11 @@ export function ItemsPage() {
     }
 
     if (itemDetailError.status === 400) {
-      setDetailFormError(getItemDetailErrorMessage(itemDetailError))
+      setDetailFormError(getItemErrorDetail(itemDetailError, ITEM_DETAIL_ERROR_FALLBACK))
     }
   }, [detailTarget, itemDetailError])
   const handleSkuCheck = useCallback(
-    async (sku: string) => {
-      try {
-        return await skuCheckMutation.mutateAsync(sku)
-      } catch (error) {
-        if (isLocalItemFormError(error)) {
-          throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
-        }
-
-        throw error
-      }
-    },
+    (sku: string) => skuCheckMutation.mutateAsync(sku),
     [skuCheckMutation],
   )
   const handleCreateItem = useCallback(
@@ -242,12 +231,12 @@ export function ItemsPage() {
         toast.success('부품이 등록되었습니다.')
       } catch (error) {
         if (!isErrorResponse(error)) {
-          toast.error(getCreateItemErrorMessage(error))
+          toast.error(getItemErrorDetail(error, CREATE_ITEM_ERROR_FALLBACK))
           return
         }
 
-        if (isLocalItemFormError(error)) {
-          setCreateFormError(getCreateItemErrorMessage(error))
+        if (error.status === 400 || error.status === 409) {
+          setCreateFormError(getItemErrorDetail(error, CREATE_ITEM_ERROR_FALLBACK))
         }
       }
     },
@@ -275,11 +264,11 @@ export function ItemsPage() {
         toast.success('부품 정보가 수정되었습니다.')
       } catch (error) {
         if (!isErrorResponse(error)) {
-          toast.error(getUpdateItemErrorMessage(error))
+          toast.error(getItemErrorDetail(error, UPDATE_ITEM_ERROR_FALLBACK))
           throw error
         }
 
-        if (isItemNotFoundError(error)) {
+        if (error.status === 404 || isItemErrorCode(error, 'ITM-019')) {
           await queryClient.invalidateQueries({ queryKey: ['items'] })
           setDetailTarget(null)
           setDetailFormError(null)
@@ -288,15 +277,15 @@ export function ItemsPage() {
           throw error
         }
 
-        if (error.errorCode === 'ITM-020') {
+        if (isItemErrorCode(error, 'ITM-020')) {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['items'] }),
             queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(itemDetail.sku) }),
           ])
         }
 
-        if (isLocalItemFormError(error)) {
-          setDetailFormError(getUpdateItemErrorMessage(error))
+        if (error.status === 400 || error.status === 409) {
+          setDetailFormError(getItemErrorDetail(error, UPDATE_ITEM_ERROR_FALLBACK))
         }
 
         throw error
@@ -322,11 +311,11 @@ export function ItemsPage() {
         toast.success(detail.active ? '부품이 비활성화되었습니다.' : '부품이 활성화되었습니다.')
       } catch (error) {
         if (!isErrorResponse(error)) {
-          toast.error(getItemStatusChangeErrorMessage(error))
+          toast.error(getItemErrorDetail(error, ITEM_STATUS_CHANGE_ERROR_FALLBACK))
           return
         }
 
-        if (isItemNotFoundError(error)) {
+        if (error.status === 404 || isItemErrorCode(error, 'ITM-019')) {
           await queryClient.invalidateQueries({ queryKey: ['items'] })
           setDetailTarget(null)
           setDetailFormError(null)
@@ -335,15 +324,15 @@ export function ItemsPage() {
           return
         }
 
-        if (error.errorCode === 'ITM-017' || error.errorCode === 'ITM-020') {
+        if (isItemErrorCode(error, 'ITM-017') || isItemErrorCode(error, 'ITM-020')) {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['items'] }),
             queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
           ])
         }
 
-        if (isLocalItemFormError(error)) {
-          toast.error(getItemStatusChangeErrorMessage(error))
+        if (error.status === 400 || error.status === 409) {
+          toast.error(getItemErrorDetail(error, ITEM_STATUS_CHANGE_ERROR_FALLBACK))
         }
       }
     },

@@ -27,13 +27,8 @@ export {
   ITEM_UNIT_OPTIONS,
 } from './model/types'
 export {
-  getCreateItemErrorMessage,
-  getItemDetailErrorMessage,
-  getItemSkuCheckErrorMessage,
-  getItemStatusChangeErrorMessage,
-  getUpdateItemErrorMessage,
-  isItemNotFoundError,
-  isLocalItemFormError,
+  getItemErrorDetail,
+  isItemErrorCode,
 } from './model/item-error-policy'
 export {
   getMockBranchWarehouseCode,
