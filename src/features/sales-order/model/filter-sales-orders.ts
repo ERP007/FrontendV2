@@ -7,26 +7,26 @@ import type { SalesOrder, SalesOrderFilter, SoStatusTab } from './types'
 export function createDefaultSoFilter(): SalesOrderFilter {
   return {
     branchCode: 'ALL',
-    from: dayjs().subtract(30, 'day').format('YYYY-MM-DD'),
-    keyword: '',
+    endDate: dayjs().format('YYYY-MM-DD'),
+    search: '',
+    startDate: dayjs().subtract(30, 'day').format('YYYY-MM-DD'),
     status: 'ALL',
-    to: dayjs().format('YYYY-MM-DD'),
   }
 }
 
 export function filterSalesOrders(orders: SalesOrder[], filter: SalesOrderFilter): SalesOrder[] {
-  const keyword = filter.keyword.trim().toLowerCase()
+  const search = filter.search.trim().toLowerCase()
 
   return orders
     .filter((order) => {
-      if (keyword) {
+      if (search) {
         const matches =
-          order.reqNo.toLowerCase().includes(keyword) ||
-          order.branchName.toLowerCase().includes(keyword) ||
+          order.reqNo.toLowerCase().includes(search) ||
+          order.branchName.toLowerCase().includes(search) ||
           order.lines.some(
             (line) =>
-              line.itemName.toLowerCase().includes(keyword) ||
-              line.sku.toLowerCase().includes(keyword),
+              line.itemName.toLowerCase().includes(search) ||
+              line.sku.toLowerCase().includes(search),
           )
         if (!matches) return false
       }
@@ -35,8 +35,8 @@ export function filterSalesOrders(orders: SalesOrder[], filter: SalesOrderFilter
       if (filter.branchCode !== 'ALL' && order.branchCode !== filter.branchCode) return false
 
       const requestedDate = order.requestedAt.slice(0, 10)
-      if (filter.from && requestedDate < filter.from) return false
-      if (filter.to && requestedDate > filter.to) return false
+      if (filter.startDate && requestedDate < filter.startDate) return false
+      if (filter.endDate && requestedDate > filter.endDate) return false
 
       return true
     })
@@ -75,17 +75,8 @@ export function deriveSoHqKpi(orders: SalesOrder[]): SoHqKpi {
 }
 
 export interface SoBranchKpi {
-  arrivingCount: number
-  pendingApprovalCount: number
-  pendingShipCount: number
+  approvedCount: number
+  draftCount: number
+  requestedCount: number
   totalCount: number
-}
-
-export function deriveSoBranchKpi(orders: SalesOrder[]): SoBranchKpi {
-  return {
-    arrivingCount: orders.filter((order) => order.status === 'APPROVED').length,
-    pendingApprovalCount: orders.filter((order) => order.status === 'REQUESTED').length,
-    pendingShipCount: orders.filter((order) => order.status === 'APPROVED').length,
-    totalCount: orders.length,
-  }
 }
