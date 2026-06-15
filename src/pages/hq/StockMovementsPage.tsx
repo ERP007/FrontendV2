@@ -1,3 +1,4 @@
+import { useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
 import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -25,7 +26,12 @@ const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '
 const MAX_RANGE_DAYS = 365
 
 export function StockMovementsPage() {
-  const [filter, setFilter] = useState<MovementFilter>(createDefaultMovementFilter)
+  // 재고 조회 상세 패널에서 넘어온 sku를 검색어 초기값으로 채운다(선택적).
+  const { keyword: keywordParam } = useSearch({ strict: false }) as { keyword?: string }
+  const [filter, setFilter] = useState<MovementFilter>(() => ({
+    ...createDefaultMovementFilter(),
+    keyword: keywordParam ?? '',
+  }))
   const [sort, setSort] = useState<MovementSort>(DEFAULT_MOVEMENT_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)

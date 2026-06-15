@@ -1,5 +1,5 @@
 import { Building2, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -7,7 +7,7 @@ import {
   DEFAULT_WAREHOUSE_FILTER,
   DEFAULT_WAREHOUSE_SORT,
   useBranchLocationCreateMutation,
-  useBranchLocationsQuery,
+  useUnassignedBranchLocationsQuery,
   useWarehouseActiveMutation,
   useWarehouseCreateMutation,
   useWarehouseDetailQuery,
@@ -30,8 +30,11 @@ import { FgButton, FgCard, FgPageHeader } from '@/shared/ui'
 /** 창고/지점 추가·수정·활성전환을 수행할 수 있는 역할(백엔드 인가와 동일). */
 const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 
+/** 창고 조회 첫 진입 검색 기본값은 '활성'(ERP-252). 드롭다운용 DEFAULT_WAREHOUSE_FILTER(전체)와 구분한다. */
+const INITIAL_WAREHOUSE_FILTER: WarehouseFilter = { ...DEFAULT_WAREHOUSE_FILTER, status: 'ACTIVE' }
+
 export function WarehousesPage() {
-  const [filter, setFilter] = useState<WarehouseFilter>(DEFAULT_WAREHOUSE_FILTER)
+  const [filter, setFilter] = useState<WarehouseFilter>(INITIAL_WAREHOUSE_FILTER)
   const [sort, setSort] = useState<WarehouseSort>(DEFAULT_WAREHOUSE_SORT)
   const [createOpen, setCreateOpen] = useState(false)
   const [branchModalOpen, setBranchModalOpen] = useState(false)
@@ -50,7 +53,8 @@ export function WarehousesPage() {
   })
 
   // 지점 드롭다운은 창고 추가/수정 폼에서만 필요 → 폼이 열릴 때만 조회한다(진입 시 불필요한 호출 방지).
-  const branchesQuery = useBranchLocationsQuery(createOpen || editCode !== null)
+  // 1:1 매핑이라 미할당 지점만 선택 가능하다(등록). 수정 시엔 현재 지점을 합쳐 보여준다.
+  const unassignedQuery = useUnassignedBranchLocationsQuery(createOpen || editCode !== null)
   // 수정 프리필: 목록에 없는 branchId·address·version까지 상세 조회로 채운다.
   const detailQuery = useWarehouseDetailQuery(editCode)
 
@@ -61,10 +65,19 @@ export function WarehousesPage() {
 
   const warehouses = listQuery.data?.content ?? []
   const totalElements = listQuery.data?.totalElements ?? warehouses.length
-  const branches = branchesQuery.data ?? []
+  const unassignedBranches = useMemo(() => unassignedQuery.data ?? [], [unassignedQuery.data])
 
   const editInitial =
     detailQuery.data && detailQuery.data.code === editCode ? detailQuery.data : null
+
+  // 수정 모달은 미할당 지점 + 현재 지점(자기 자신)을 함께 노출한다(1:1이라 현재 지점은 미할당 목록에 없으므로 합친다).
+  const editBranches = useMemo(() => {
+    if (!editInitial || editInitial.branchId == null) return unassignedBranches
+    const current = { id: editInitial.branchId, name: editInitial.branchName ?? '' }
+    return unassignedBranches.some((branch) => branch.id === current.id)
+      ? unassignedBranches
+      : [current, ...unassignedBranches]
+  }, [editInitial, unassignedBranches])
 
   function handleCreate(values: WarehouseFormValues) {
     createMutation.mutate(values, {
@@ -142,7 +155,7 @@ export function WarehousesPage() {
         filter={filter}
         onChange={setFilter}
         onReset={() => {
-          setFilter(DEFAULT_WAREHOUSE_FILTER)
+          setFilter(INITIAL_WAREHOUSE_FILTER)
           setSort(DEFAULT_WAREHOUSE_SORT)
         }}
       />
@@ -164,14 +177,14 @@ export function WarehousesPage() {
         />
       )}
       <WarehouseFormModal
-        branches={branches}
+        branches={unassignedBranches}
         open={createOpen}
         submitting={createMutation.isPending}
         onClose={() => setCreateOpen(false)}
         onSubmit={handleCreate}
       />
       <WarehouseFormModal
-        branches={branches}
+        branches={editBranches}
         initial={editInitial}
         open={editInitial !== null}
         submitting={updateMutation.isPending}

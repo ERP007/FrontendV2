@@ -87,6 +87,10 @@ const stockMovementsRoute = createRoute({
   component: StockMovementsPage,
   getParentRoute: () => shellRoute,
   path: '/stock-movements',
+  // 재고 조회 상세 패널 '전체 이력 보기'에서 sku를 keyword로 넘겨받는다(선택적).
+  validateSearch: (search: Record<string, unknown>): { keyword?: string } => ({
+    keyword: typeof search.keyword === 'string' ? search.keyword : undefined,
+  }),
 })
 
 const itemsRoute = createRoute({

@@ -18,6 +18,8 @@ export interface Stock {
   safetyStock: number
   sku: string
   status: StockStatus
+  /** 아이템(SKU) 활성 여부. false면 비활성 부품 → 상태에 '비활성화' 표시 + 행 흐리게. (구 응답 호환 위해 옵셔널) */
+  itemActive?: boolean
   /** 창고 활성 여부. false면 비활성 창고 재고 → 부품명·코드를 흐리게 표시. (구 응답 호환 위해 옵셔널) */
   warehouseActive?: boolean
   warehouseCode: string
@@ -33,13 +35,11 @@ export interface StockKpi {
   totalSkuCount: number
 }
 
-/** swagger WarehouseStockResponse */
+/** swagger WarehouseStockResponse — 상세 패널은 활성 창고만 노출한다(비활성 창고 행은 서버에서 제외). */
 export interface WarehouseStock {
   quantity: number
   safetyStock: number
   status: StockStatus
-  /** 창고 활성 여부. false면 비활성 창고 → 상세 패널에서 흐리게 표시. (구 응답 호환 위해 옵셔널) */
-  warehouseActive?: boolean
   warehouseCode: string
   warehouseId: number
   warehouseName: string

@@ -92,8 +92,19 @@ export function WarehouseTable({
         cell: ({ row }) => (
           <span className="font-medium text-ink-2">{row.original.branchName ?? '—'}</span>
         ),
+        enableSorting: true,
         header: '소속 지점',
+        id: 'branch',
         size: 150,
+      },
+      {
+        accessorKey: 'address',
+        // 주소는 최대 2줄까지 표시하고 넘치면 말줄임한다(ERP-252).
+        cell: ({ row }) => (
+          <span className="line-clamp-2 font-medium text-muted">{row.original.address || '—'}</span>
+        ),
+        header: '주소',
+        size: 240,
       },
       {
         accessorKey: 'active',
@@ -143,6 +154,8 @@ export function WarehouseTable({
         </span>
       }
       manualSorting
+      // 주소 2줄·행간격 확보를 위해 행 높이를 키운다(ERP-252).
+      rowClassName={() => '[&>td]:h-16'}
       sorting={sortingState}
       onRowClick={canManage ? onEdit : undefined}
       onSortingChange={handleSortingChange}

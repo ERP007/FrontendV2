@@ -118,6 +118,15 @@ export function StocksPage() {
     setPage(1)
   }
 
+  // 비활성 창고·비활성 아이템 행은 상세 패널을 열지 않는다(IV-01: 조회만 가능, 수정 불가).
+  function handleSelectStock(stock: Stock) {
+    if (stock.warehouseActive === false || stock.itemActive === false) {
+      toast.info('비활성 창고·부품의 상세는 표시되지 않습니다.')
+      return
+    }
+    setSelectedStock(stock)
+  }
+
   function handleAdjustSubmit(values: AdjustmentFormValues) {
     if (!selectedStock) return
 
@@ -231,7 +240,7 @@ export function StocksPage() {
               }
               selectedId={selectedStock?.id ?? null}
               stocks={stocks}
-              onSelect={(stock) => setSelectedStock(stock)}
+              onSelect={handleSelectStock}
             />
           )}
           <FgPagination
@@ -253,7 +262,12 @@ export function StocksPage() {
             detail={detail}
             loading={detailQuery.isLoading}
             onAdjust={() => setAdjustOpen(true)}
-            onViewHistory={() => void navigate({ to: '/stock-movements' })}
+            onViewHistory={() =>
+              void navigate({
+                to: '/stock-movements',
+                search: selectedStock ? { keyword: selectedStock.sku } : {},
+              })
+            }
           />
         </div>
       </div>

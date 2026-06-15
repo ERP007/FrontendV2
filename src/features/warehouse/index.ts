@@ -1,5 +1,9 @@
 export { useBranchLocationCreateMutation } from './api/use-branch-location-mutations'
 export { branchLocationsQueryKey, useBranchLocationsQuery } from './api/use-branch-locations-query'
+export {
+  unassignedBranchLocationsQueryKey,
+  useUnassignedBranchLocationsQuery,
+} from './api/use-unassigned-branch-locations-query'
 export { useWarehouseDetailQuery } from './api/use-warehouse-detail-query'
 export { useWarehouseListQuery, warehouseListQueryKey } from './api/use-warehouse-list-query'
 export {

@@ -20,9 +20,9 @@ export interface Warehouse {
 
 /**
  * 목록 조회 응답 항목(swagger WarehouseResponse).
- * 상세 응답(WarehouseDetailResponse)과 달리 address·branchId·version은 포함하지 않는다.
+ * 상세 응답(WarehouseDetailResponse)과 달리 branchId·version은 포함하지 않는다(address는 목록에도 포함).
  */
-export type WarehouseListItem = Omit<Warehouse, 'address' | 'branchId' | 'version'>
+export type WarehouseListItem = Omit<Warehouse, 'branchId' | 'version'>
 
 /** swagger BranchLocationResponse */
 export interface BranchLocation {
@@ -54,8 +54,8 @@ export interface WarehouseFormValues {
   type: WarehouseType
 }
 
-/** 헤더 클릭 정렬 대상. 백엔드 WarehouseSort 지원 컬럼(code/name/type)으로 한정한다. */
-export type WarehouseSortField = 'code' | 'name' | 'type'
+/** 헤더 클릭 정렬 대상. 백엔드 WarehouseSort 지원 컬럼(code/name/type/branch)으로 한정한다. */
+export type WarehouseSortField = 'code' | 'name' | 'type' | 'branch'
 export type WarehouseSortDirection = 'asc' | 'desc'
 
 export interface WarehouseSort {

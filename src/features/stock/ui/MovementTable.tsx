@@ -42,7 +42,7 @@ function SortableHead({ className, field, label, onSortChange, sort }: SortableH
     >
       <button
         className={cn(
-          'flex h-11 w-full items-center justify-start gap-1 px-5 font-semibold transition-colors hover:text-ink-2',
+          'flex h-11 w-full items-center justify-start gap-1 whitespace-nowrap px-5 font-semibold transition-colors hover:text-ink-2',
           active ? 'text-ink-2' : 'text-faint',
         )}
         type="button"
@@ -85,8 +85,10 @@ function MovementRow({ movement }: { movement: Movement }) {
         <span className="ml-1 text-meta font-medium text-faint">{movement.unit}</span>
       </FgTableCell>
       <FgTableCell>
-        <span className="font-medium text-ink-2">{movementSourceLabel(movement)}</span>
-        <span className="ml-2 text-meta font-medium text-faint">{movement.sourceRef}</span>
+        <span className="flex flex-col gap-0.5">
+          <span className="font-medium text-ink-2">{movementSourceLabel(movement)}</span>
+          <span className="text-meta font-medium text-faint">{movement.sourceRef}</span>
+        </span>
       </FgTableCell>
       <FgTableCell>
         <span className="flex items-center gap-2">
@@ -143,7 +145,7 @@ export function MovementTable({
         <FgTable>
           <FgTableHeader>
             <tr>
-              <SortableHead className="w-24" field="occurredAt" label="일시" onSortChange={onSortChange} sort={sort} />
+              <SortableHead className="w-28" field="occurredAt" label="일시" onSortChange={onSortChange} sort={sort} />
               <FgTableHead>부품</FgTableHead>
               <FgTableHead className="w-36">창고</FgTableHead>
               <FgTableHead className="w-28">유형</FgTableHead>
