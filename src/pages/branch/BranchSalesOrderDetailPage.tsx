@@ -1,11 +1,12 @@
-import { useParams } from '@tanstack/react-router'
-import { Calendar, FileText, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { Ban, Calendar, Edit3, FileText, PackageCheck, Send, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import { CARRIER_TYPE_LABELS, SoHistoryTimeline } from '@/features/sales-order'
 import type { BranchSalesOrderDetail } from '@/features/sales-order'
-import { formatDateTime, formatNumber } from '@/shared/lib/format'
-import { FgBadge, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
+import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
+import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
 const MOCK_SO: BranchSalesOrderDetail = {
   approvedAt: '2026-06-12T09:25:00.000Z',
@@ -21,7 +22,7 @@ const MOCK_SO: BranchSalesOrderDetail = {
     { id: 5, itemCode: 'HMC-AC-40229', itemName: '와이퍼 블레이드 24"', requestQuantity: 10, unit: 'EA' },
     { id: 6, itemCode: 'HMC-CL-50710', itemName: '엔진 쿨런트 1L', requestQuantity: 10, unit: 'L' },
   ],
-  status: 'APPROVED',
+  status: 'DRAFT',
   toWarehouse: { code: 'WH-04A', name: '강남 1지점 · 부품창고' },
 }
 
@@ -38,12 +39,64 @@ function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; valu
 }
 
 export function BranchSalesOrderDetailPage() {
+  const navigate = useNavigate()
   const params = useParams({ strict: false })
   const so: BranchSalesOrderDetail = { ...MOCK_SO, code: params.soNo ?? MOCK_SO.code }
+
+  function renderActions() {
+    if (so.status === 'DRAFT') {
+      return (
+        <>
+          <FgButton
+            leftIcon={<Edit3 aria-hidden className="h-4 w-4" />}
+            onClick={() => toast.info('수정 화면은 준비 중입니다.')}
+          >
+            수정하기
+          </FgButton>
+          <FgButton
+            leftIcon={<Send aria-hidden className="h-4 w-4" />}
+            variant="primary"
+            onClick={() => toast.info('제출 API 연결 예정입니다.')}
+          >
+            제출하기
+          </FgButton>
+        </>
+      )
+    }
+    if (so.status === 'REQUESTED') {
+      return (
+        <FgButton
+          leftIcon={<Ban aria-hidden className="h-4 w-4" />}
+          variant="danger"
+          onClick={() => toast.info('취소 API 연결 예정입니다.')}
+        >
+          취소하기
+        </FgButton>
+      )
+    }
+    if (so.status === 'APPROVED') {
+      return (
+        <FgButton
+          leftIcon={<PackageCheck aria-hidden className="h-4 w-4" />}
+          variant="primary"
+          onClick={() =>
+            void navigate({
+              params: { soNo: so.code },
+              to: '/branch/sales-orders/$soNo/arrival',
+            })
+          }
+        >
+          입고하기
+        </FgButton>
+      )
+    }
+    return null
+  }
 
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={renderActions()}
         badge={<FgDomainStatusBadge status={so.status} />}
         breadcrumbs={[
           { label: '발주' },
@@ -66,7 +119,18 @@ export function BranchSalesOrderDetailPage() {
               <InfoCell
                 icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
                 label="본사 출고 일자"
-                value={so.approvedAt ? formatDateTime(so.approvedAt) : '—'}
+                value={
+                  so.approvedAt ? (
+                    <span>
+                      {formatDate(so.approvedAt)}
+                      <span className="ml-1.5 text-meta font-medium text-faint">
+                        {formatTime(so.approvedAt)}
+                      </span>
+                    </span>
+                  ) : (
+                    '—'
+                  )
+                }
               />
               <InfoCell
                 icon={<FileText aria-hidden className="h-3.5 w-3.5" />}
