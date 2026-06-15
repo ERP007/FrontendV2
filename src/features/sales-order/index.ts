@@ -9,11 +9,11 @@ export type {
   CreateSalesOrderRequest,
   SalesOrderResponse,
 } from './api/use-create-sales-order-mutation'
+export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
   createDefaultSoFilter,
-  deriveSoBranchKpi,
   deriveSoHqKpi,
   filterSalesOrders,
 } from './model/filter-sales-orders'

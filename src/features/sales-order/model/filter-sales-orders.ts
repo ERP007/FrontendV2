@@ -75,17 +75,8 @@ export function deriveSoHqKpi(orders: SalesOrder[]): SoHqKpi {
 }
 
 export interface SoBranchKpi {
-  arrivingCount: number
-  pendingApprovalCount: number
-  pendingShipCount: number
+  approvedCount: number
+  draftCount: number
+  requestedCount: number
   totalCount: number
-}
-
-export function deriveSoBranchKpi(orders: SalesOrder[]): SoBranchKpi {
-  return {
-    arrivingCount: orders.filter((order) => order.status === 'APPROVED').length,
-    pendingApprovalCount: orders.filter((order) => order.status === 'REQUESTED').length,
-    pendingShipCount: orders.filter((order) => order.status === 'APPROVED').length,
-    totalCount: orders.length,
-  }
 }

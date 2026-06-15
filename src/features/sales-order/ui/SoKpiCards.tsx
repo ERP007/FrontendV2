@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, ClipboardList, PackageCheck, Truck } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, ClipboardList, FileEdit, Truck } from 'lucide-react'
 
 import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgKpiCard } from '@/shared/ui'
@@ -42,29 +42,34 @@ export function SoBranchKpiCards({ kpi }: { kpi: SoBranchKpi }) {
   return (
     <div className="grid grid-cols-4 gap-5">
       <FgKpiCard
-        footer="최근 30일 기준"
         icon={<ClipboardList aria-hidden className="h-4 w-4" />}
         label="전체 요청"
         metric={formatNumber(kpi.totalCount)}
       />
       <FgKpiCard
+        footer="작성 중"
+        icon={<FileEdit aria-hidden className="h-4 w-4" />}
+        label="임시저장"
+        metric={formatNumber(kpi.draftCount)}
+      />
+      <FgKpiCard
         footer="본사 검토 중"
         icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
-        label="승인 대기"
-        metric={formatNumber(kpi.pendingApprovalCount)}
-      />
-      <FgKpiCard
-        footer="본사 출고 준비 중"
-        icon={<Truck aria-hidden className="h-4 w-4" />}
         label="출고 대기"
-        metric={formatNumber(kpi.pendingShipCount)}
+        metric={formatNumber(kpi.requestedCount)}
       />
       <FgKpiCard
-        icon={<PackageCheck aria-hidden className="h-4 w-4" />}
+        footer="출고 완료 및 미수령"
+        icon={<Truck aria-hidden className="h-4 w-4" />}
         label="도착 대기"
-        metric={<span className="text-primary-strong">{formatNumber(kpi.arrivingCount)}</span>}
-        tag={<FgBadge variant="primary">도착 확인 →</FgBadge>}
-        tone="primary"
+        metric={
+          kpi.approvedCount > 0 ? (
+            <span className="text-primary-strong">{formatNumber(kpi.approvedCount)}</span>
+          ) : (
+            formatNumber(kpi.approvedCount)
+          )
+        }
+        tone={kpi.approvedCount > 0 ? 'primary' : undefined}
       />
     </div>
   )

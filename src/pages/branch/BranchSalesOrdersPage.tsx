@@ -5,21 +5,19 @@ import { useMemo, useState } from 'react'
 import {
   applyStatusTab,
   createDefaultSoFilter,
-  deriveSoBranchKpi,
   filterSalesOrders,
-  MY_BRANCH,
-  SALES_ORDER_FIXTURES,
   SoBranchKpiCards,
   SoBranchTable,
   SoFilterBar,
+  useSalesOrderBranchKpiQuery,
 } from '@/features/sales-order'
-import type { SalesOrderFilter, SoStatusTab } from '@/features/sales-order'
+import type { SalesOrder, SalesOrderFilter, SoStatusTab } from '@/features/sales-order'
 import { formatNumber } from '@/shared/lib/format'
-import { FgBadge, FgButton, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
+import { FgButton, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }]
 
-const MY_ORDERS = SALES_ORDER_FIXTURES.filter((order) => order.branchCode === MY_BRANCH.code)
+const EMPTY_ORDERS: SalesOrder[] = []
 
 export function BranchSalesOrdersPage() {
   const navigate = useNavigate()
@@ -28,8 +26,8 @@ export function BranchSalesOrdersPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  const kpi = useMemo(() => deriveSoBranchKpi(MY_ORDERS), [])
-  const filtered = useMemo(() => filterSalesOrders(MY_ORDERS, filter), [filter])
+  const { data: kpi } = useSalesOrderBranchKpiQuery()
+  const filtered = useMemo(() => filterSalesOrders(EMPTY_ORDERS, filter), [filter])
   const tabbed = useMemo(() => applyStatusTab(filtered, tab), [filtered, tab])
 
   const tabCounts = useMemo(
@@ -65,15 +63,10 @@ export function BranchSalesOrdersPage() {
             발주 요청 등록
           </FgButton>
         }
-        badge={
-          <FgBadge variant="primary">
-            {MY_BRANCH.name} · {MY_BRANCH.code}
-          </FgBadge>
-        }
         breadcrumbs={breadcrumbs}
         title="내 지점 발주 요청"
       />
-      <SoBranchKpiCards kpi={kpi} />
+      {kpi ? <SoBranchKpiCards kpi={kpi} /> : null}
       <SoFilterBar
         filter={filter}
         searchPlaceholder="요청번호 또는 부품명·코드 검색"
