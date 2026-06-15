@@ -4,8 +4,10 @@ export interface OAuth2DebugToken {
   expiresAt: string | null
   issuedAt: string | null
   scopes?: string[]
+  tokenPresent: boolean
+  tokenSha256?: string | null
   tokenType?: string
-  tokenValue: string
+  tokenValue?: string | null
   userRole?: unknown
   claims: Record<string, unknown>
 }
@@ -13,7 +15,8 @@ export interface OAuth2DebugToken {
 export interface OAuth2DebugRefreshToken {
   expiresAt: string | null
   issuedAt: string | null
-  tokenValue: string
+  tokenPresent: boolean
+  tokenSha256?: string | null
 }
 
 export interface OAuth2DebugTokenResponse {
@@ -32,10 +35,13 @@ export async function logOAuth2DebugToken() {
   const token = await fetchOAuth2DebugToken()
 
   console.group('[ERP debug] OAuth2 token')
-  console.log('accessToken.tokenValue', token.accessToken.tokenValue)
+  console.log('accessToken.tokenPresent', token.accessToken.tokenPresent)
+  console.log('accessToken.tokenValue', token.accessToken.tokenValue ?? null)
+  console.log('accessToken.tokenSha256', token.accessToken.tokenSha256 ?? null)
   console.log('accessToken.userRole', token.accessToken.userRole)
   console.log('accessToken.claims', token.accessToken.claims)
-  console.log('refreshToken.tokenValue', token.refreshToken?.tokenValue ?? null)
+  console.log('refreshToken.tokenPresent', token.refreshToken?.tokenPresent ?? false)
+  console.log('refreshToken.tokenSha256', token.refreshToken?.tokenSha256 ?? null)
   console.log('raw', token)
   console.groupEnd()
 
