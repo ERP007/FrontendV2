@@ -1,8 +1,10 @@
+export { useHqWarehousesQuery } from './api/use-hq-warehouses-query'
 export { BRANCH_LOCATION_FIXTURES, WAREHOUSE_FIXTURES } from './model/fixtures'
 export { filterWarehouses } from './model/filter-warehouses'
 export { DEFAULT_WAREHOUSE_FILTER } from './model/types'
 export type {
   BranchLocation,
+  HqWarehouseSummary,
   Warehouse,
   WarehouseFilter,
   WarehouseFormValues,

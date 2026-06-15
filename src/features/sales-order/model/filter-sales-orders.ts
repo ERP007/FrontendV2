@@ -83,7 +83,7 @@ export interface SoBranchKpi {
 
 export function deriveSoBranchKpi(orders: SalesOrder[]): SoBranchKpi {
   return {
-    arrivingCount: orders.filter((order) => order.status === 'SHIPPED').length,
+    arrivingCount: orders.filter((order) => order.status === 'APPROVED').length,
     pendingApprovalCount: orders.filter((order) => order.status === 'REQUESTED').length,
     pendingShipCount: orders.filter((order) => order.status === 'APPROVED').length,
     totalCount: orders.length,

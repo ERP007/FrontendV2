@@ -48,8 +48,8 @@ export function BranchSalesOrderArrivalPage() {
   const router = useRouter()
 
   const so =
-    SALES_ORDER_FIXTURES.find((order) => order.reqNo === params.soNo && order.status === 'SHIPPED') ??
-    SALES_ORDER_FIXTURES.find((order) => order.status === 'SHIPPED') ??
+    SALES_ORDER_FIXTURES.find((order) => order.reqNo === params.soNo && order.status === 'APPROVED') ??
+    SALES_ORDER_FIXTURES.find((order) => order.status === 'APPROVED') ??
     SALES_ORDER_FIXTURES[0]
 
   const [deliveredMap, setDeliveredMap] = useState<Record<number, number>>(() =>

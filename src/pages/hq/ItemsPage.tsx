@@ -16,7 +16,7 @@ import {
   useItemUnitsQuery,
   useItemsQuery,
 } from '@/features/item'
-import type { ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import type { ItemFilter, ItemFormValues } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -44,9 +44,9 @@ export function ItemsPage() {
     return () => window.clearTimeout(timeoutId)
   }, [filter.keyword])
 
-  const itemListParams = useMemo<ItemListParams>(
-    () => ({ ...filter, keyword: debouncedKeyword, page, size: pageSize }),
-    [debouncedKeyword, filter, page, pageSize],
+  const itemListFilter = useMemo<ItemFilter>(
+    () => ({ ...filter, keyword: debouncedKeyword }),
+    [debouncedKeyword, filter],
   )
   const selectedMajorCategoryCode = filter.majorCategory === 'ALL' ? undefined : filter.majorCategory
   const {
@@ -69,7 +69,7 @@ export function ItemsPage() {
     isFetching: isItemUnitsFetching,
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
-  const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const { data, isFetching, isLoading } = useItemsQuery(itemListFilter, page, pageSize)
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
 
