@@ -10,6 +10,10 @@ export {
   getItemSkuCheckErrorMessage,
   useItemSkuCheckMutation,
 } from './api/use-item-sku-check-mutation'
+export {
+  itemDetailQueryKey,
+  useItemDetailQuery,
+} from './api/use-item-detail-query'
 export { useItemUnitsQuery } from './api/use-item-units-query'
 export { useItemsQuery } from './api/use-items-query'
 export {
@@ -17,7 +21,6 @@ export {
   ITEM_CATEGORIES,
   ITEM_UNIT_OPTIONS,
 } from './model/types'
-export { toItemDetailPreview } from './model/detail-preview'
 export {
   getMockBranchWarehouseCode,
   getMockItemStockRows,

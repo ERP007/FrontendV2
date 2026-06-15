@@ -9,12 +9,13 @@ import {
   ItemDetailModal,
   ItemFilterBar,
   ItemTable,
-  toItemDetailPreview,
   useItemCategoriesQuery,
+  useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemsQuery,
 } from '@/features/item'
 import type { Item, ItemFilter, ItemListParams } from '@/features/item'
+import { isErrorResponse } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
@@ -53,6 +54,11 @@ export function BranchItemsPage() {
     isLoading: isMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(selectedMajorCategoryCode)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const {
+    data: itemDetail,
+    error: itemDetailError,
+    isLoading: isItemDetailLoading,
+  } = useItemDetailQuery(detailTarget?.code ?? null)
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -69,10 +75,6 @@ export function BranchItemsPage() {
         value: category.categoryCode,
       })),
     [middleCategories],
-  )
-  const detail = useMemo(
-    () => (detailTarget ? toItemDetailPreview(detailTarget) : null),
-    [detailTarget],
   )
   const detailAllStockRows = useMemo(
     () => (detailTarget ? getMockItemStockRows(detailTarget.code) : []),
@@ -103,6 +105,13 @@ export function BranchItemsPage() {
   const handleSelectItem = useCallback((item: Item) => {
     setDetailTarget(item)
   }, [])
+  useEffect(() => {
+    if (!detailTarget || !isErrorResponse(itemDetailError) || itemDetailError.status !== 404) {
+      return
+    }
+
+    setDetailTarget(null)
+  }, [detailTarget, itemDetailError])
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
@@ -171,7 +180,8 @@ export function BranchItemsPage() {
       {detailTarget ? (
         <ItemDetailModal
           canManage={false}
-          detail={detail}
+          detail={itemDetail ?? null}
+          isLoading={isItemDetailLoading}
           majorCategoryOptions={majorCategoryOptions}
           open
           stockRows={detailStockRows}

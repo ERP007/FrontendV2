@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Check, Info, Loader2, Package, Power, RotateCcw } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { Check, Info, Loader2, Package, Pencil, Power, RotateCcw } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
@@ -131,6 +131,7 @@ export function ItemDetailModal({
   warehouseOptions = [],
   warehouseValue,
 }: ItemDetailModalProps) {
+  const [isEditing, setIsEditing] = useState(false)
   const {
     control,
     formState: { errors },
@@ -151,15 +152,18 @@ export function ItemDetailModal({
     if (detail) {
       reset(toFormValues(detail))
       onCategoryChange?.(detail.categoryCode)
+      setIsEditing(false)
       return
     }
 
     reset(emptyValues)
+    setIsEditing(false)
   }, [detail, onCategoryChange, open, reset])
 
   const selectedCategoryCode = useWatch({ control, name: 'categoryCode' })
-  const selectedUnit = useWatch({ control, name: 'unit' })
-  const canEdit = canManage && Boolean(detail?.active) && Boolean(onSubmit)
+  const selectedUnit = useWatch({ control, name: 'unit' }) || detail?.unit || 'EA'
+  const canEnterEdit = canManage && Boolean(detail?.active)
+  const canEdit = canEnterEdit && isEditing
   const hasWarehouseFilter = canManage && warehouseOptions.length > 0 && Boolean(onWarehouseChange)
   const categoryOptions = useMemo(
     () => ensureOption(majorCategoryOptions, detail?.categoryCode, detail?.categoryName),
@@ -224,11 +228,26 @@ export function ItemDetailModal({
       ...values,
       name: values.name.trim(),
     })
+    setIsEditing(false)
   }
 
-  function renderSubmitButton(size: 'md' | 'sm'): ReactNode {
+  function renderEditButton(size: 'md' | 'sm'): ReactNode {
     if (!detail?.active) {
       return null
+    }
+
+    if (!isEditing) {
+      return (
+        <FgButton
+          leftIcon={<Pencil aria-hidden className="h-4 w-4" />}
+          disabled={isStatusChanging || isSubmitting}
+          size={size}
+          variant="soft"
+          onClick={() => setIsEditing(true)}
+        >
+          수정
+        </FgButton>
+      )
     }
 
     return (
@@ -241,7 +260,29 @@ export function ItemDetailModal({
         type="submit"
         variant="primary"
       >
-        수정
+        저장
+      </FgButton>
+    )
+  }
+
+  function renderCancelEditButton(size: 'md' | 'sm'): ReactNode {
+    if (!isEditing) {
+      return null
+    }
+
+    return (
+      <FgButton
+        disabled={isSubmitting}
+        size={size}
+        onClick={() => {
+          if (detail) {
+            reset(toFormValues(detail))
+            onCategoryChange?.(detail.categoryCode)
+          }
+          setIsEditing(false)
+        }}
+      >
+        취소
       </FgButton>
     )
   }
@@ -253,7 +294,7 @@ export function ItemDetailModal({
 
     return (
       <FgButton
-        disabled={!onToggleActive || isSubmitting}
+        disabled={!onToggleActive || isSubmitting || isEditing}
         leftIcon={detail.active ? <Power aria-hidden className="h-4 w-4" /> : <RotateCcw aria-hidden className="h-4 w-4" />}
         loading={isStatusChanging}
         size={size}
@@ -269,7 +310,8 @@ export function ItemDetailModal({
 
   const headerActions = detail && canManage ? (
     <>
-      {renderSubmitButton('sm')}
+      {renderCancelEditButton('sm')}
+      {renderEditButton('sm')}
       {renderStatusButton('sm')}
     </>
   ) : null
@@ -278,7 +320,10 @@ export function ItemDetailModal({
     <>
       <FgButton onClick={onClose}>닫기</FgButton>
       {detail && canManage ? (
-        renderSubmitButton('md')
+        <>
+          {renderCancelEditButton('md')}
+          {renderEditButton('md')}
+        </>
       ) : null}
     </>
   )
@@ -350,58 +395,70 @@ export function ItemDetailModal({
                 required={canEdit}
                 {...register('name')}
               />
-              <Controller
-                control={control}
-                name="categoryCode"
-                render={({ field }) => (
-                  <FgSelect
-                    disabled={!canEdit || isCategoryLoading}
-                    error={errors.categoryCode?.message}
-                    label="대분류"
-                    options={categoryOptions}
-                    placeholder={isCategoryLoading ? '대분류 불러오는 중' : '대분류 선택'}
-                    required={canEdit}
-                    value={field.value || undefined}
-                    onValueChange={(value) => {
-                      field.onChange(value)
-                      setValue('subCategoryCode', '', { shouldValidate: false })
-                      onCategoryChange?.(value)
-                    }}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="subCategoryCode"
-                render={({ field }) => (
-                  <FgSelect
-                    disabled={!canEdit || !selectedCategoryCode || isSubCategoryLoading}
-                    error={errors.subCategoryCode?.message}
-                    label="중분류"
-                    options={normalizedSubCategoryOptions}
-                    placeholder={isSubCategoryLoading ? '중분류 불러오는 중' : '중분류 선택'}
-                    required={canEdit}
-                    value={field.value || undefined}
-                    onValueChange={field.onChange}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name="unit"
-                render={({ field }) => (
-                  <FgSelect
-                    disabled={!canEdit || isUnitLoading}
-                    error={errors.unit?.message}
-                    label="단위"
-                    options={normalizedUnitOptions}
-                    placeholder={isUnitLoading ? '단위 불러오는 중' : '단위 선택'}
-                    required={canEdit}
-                    value={field.value || undefined}
-                    onValueChange={field.onChange}
-                  />
-                )}
-              />
+              {canEdit ? (
+                <Controller
+                  control={control}
+                  name="categoryCode"
+                  render={({ field }) => (
+                    <FgSelect
+                      disabled={isCategoryLoading}
+                      error={errors.categoryCode?.message}
+                      label="대분류"
+                      options={categoryOptions}
+                      placeholder={isCategoryLoading ? '대분류 불러오는 중' : '대분류 선택'}
+                      required
+                      value={field.value || undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        setValue('subCategoryCode', '', { shouldValidate: false })
+                        onCategoryChange?.(value)
+                      }}
+                    />
+                  )}
+                />
+              ) : (
+                <FgInput disabled label="대분류" value={detail.categoryName} />
+              )}
+              {canEdit ? (
+                <Controller
+                  control={control}
+                  name="subCategoryCode"
+                  render={({ field }) => (
+                    <FgSelect
+                      disabled={!selectedCategoryCode || isSubCategoryLoading}
+                      error={errors.subCategoryCode?.message}
+                      label="중분류"
+                      options={normalizedSubCategoryOptions}
+                      placeholder={isSubCategoryLoading ? '중분류 불러오는 중' : '중분류 선택'}
+                      required
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    />
+                  )}
+                />
+              ) : (
+                <FgInput disabled label="중분류" value={detail.subCategoryName} />
+              )}
+              {canEdit ? (
+                <Controller
+                  control={control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FgSelect
+                      disabled={isUnitLoading}
+                      error={errors.unit?.message}
+                      label="단위"
+                      options={normalizedUnitOptions}
+                      placeholder={isUnitLoading ? '단위 불러오는 중' : '단위 선택'}
+                      required
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    />
+                  )}
+                />
+              ) : (
+                <FgInput disabled label="단위" value={detail.unit} />
+              )}
               <FgInput
                 disabled={!canEdit}
                 error={errors.safetyStock?.message}

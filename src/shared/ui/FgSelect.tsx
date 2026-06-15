@@ -41,6 +41,7 @@ export function FgSelect({
   value,
 }: FgSelectProps) {
   const helperText = error ?? hint
+  const selectedOption = options.find((option) => option.value === value)
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -62,7 +63,9 @@ export function FgSelect({
         >
           <span className="flex min-w-0 items-center gap-3">
             {leftIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{leftIcon}</span> : null}
-            <Select.Value placeholder={placeholder} />
+            <span className="min-w-0 truncate">
+              <Select.Value placeholder={placeholder}>{selectedOption?.label}</Select.Value>
+            </span>
           </span>
           <Select.Icon asChild>
             <ChevronDown aria-hidden className="h-4 w-4 text-faint" />

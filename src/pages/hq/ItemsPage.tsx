@@ -13,9 +13,9 @@ import {
   ItemDetailModal,
   ItemFilterBar,
   ItemTable,
-  toItemDetailPreview,
   useCreateItemMutation,
   useItemCategoriesQuery,
+  useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemSkuCheckMutation,
   useItemUnitsQuery,
@@ -37,6 +37,7 @@ export function ItemsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
+  const [detailMajorCategoryCode, setDetailMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
   const [detailWarehouseCode, setDetailWarehouseCode] = useState(ALL_WAREHOUSES)
@@ -73,11 +74,21 @@ export function ItemsPage() {
     isLoading: isCreateMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(createMajorCategoryCode || undefined)
   const {
+    data: detailMiddleCategories = [],
+    isFetching: isDetailMiddleCategoryFetching,
+    isLoading: isDetailMiddleCategoryLoading,
+  } = useItemSubCategoriesQuery(detailMajorCategoryCode || undefined)
+  const {
     data: itemUnits = [],
     isFetching: isItemUnitsFetching,
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const {
+    data: itemDetail,
+    error: itemDetailError,
+    isLoading: isItemDetailLoading,
+  } = useItemDetailQuery(detailTarget?.code ?? null)
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
 
@@ -105,6 +116,14 @@ export function ItemsPage() {
       })),
     [createMiddleCategories],
   )
+  const detailMiddleCategoryOptions = useMemo(
+    () =>
+      detailMiddleCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [detailMiddleCategories],
+  )
   const unitOptions = useMemo(
     () =>
       itemUnits.map((itemUnit) => ({
@@ -112,10 +131,6 @@ export function ItemsPage() {
         value: itemUnit.unit,
       })),
     [itemUnits],
-  )
-  const detail = useMemo(
-    () => (detailTarget ? toItemDetailPreview(detailTarget) : null),
-    [detailTarget],
   )
   const detailAllStockRows = useMemo(
     () => (detailTarget ? getMockItemStockRows(detailTarget.code) : []),
@@ -170,6 +185,14 @@ export function ItemsPage() {
     setDetailTarget(item)
     setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [])
+  useEffect(() => {
+    if (!detailTarget || !isErrorResponse(itemDetailError) || itemDetailError.status !== 404) {
+      return
+    }
+
+    setDetailTarget(null)
+    setDetailWarehouseCode(ALL_WAREHOUSES)
+  }, [detailTarget, itemDetailError])
   const handleSkuCheck = useCallback(
     async (sku: string) => {
       try {
@@ -299,20 +322,24 @@ export function ItemsPage() {
       {detailTarget ? (
         <ItemDetailModal
           canManage={canCreateItem}
-          detail={detail}
+          detail={itemDetail ?? null}
+          isLoading={isItemDetailLoading}
+          isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           open
           stockRows={detailStockRows}
           stockScopeLabel={detailStockScopeLabel}
-          subCategoryOptions={middleCategoryOptions}
+          subCategoryOptions={detailMiddleCategoryOptions}
           unitOptions={unitOptions}
           warehouseOptions={canCreateItem ? detailWarehouseOptions : undefined}
           warehouseValue={canCreateItem ? detailWarehouseCode : undefined}
           onClose={() => {
             setDetailTarget(null)
+            setDetailMajorCategoryCode('')
             setDetailWarehouseCode(ALL_WAREHOUSES)
           }}
+          onCategoryChange={setDetailMajorCategoryCode}
           onWarehouseChange={canCreateItem ? setDetailWarehouseCode : undefined}
         />
       ) : null}
