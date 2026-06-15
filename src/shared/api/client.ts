@@ -9,6 +9,7 @@ import type { ErrorResponse } from '@/shared/api/error'
 const API_PATH_PREFIX = '/api'
 const DEFAULT_API_ORIGIN = ''
 const KEYCLOAK_AUTHORIZATION_PATH = '/oauth2/authorization/keycloak'
+const LOGOUT_PATH = '/api/auth/logout'
 const LOGIN_PATH = '/login'
 const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
 
@@ -84,6 +85,7 @@ function buildBackendUrl(path: string) {
 
 export const API_BASE_URL = buildBackendUrl(API_PATH_PREFIX)
 export const KEYCLOAK_AUTHORIZATION_URL = buildBackendUrl(KEYCLOAK_AUTHORIZATION_PATH)
+export const LOGOUT_URL = buildBackendUrl(LOGOUT_PATH)
 
 export function redirectToAuthLogin({ force = false }: { force?: boolean } = {}) {
   if (typeof window === 'undefined') {

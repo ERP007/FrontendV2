@@ -5,6 +5,23 @@ import type { UserRole } from '@/shared/config/session'
  * swagger 수신 시 필드명을 응답 스키마와 정합시킨다.
  */
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'SUSPENDED'
+export type UserApiRole = UserRole | 'WAREHOUSE_STAFF' | 'WAREHOUSE_MANAGER'
+export type UserRoleFilter = 'ALL' | UserApiRole
+export type UserTenancyCodeFilter =
+  | 'ALL'
+  | 'ADMIN'
+  | 'HQ'
+  | 'WH-HQ-001'
+  | 'WH-HQ-002'
+  | 'WH-BR-001'
+  | 'WH-BR-002'
+  | 'WH-BR-003'
+  | 'WH-BR-004'
+export type UserStatusFilter = 'ALL' | UserStatus
+export type UserSortBy = 'employeeNo' | 'name' | 'joinedAt'
+export type UserSortDirection = 'ASC' | 'DESC'
+export type CreateUserPasswordIssueMode = 'AUTO' | 'MANUAL'
+export type CreateUserTenancy = 'ADMIN' | 'HQ' | 'BRANCH' | 'WAREHOUSE'
 
 export interface User {
   email: string
@@ -81,5 +98,92 @@ export interface UserFormValues {
   passwordMode: PasswordIssueMode
   rank: string
   role: UserRole
-  warehouseName: string
+  tenancyCode: string
+}
+
+export interface FetchUsersParams {
+  keyword?: string
+  page: number
+  role: UserRoleFilter
+  size: number
+  sortBy: UserSortBy
+  sortDirection: UserSortDirection
+  status: UserStatusFilter
+  tenancyCode: UserTenancyCodeFilter
+}
+
+export interface UserListItem {
+  department: string
+  email: string
+  employeeNo: string
+  joinedAt: string
+  name: string
+  role: UserApiRole
+  status: UserStatus
+  userId: string
+}
+
+export interface UserListResponse {
+  content: UserListItem[]
+  hasNext: boolean
+  hasPrevious: boolean
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface CreateUserRequest {
+  display_name: string
+  email: string
+  employee_no: string
+  initial_password: string
+  password_issue_mode: CreateUserPasswordIssueMode
+  position: string
+  role: UserApiRole
+  tenancy: CreateUserTenancy
+  tenancy_code: string
+}
+
+export interface CreateUserResponse {
+  temporaryPassword: string | null
+  user: unknown
+}
+
+export interface UserDetailResponse {
+  createdAt: string | null
+  email: string
+  employeeNo: string
+  joinedAt: string
+  lastChangedPassAt: string | null
+  lastLoginAt: string | null
+  name: string
+  position: string | null
+  role: UserApiRole
+  status: UserStatus
+  tenancyCode: string
+  tenancyName: string
+  userId: string
+}
+
+export type MyPageResponse = Omit<UserDetailResponse, 'createdAt'>
+
+export interface UpdateUserRequest {
+  display_name: string
+  email: string
+  position: string
+  role: UserApiRole
+  tenancy_code: string
+}
+
+export interface SuspendToggleResponse {
+  email: string
+  employeeNo: string
+  name: string
+  status: UserStatus
+  userId: string
+}
+
+export interface UserSuspensionRequest {
+  suspended: boolean
 }

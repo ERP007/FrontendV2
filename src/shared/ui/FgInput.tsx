@@ -70,7 +70,8 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
             aria-invalid={error ? true : undefined}
             aria-describedby={helperId}
             className={cn(
-              'h-full min-w-0 flex-1 border-none bg-transparent p-0 text-inherit outline-none placeholder:text-faint',
+              'h-full min-w-0 flex-1 appearance-none border-none bg-transparent p-0 text-inherit outline-none placeholder:text-faint',
+              'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
               'disabled:cursor-not-allowed',
               inputClassName,
             )}
@@ -79,7 +80,7 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
           {rightIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{rightIcon}</span> : null}
         </div>
         {helperText ? (
-          <p id={helperId} className={cn('text-meta text-faint', error && 'text-danger')}>
+          <p id={helperId} className={cn('whitespace-pre-line text-meta text-faint', error && 'text-danger')}>
             {helperText}
           </p>
         ) : null}

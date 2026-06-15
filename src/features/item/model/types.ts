@@ -11,7 +11,7 @@ export interface Item {
   createdAt: string
   defaultSafetyStock: number
   description: string | null
-  id: number
+  id: number | string
   majorCategory: string
   middleCategory: string
   name: string
@@ -19,21 +19,71 @@ export interface Item {
   updatedAt: string
 }
 
+export interface ItemCategory {
+  categoryCode: string
+  categoryName: string
+  displayOrder: number
+}
+
+export interface ItemSubCategory extends ItemCategory {
+  parentCategoryCode: string
+}
+
 /** 분류 트리: 대분류 → 중분류 목록 */
 export const ITEM_CATEGORIES: Record<string, string[]> = {
-  엔진: ['윤활계통', '흡배기', '점화', '냉각'],
-  변속: ['오일/액', '기어'],
-  구동: ['클러치', '드라이브샤프트'],
-  제동: ['패드/슈', '디스크/드럼'],
-  현가: ['댐퍼', '스프링'],
-  전장: ['전원', '등화', '센서'],
-  공조: ['컴프레서', '필터'],
-  외장: ['미러', '램프'],
+  엔진: ['윤활계통', '필터'],
+  점화: [],
+  제동: [],
+  동력전달: [],
+  '현가·조향': [],
+  전장: [],
+  '외장·기타': [],
 }
 
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
-export type ItemSortKey = 'updatedAt' | 'code'
+export interface ItemUnitOption {
+  name: string
+  unit: ItemUnit
+}
+
+export interface ItemSkuCheckResult {
+  available: boolean
+  message: string
+  sku: string
+}
+
+export interface CreateItemRequest {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface CreateItemResponse {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  parentCategoryCode: string
+  parentCategoryName: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
+export type ItemSortKey =
+  | 'sku,asc'
+  | 'sku,desc'
+  | 'name,asc'
+  | 'name,desc'
+  | 'updatedAt,desc'
+  | 'updatedAt,asc'
 
 export interface ItemFilter {
   keyword: string
@@ -47,7 +97,7 @@ export const DEFAULT_ITEM_FILTER: ItemFilter = {
   keyword: '',
   majorCategory: 'ALL',
   middleCategory: 'ALL',
-  sort: 'updatedAt',
+  sort: 'updatedAt,desc',
   status: 'ALL',
 }
 
@@ -70,34 +120,12 @@ export interface ItemListItem {
   updatedAt: string
 }
 
-export type ItemListStatus = 'ACTIVE' | 'ALL' | 'INACTIVE'
-export type ItemListSortField = 'createdAt' | 'name' | 'safetyStock' | 'sku' | 'updatedAt'
-export type ItemListSortDirection = 'asc' | 'desc'
-export type ItemListSort = `${ItemListSortField},${ItemListSortDirection}`
-
-export interface ItemListParams {
-  categoryCode?: string
-  page?: number
-  search?: string
-  size?: number
-  sort?: ItemListSort
-  status?: ItemListStatus
-}
-
-export const DEFAULT_ITEM_LIST_PARAMS: Required<Pick<ItemListParams, 'page' | 'size' | 'sort' | 'status'>> = {
-  page: 1,
-  size: 10,
-  sort: 'updatedAt,desc',
-  status: 'ALL',
-}
-
 export interface ItemFormValues {
-  autoGenerateCode: boolean
-  code: string
-  defaultSafetyStock: number
-  description: string
+  categoryCode: string
   majorCategory: string
-  middleCategory: string
   name: string
+  safetyStock: number
+  sku: string
   unit: ItemUnit
+  unitPrice: number
 }
