@@ -111,7 +111,7 @@ export function FgAppShell({
   const profileTrigger = (
     <button
       aria-label="사용자 메뉴"
-      className="flex items-center gap-3 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="flex items-center gap-3 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-background focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=open]:bg-background"
       type="button"
     >
       <FgAvatar size="md" />

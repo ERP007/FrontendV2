@@ -32,7 +32,7 @@ export function FgDropdownMenu({ align = 'end', items, trigger }: FgDropdownMenu
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align={align}
-          className="z-50 min-w-44 rounded-control border border-line bg-surface p-1 shadow-popover"
+          className="z-50 min-w-44 rounded-control bg-surface/95 p-1 shadow-popover backdrop-blur focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
           sideOffset={6}
         >
           {items.map((item, index) => (
@@ -42,6 +42,7 @@ export function FgDropdownMenu({ align = 'end', items, trigger }: FgDropdownMenu
                 'flex min-h-9 cursor-pointer select-none items-center gap-2 rounded-control px-3 py-2 text-label text-ink-2 outline-none',
                 'data-[disabled]:pointer-events-none data-[disabled]:text-faint',
                 'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
+                'focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0',
                 item.danger && 'text-danger data-[highlighted]:bg-danger-bg data-[highlighted]:text-danger',
               )}
               disabled={item.disabled}

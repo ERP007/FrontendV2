@@ -137,6 +137,10 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error)
+    }
+
     const errorResponse = normalizeErrorResponse(error)
     const isWaitingForAuthRedirect = handleGlobalError(errorResponse)
 
