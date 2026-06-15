@@ -78,13 +78,6 @@ const indexRoute = createRoute({
 })
 
 const dashboardRoute = createRoute({
-  beforeLoad: async () => {
-    const session = await ensureSession()
-
-    if (session.userRole === 'ADMIN') {
-      throw redirect({ to: '/users' })
-    }
-  },
   component: DashboardPage,
   getParentRoute: () => shellRoute,
   path: '/dashboard',
