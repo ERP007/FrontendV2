@@ -3,14 +3,14 @@
  * swagger 수신 시 필드명을 응답 스키마와 정합시킨다.
  */
 export type SalesOrderStatus =
-  | 'REQUESTED'
   | 'APPROVED'
-  | 'REJECTED'
-  | 'SHIPPED'
-  | 'DELIVERED'
   | 'CANCELED'
+  | 'DELIVERED'
+  | 'DRAFT'
+  | 'REJECTED'
+  | 'REQUESTED'
 export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
-export type SoItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
+export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
 
 export interface SalesOrderLine {
@@ -66,9 +66,34 @@ export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
   APPROVED: 'APPROVED',
   CANCELED: 'CANCELED',
   DELIVERED: 'DELIVERED',
+  DRAFT: 'DRAFT',
   REJECTED: 'REJECTED',
   REQUESTED: 'REQUESTED',
-  SHIPPED: 'SHIPPED',
+}
+
+export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
+  'DRAFT',
+  'REQUESTED',
+  'APPROVED',
+  'DELIVERED',
+  'CANCELED',
+  'REJECTED',
+]
+
+export const SO_BRANCH_STATUS_LABELS: Record<SalesOrderStatus, string> = {
+  APPROVED: '도착 대기',
+  CANCELED: '취소',
+  DELIVERED: '입고',
+  DRAFT: '임시저장',
+  REJECTED: '거절',
+  REQUESTED: '출고 대기',
+}
+
+export const SO_TAB_STATUS_MAP: Record<SoStatusTab, SalesOrderStatus[] | undefined> = {
+  ALL: undefined,
+  CLOSED: ['REJECTED', 'CANCELED'],
+  DONE: ['DELIVERED'],
+  IN_PROGRESS: ['REQUESTED', 'APPROVED'],
 }
 
 export const SO_PRIORITY_LABELS: Record<SoPriority, string> = {
@@ -102,38 +127,36 @@ export const ARRIVAL_DIFF_REASON_OPTIONS = [
 
 export interface SalesOrderFilter {
   branchCode: 'ALL' | string
-  from: string
-  keyword: string
+  endDate: string
+  search: string
+  startDate: string
   status: 'ALL' | SalesOrderStatus
-  to: string
 }
 
 /** SO-04 상태 탭 */
 export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'
 
-export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED', 'SHIPPED']
+export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED']
 
 /** SO-05 작성 중 라인 */
-export interface SoDraftLine {
+export interface SoLine {
   branchStock: number | null
+  itemCode: string | null
   itemName: string
   priority: SoPriority
   quantity: number
-  safetySource: 'MASTER' | 'OVERRIDE' | null
   safetyStock: number | null
-  sku: string | null
   unit: SoItemUnit | null
 }
 
-export function emptySoDraftLine(): SoDraftLine {
+export function emptySoDraftLine(): SoLine {
   return {
     branchStock: null,
+    itemCode: null,
     itemName: '',
     priority: 'NORMAL',
     quantity: 0,
-    safetySource: null,
     safetyStock: null,
-    sku: null,
     unit: null,
   }
 }

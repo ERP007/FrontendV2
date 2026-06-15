@@ -70,7 +70,7 @@ export function FgSelect({
         </Select.Trigger>
         <Select.Portal>
           <Select.Content
-            className="z-50 max-h-80 overflow-hidden rounded-control border border-line bg-surface shadow-popover"
+            className="z-50 max-h-80 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-control border border-line bg-surface shadow-popover"
             position="popper"
             sideOffset={6}
           >
@@ -87,10 +87,14 @@ export function FgSelect({
                   )}
                 >
                   <Select.ItemText>
-                    <span className="block font-semibold">{option.label}</span>
-                    {option.supportingText ? (
-                      <span className="block text-meta text-faint">{option.supportingText}</span>
-                    ) : null}
+                    <span className="font-semibold text-ink">
+                      {option.label}
+                      {option.supportingText ? (
+                        <span className="ml-1.5 text-meta font-medium text-faint">
+                          {option.supportingText}
+                        </span>
+                      ) : null}
+                    </span>
                   </Select.ItemText>
                   <Select.ItemIndicator className="absolute right-2 flex h-5 w-5 items-center justify-center text-primary">
                     <Check aria-hidden className="h-4 w-4" />

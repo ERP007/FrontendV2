@@ -2,12 +2,14 @@ export {
   API_BASE_URL,
   API_ORIGIN,
   KEYCLOAK_AUTHORIZATION_URL,
+  LOGOUT_URL,
   api,
   clearAuthRedirectAttempt,
   isAuthRedirectInProgress,
   redirectToAuthLogin,
   waitForAuthRedirect,
 } from '@/shared/api/client'
+export type { PageResponse } from '@/shared/api/page'
 export { queryClient } from '@/shared/api/query-client'
 export type { ErrorResponse } from '@/shared/api/error'
 export { isErrorResponse, normalizeErrorResponse } from '@/shared/api/error'

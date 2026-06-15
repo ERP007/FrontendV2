@@ -12,8 +12,11 @@ export {
   useWarehouseUpdateMutation,
 } from './api/use-warehouse-mutations'
 export { DEFAULT_WAREHOUSE_FILTER, DEFAULT_WAREHOUSE_SORT } from './model/types'
+export { useHqWarehousesQuery } from './api/use-hq-warehouses-query'
+export { BRANCH_LOCATION_FIXTURES, WAREHOUSE_FIXTURES } from './model/fixtures'
 export type {
   BranchLocation,
+  HqWarehouseSummary,
   Warehouse,
   WarehouseFilter,
   WarehouseFormValues,

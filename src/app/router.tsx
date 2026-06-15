@@ -29,6 +29,10 @@ import { ensureSession } from '@/shared/auth/session'
 
 const rootRoute = createRootRoute()
 
+function getInitialHomePath(userRole?: string | null) {
+  return userRole === 'ADMIN' ? '/users' : '/dashboard'
+}
+
 function shouldWaitForAuthRedirect(error: unknown) {
   return isAuthRedirectInProgress() || (isErrorResponse(error) && error.status === 401)
 }
@@ -64,8 +68,10 @@ const shellRoute = createRoute({
 })
 
 const indexRoute = createRoute({
-  beforeLoad: () => {
-    throw redirect({ to: '/dashboard' })
+  beforeLoad: async () => {
+    const session = await ensureSession()
+
+    throw redirect({ to: getInitialHomePath(session.userRole) })
   },
   getParentRoute: () => shellRoute,
   path: '/',

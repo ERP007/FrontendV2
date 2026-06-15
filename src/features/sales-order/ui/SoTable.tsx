@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { Eye, FileText, PackageCheck } from 'lucide-react'
 import { useMemo } from 'react'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
@@ -11,6 +11,8 @@ import { FgButton, FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/sh
 import { IN_PROGRESS_STATUSES, isSoDelayed, soTotalRequested } from '../model/types'
 
 import type { SalesOrder } from '../model/types'
+
+import type { BranchSalesOrderListItem } from '../api/use-branch-sales-orders-query'
 
 export interface SoTableProps {
   header?: ReactNode
@@ -136,19 +138,30 @@ export function SoTable({ header, onOpen, orders }: SoTableProps) {
 
 export interface SoBranchTableProps {
   header?: ReactNode
-  onArrival: (order: SalesOrder) => void
-  onOpen: (order: SalesOrder) => void
-  orders: SalesOrder[]
+  onArrival: (order: BranchSalesOrderListItem) => void
+  onOpen: (order: BranchSalesOrderListItem) => void
+  onSortChange?: (field: 'requestedAt' | 'desiredArrivalDate', direction: 'asc' | 'desc') => void
+  orders: BranchSalesOrderListItem[]
+  sortDirection?: 'asc' | 'desc'
+  sortField?: 'requestedAt' | 'desiredArrivalDate'
 }
 
 /** SO-04 지점용 발주 요청 테이블 */
-export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTableProps) {
+export function SoBranchTable({
+  header,
+  onArrival,
+  onOpen,
+  onSortChange,
+  orders,
+  sortDirection,
+  sortField,
+}: SoBranchTableProps) {
   const today = dayjs().format('YYYY-MM-DD')
 
-  const columns = useMemo<ColumnDef<SalesOrder>[]>(
+  const columns = useMemo<ColumnDef<BranchSalesOrderListItem>[]>(
     () => [
       {
-        accessorKey: 'reqNo',
+        accessorKey: 'code',
         cell: ({ row }) => (
           <span className="flex items-center gap-2 font-semibold text-ink">
             {IN_PROGRESS_STATUSES.includes(row.original.status) ? (
@@ -156,10 +169,9 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
             ) : (
               <span className="h-1.5 w-1.5 shrink-0" />
             )}
-            {row.original.reqNo}
+            {row.original.code}
           </span>
         ),
-        enableSorting: true,
         header: '요청번호',
         size: 170,
       },
@@ -173,15 +185,21 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
         size: 160,
       },
       {
-        accessorKey: 'desiredAt',
+        accessorKey: 'desiredArrivalDate',
+        enableSorting: true,
         cell: ({ row }) => {
-          const delayed = isSoDelayed(row.original, today)
+          const delayed = isSoDelayed(
+            { desiredAt: row.original.desiredArrivalDate, status: row.original.status },
+            today,
+          )
 
           return (
             <span className={cn('font-semibold', delayed ? 'text-danger' : 'text-ink-2')}>
-              {formatDate(row.original.desiredAt)}
+              {formatDate(row.original.desiredArrivalDate)}
               {delayed ? (
-                <span className="ml-1.5 text-meta font-bold">({formatDday(row.original.desiredAt)})</span>
+                <span className="ml-1.5 text-meta font-bold">
+                  ({formatDday(row.original.desiredArrivalDate)})
+                </span>
               ) : null}
             </span>
           )
@@ -190,23 +208,29 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
         size: 150,
       },
       {
-        cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.lines.length}</span>,
+        cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
-        id: 'lineCount',
+        id: 'itemCount',
         meta: { align: 'right' },
-        size: 60,
+        size: 90,
       },
       {
-        cell: ({ row }) => (
-          <span className="font-semibold text-ink">
-            {formatNumber(soTotalRequested(row.original.lines))}
-            <span className="ml-1 text-meta font-medium text-faint">EA</span>
-          </span>
-        ),
+        cell: ({ row }) => {
+          const { totalQuantity, unitSnapshot } = row.original
+          if (totalQuantity === null || unitSnapshot === null) {
+            return <span className="font-semibold text-faint">-</span>
+          }
+          return (
+            <span className="font-semibold text-ink">
+              {formatNumber(totalQuantity)}
+              <span className="ml-1 text-meta font-medium text-faint">{unitSnapshot}</span>
+            </span>
+          )
+        },
         header: '총 수량',
         id: 'totalQuantity',
         meta: { align: 'right' },
-        size: 100,
+        size: 110,
       },
       {
         accessorKey: 'status',
@@ -219,7 +243,7 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
           <FgDropdownMenu
             items={[
               {
-                disabled: row.original.status !== 'SHIPPED',
+                disabled: row.original.status !== 'APPROVED',
                 icon: <PackageCheck aria-hidden className="h-4 w-4" />,
                 label: '도착 확인',
                 onSelect: () => onArrival(row.original),
@@ -242,5 +266,26 @@ export function SoBranchTable({ header, onArrival, onOpen, orders }: SoBranchTab
     [onArrival, onOpen, today],
   )
 
-  return <FgDataTable columns={columns} data={orders} header={header} onRowClick={onOpen} />
+  const sorting = useMemo<SortingState>(
+    () => (sortField ? [{ desc: sortDirection !== 'asc', id: sortField }] : []),
+    [sortDirection, sortField],
+  )
+
+  return (
+    <FgDataTable
+      columns={columns}
+      data={orders}
+      header={header}
+      manualSorting
+      sorting={sorting}
+      onRowClick={onOpen}
+      onSortingChange={(next) => {
+        if (!onSortChange) return
+        const head = next[0]
+        if (!head) return
+        if (head.id !== 'requestedAt' && head.id !== 'desiredArrivalDate') return
+        onSortChange(head.id, head.desc ? 'desc' : 'asc')
+      }}
+    />
+  )
 }

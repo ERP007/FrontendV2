@@ -9,13 +9,16 @@ export const userFormSchema = z
     passwordMode: z.enum(['AUTO', 'MANUAL']),
     rank: z.string(),
     role: z.enum(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF', 'BRANCH_MANAGER', 'BRANCH_STAFF']),
-    warehouseName: z.string().min(1, '소속을 선택하세요.'),
+    tenancyCode: z.string().min(1, '소속을 선택하세요.'),
   })
   .superRefine((values, context) => {
-    if (values.passwordMode === 'MANUAL' && values.initialPassword.length < 8) {
+    if (
+      values.passwordMode === 'MANUAL' &&
+      !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(values.initialPassword)
+    ) {
       context.addIssue({
         code: 'custom',
-        message: '초기 비밀번호는 8자 이상으로 입력하세요.',
+        message: '비밀번호는 영문 1자 이상, 숫자 1자 이상, 총 8자 이상이어야 합니다.',
         path: ['initialPassword'],
       })
     }

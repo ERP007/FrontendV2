@@ -46,14 +46,13 @@ export interface FgDataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
   emptyState?: ReactNode
+  enableSortingRemoval?: boolean
   header?: ReactNode
   isRowSelected?: (row: TData) => boolean
-  /** 서버 사이드 정렬: true면 내부 클라이언트 정렬을 끄고 정렬 변경을 onSortingChange로 상위에 위임한다. */
   manualSorting?: boolean
   onRowClick?: (row: TData) => void
-  onSortingChange?: OnChangeFn<SortingState>
+  onSortingChange?: (sorting: SortingState) => void
   rowClassName?: (row: TData) => string | undefined
-  /** 외부에서 정렬 상태를 제어할 때 전달한다(미전달 시 내부 상태로 클라이언트 정렬). */
   sorting?: SortingState
 }
 
@@ -62,6 +61,7 @@ export function FgDataTable<TData>({
   columns,
   data,
   emptyState,
+  enableSortingRemoval = true,
   header,
   isRowSelected,
   manualSorting = false,
@@ -71,17 +71,28 @@ export function FgDataTable<TData>({
   sorting,
 }: FgDataTableProps<TData>) {
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
-  const resolvedSorting = sorting ?? internalSorting
+  const currentSorting = sorting ?? internalSorting
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const nextSorting = typeof updater === 'function' ? updater(currentSorting) : updater
+
+    if (onSortingChange) {
+      onSortingChange(nextSorting)
+      return
+    }
+
+    setInternalSorting(nextSorting)
+  }
 
   const table = useReactTable({
     columns,
     data,
     defaultColumn: { enableSorting: false },
+    enableSortingRemoval,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     manualSorting,
-    onSortingChange: onSortingChange ?? setInternalSorting,
-    state: { sorting: resolvedSorting },
+    onSortingChange: handleSortingChange,
+    state: { sorting: currentSorting },
   })
 
   const rows = table.getRowModel().rows

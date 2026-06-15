@@ -1,6 +1,6 @@
 import type { User, UserActivity } from './types'
 
-/** 소속(창고) 선택 옵션 — User 서비스 연동 전 임시 목록 */
+/** 소속(창고) 선택 옵션 — User 서비스 목록 API 연동 전 임시 필터 목록 */
 export const BELONG_OPTIONS = [
   '본사 중앙창고',
   '서울 1창고',
