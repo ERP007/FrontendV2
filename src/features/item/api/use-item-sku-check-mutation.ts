@@ -14,12 +14,11 @@ export function getItemSkuCheckErrorMessage(error: unknown) {
   if (isErrorResponse(error)) {
     const detail = error.detail.trim()
 
-    if (error.errorCode === 'SKU_REQUIRED') {
-      return '부품 코드를 입력하세요.'
-    }
-
-    if (error.errorCode === 'INVALID_SKU_FORMAT') {
-      return '부품 코드 형식이 올바르지 않습니다.\n예: HMC-EN-00214'
+    switch (error.errorCode) {
+      case 'ITM-004':
+        return '부품 코드를 입력하세요.'
+      case 'ITM-006':
+        return '부품 코드 형식이 올바르지 않습니다.\n예: HMC-EN-00214'
     }
 
     if (error.status === 403) {

@@ -18,6 +18,35 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function normalizeErrorResponseShape(value: unknown, fallbackStatus = 0): ErrorResponse | null {
+  if (!isRecord(value)) {
+    return null
+  }
+
+  const status = typeof value.status === 'number' ? value.status : fallbackStatus
+
+  if (status === 0) {
+    return null
+  }
+
+  const detail = typeof value.detail === 'string'
+    ? value.detail
+    : typeof value.message === 'string'
+      ? value.message
+      : null
+
+  if (detail === null) {
+    return null
+  }
+
+  return {
+    status,
+    detail,
+    errorCode: typeof value.errorCode === 'string' ? value.errorCode : UNKNOWN_ERROR_CODE,
+    timestamp: typeof value.timestamp === 'string' ? value.timestamp : getTimestamp(),
+  }
+}
+
 export function isErrorResponse(value: unknown): value is ErrorResponse {
   if (!isRecord(value)) {
     return false
@@ -32,15 +61,18 @@ export function isErrorResponse(value: unknown): value is ErrorResponse {
 }
 
 export function normalizeErrorResponse(error: unknown): ErrorResponse {
-  if (isErrorResponse(error)) {
-    return error
+  const normalizedError = normalizeErrorResponseShape(error)
+
+  if (normalizedError) {
+    return normalizedError
   }
 
   if (axios.isAxiosError(error)) {
     const responseData = error.response?.data
+    const normalizedResponseData = normalizeErrorResponseShape(responseData, error.response?.status ?? 0)
 
-    if (isErrorResponse(responseData)) {
-      return responseData
+    if (normalizedResponseData) {
+      return normalizedResponseData
     }
 
     return {
