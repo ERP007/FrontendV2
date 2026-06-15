@@ -41,11 +41,17 @@ export function formatDelta(value: number): string {
 }
 
 export function formatDday(value: DateInput): string {
-  const diff = dayjs(value).startOf('day').diff(dayjs().startOf('day'), 'day')
+  if (value === null || value === undefined || value === '') return '-'
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return '-'
+  const diff = parsed.startOf('day').diff(dayjs().startOf('day'), 'day')
   if (diff === 0) return 'D-Day'
   return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`
 }
 
 export function isOverdue(value: DateInput): boolean {
-  return dayjs(value).startOf('day').isBefore(dayjs().startOf('day'))
+  if (value === null || value === undefined || value === '') return false
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return false
+  return parsed.startOf('day').isBefore(dayjs().startOf('day'))
 }
