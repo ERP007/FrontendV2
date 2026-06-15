@@ -88,6 +88,12 @@ export default {
         'modal-md': '640px',
         'modal-lg': '740px',
       },
+      maxHeight: {
+        modal: 'calc(100dvh - 10rem)',
+      },
+      height: {
+        modal: 'calc(100dvh - 10rem)',
+      },
       boxShadow: {
         card: '0 1px 2px rgba(19, 32, 42, 0.03)',
         primary: '0 1px 2px rgba(10, 83, 101, 0.25)',

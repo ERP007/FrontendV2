@@ -199,22 +199,17 @@ export function ItemsPage() {
     setDetailFormError(null)
     setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [])
-  useEffect(() => {
-    if (!detailTarget || !isErrorResponse(itemDetailError)) {
-      return
-    }
-
-    if (itemDetailError.status === 404 || isItemErrorCode(itemDetailError, 'ITM-019')) {
-      setDetailTarget(null)
-      setDetailFormError(null)
-      setDetailWarehouseCode(ALL_WAREHOUSES)
-      return
-    }
-
-    if (itemDetailError.status === 400) {
-      setDetailFormError(getItemErrorDetail(itemDetailError, ITEM_DETAIL_ERROR_FALLBACK))
-    }
-  }, [detailTarget, itemDetailError])
+  const itemDetailResponseError = isErrorResponse(itemDetailError) ? itemDetailError : null
+  const isDetailUnavailable = Boolean(
+    detailTarget &&
+      itemDetailResponseError &&
+      (itemDetailResponseError.status === 404 || isItemErrorCode(itemDetailResponseError, 'ITM-019')),
+  )
+  const detailFetchFormError =
+    detailTarget && itemDetailResponseError?.status === 400
+      ? getItemErrorDetail(itemDetailResponseError, ITEM_DETAIL_ERROR_FALLBACK)
+      : null
+  const visibleDetailFormError = detailFormError ?? detailFetchFormError
   const handleSkuCheck = useCallback(
     (sku: string) => skuCheckMutation.mutateAsync(sku),
     [skuCheckMutation],
@@ -342,6 +337,7 @@ export function ItemsPage() {
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
   const totalPages = Math.max(1, data?.totalPages ?? 1)
+  const isListUpdating = isFetching && !isLoading
 
   function handleFilterChange(next: ItemFilter) {
     const isOnlyKeywordChanged =
@@ -400,11 +396,22 @@ export function ItemsPage() {
           ) : undefined
         }
         header={
-          <span>
-            {isFetching ? '새로고침 중 · ' : null}
-            전체 <strong className="text-ink">{formatNumber(totalCount)}</strong>건 중 {rangeStart}-
-            {rangeEnd}
-          </span>
+          <div className="flex w-full items-center justify-between gap-3">
+            <span>
+              전체 <strong className="text-ink">{formatNumber(totalCount)}</strong>건 중 {rangeStart}-
+              {rangeEnd}
+            </span>
+            {isListUpdating ? (
+              <span
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 text-label font-semibold text-primary"
+                role="status"
+              >
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                목록 업데이트 중
+              </span>
+            ) : null}
+          </div>
         }
         items={items}
         onSelect={handleSelectItem}
@@ -442,11 +449,11 @@ export function ItemsPage() {
           unitOptions={unitOptions}
         />
       ) : null}
-      {detailTarget ? (
+      {detailTarget && !isDetailUnavailable ? (
         <ItemDetailModal
           canManage={canCreateItem}
           detail={itemDetail ?? null}
-          formError={detailFormError}
+          formError={visibleDetailFormError}
           isLoading={isItemDetailLoading}
           isStatusChanging={activateItemMutation.isPending || deactivateItemMutation.isPending}
           isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}

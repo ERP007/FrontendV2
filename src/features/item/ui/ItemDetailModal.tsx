@@ -24,6 +24,7 @@ import { resolveItemStockStatus } from '../model/types'
 import type { ItemDetail, ItemDetailFormValues, ItemStockRow, ItemStockStatus } from '../model/types'
 
 const FORM_ID = 'item-detail-form'
+const READ_ONLY_CONTROL_CLASS = '!border-faint !bg-line !text-ink-2'
 
 const emptyValues: ItemDetailFormValues = {
   categoryCode: '',
@@ -131,7 +132,7 @@ export function ItemDetailModal({
   warehouseOptions = [],
   warehouseValue,
 }: ItemDetailModalProps) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [editingSku, setEditingSku] = useState<string | null>(null)
   const {
     control,
     formState: { errors },
@@ -152,18 +153,18 @@ export function ItemDetailModal({
     if (detail) {
       reset(toFormValues(detail))
       onCategoryChange?.(detail.categoryCode)
-      setIsEditing(false)
       return
     }
 
     reset(emptyValues)
-    setIsEditing(false)
   }, [detail, onCategoryChange, open, reset])
 
   const selectedCategoryCode = useWatch({ control, name: 'categoryCode' })
   const selectedUnit = useWatch({ control, name: 'unit' }) || detail?.unit || 'EA'
   const canEnterEdit = canManage && Boolean(detail?.active)
+  const isEditing = open && Boolean(detail?.sku) && editingSku === detail?.sku
   const canEdit = canEnterEdit && isEditing
+  const lockedControlClassName = canEdit ? READ_ONLY_CONTROL_CLASS : undefined
   const hasWarehouseFilter = canManage && warehouseOptions.length > 0 && Boolean(onWarehouseChange)
   const categoryOptions = useMemo(
     () => ensureOption(majorCategoryOptions, detail?.categoryCode, detail?.categoryName),
@@ -229,7 +230,7 @@ export function ItemDetailModal({
         ...values,
         name: values.name.trim(),
       })
-      setIsEditing(false)
+      setEditingSku(null)
     } catch {
       // The parent owns API error presentation. Keep edit mode open.
     }
@@ -249,7 +250,7 @@ export function ItemDetailModal({
         variant="soft"
         onClick={(event) => {
           event.preventDefault()
-          setIsEditing(true)
+          setEditingSku(detail.sku)
         }}
       >
         수정
@@ -292,7 +293,7 @@ export function ItemDetailModal({
             reset(toFormValues(detail))
             onCategoryChange?.(detail.categoryCode)
           }
-          setIsEditing(false)
+          setEditingSku(null)
         }}
       >
         취소
@@ -322,6 +323,11 @@ export function ItemDetailModal({
     )
   }
 
+  function closeModal() {
+    setEditingSku(null)
+    onClose()
+  }
+
   const headerActions = detail && canManage ? (
     <>
       {isEditing ? renderCancelEditButton('sm') : null}
@@ -332,7 +338,7 @@ export function ItemDetailModal({
 
   const footer = (
     <>
-      <FgButton type="button" onClick={onClose}>닫기</FgButton>
+      <FgButton type="button" onClick={closeModal}>닫기</FgButton>
       {detail && canManage ? (
         <>
           {renderCancelEditButton('md')}
@@ -344,13 +350,14 @@ export function ItemDetailModal({
 
   return (
     <FgModal
+      className="fg-modal-fixed-scroll"
       footer={footer}
       headerActions={headerActions}
       open={open}
       size="lg"
       title={canManage ? '부품 상세' : '부품 상세 조회'}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose()
+        if (!nextOpen) closeModal()
       }}
     >
       {isLoading ? (
@@ -388,18 +395,19 @@ export function ItemDetailModal({
             <FgNotice tone="warning">비활성 부품은 기본 정보를 수정할 수 없습니다. 활성 복귀 후 수정하세요.</FgNotice>
           ) : null}
 
-          <section className="space-y-4">
+          <section className="rounded-control border border-line bg-background px-6 py-8">
             <h3 className="text-subtitle text-ink">기본 정보</h3>
             <form
-              className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2"
+              className="mt-8 grid grid-cols-1 gap-x-6 gap-y-9 lg:grid-cols-2"
               id={FORM_ID}
               onSubmit={handleSubmit(submit)}
             >
               <FgInput
+                controlClassName={lockedControlClassName}
                 disabled
                 inputClassName="font-semibold"
                 label="부품 코드"
-                rightIcon={<span className="text-meta font-semibold text-faint">읽기전용</span>}
+                rightIcon={<span className="text-meta font-semibold text-muted">읽기전용</span>}
                 value={detail.sku}
               />
               <FgInput
@@ -431,7 +439,11 @@ export function ItemDetailModal({
                   )}
                 />
               ) : (
-                <FgInput disabled label="대분류" value={detail.categoryName} />
+                <FgInput
+                  disabled
+                  label="대분류"
+                  value={detail.categoryName}
+                />
               )}
               {canEdit ? (
                 <Controller
@@ -451,8 +463,24 @@ export function ItemDetailModal({
                   )}
                 />
               ) : (
-                <FgInput disabled label="중분류" value={detail.subCategoryName} />
+                <FgInput
+                  disabled
+                  label="중분류"
+                  value={detail.subCategoryName}
+                />
               )}
+              <FgInput
+                disabled={!canEdit}
+                error={errors.safetyStock?.message}
+                inputClassName="text-right font-bold"
+                label="안전재고 기준"
+                min={0}
+                required={canEdit}
+                rightIcon={<span className="text-meta font-semibold text-faint">{selectedUnit}</span>}
+                step={1}
+                type="number"
+                {...register('safetyStock', { valueAsNumber: true })}
+              />
               {canEdit ? (
                 <Controller
                   control={control}
@@ -471,19 +499,23 @@ export function ItemDetailModal({
                   )}
                 />
               ) : (
-                <FgInput disabled label="단위" value={detail.unit} />
+                <FgInput
+                  disabled
+                  label="단위"
+                  value={detail.unit}
+                />
               )}
               <FgInput
-                disabled={!canEdit}
-                error={errors.safetyStock?.message}
-                inputClassName="text-right font-bold"
-                label="안전재고 기준"
-                min={0}
-                required={canEdit}
-                rightIcon={<span className="text-meta font-semibold text-faint">{selectedUnit}</span>}
-                step={1}
-                type="number"
-                {...register('safetyStock', { valueAsNumber: true })}
+                controlClassName={lockedControlClassName}
+                disabled
+                label="등록일"
+                value={formatDate(detail.createdAt)}
+              />
+              <FgInput
+                controlClassName={lockedControlClassName}
+                disabled
+                label="최근 수정일"
+                value={formatDate(detail.updatedAt)}
               />
               <FgInput
                 disabled={!canEdit}
@@ -493,12 +525,11 @@ export function ItemDetailModal({
                 min={0}
                 required={canEdit}
                 rightIcon={<span className="text-meta font-semibold text-faint">원</span>}
+                rootClassName="lg:col-start-2"
                 step={1}
                 type="number"
                 {...register('unitPrice', { valueAsNumber: true })}
               />
-              <FgInput disabled label="등록일" value={formatDate(detail.createdAt)} />
-              <FgInput disabled label="최근 수정일" value={formatDate(detail.updatedAt)} />
             </form>
           </section>
 

@@ -22,14 +22,23 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
       const baseColumns: ColumnDef<Item>[] = [
         {
           accessorKey: 'code',
-          cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
+          cell: ({ row }) => (
+            <span className="block max-w-48 truncate font-semibold text-ink" title={row.original.code}>
+              {row.original.code}
+            </span>
+          ),
           header: '부품 코드',
-          size: 150,
+          size: 190,
         },
         {
           accessorKey: 'name',
-          cell: ({ row }) => <span className="font-bold text-ink">{row.original.name}</span>,
+          cell: ({ row }) => (
+            <span className="block max-w-56 truncate font-bold text-ink" title={row.original.name}>
+              {row.original.name}
+            </span>
+          ),
           header: '부품명',
+          size: 230,
         },
         {
           cell: ({ row }) => (
@@ -45,7 +54,7 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
           ),
           header: '분류',
           id: 'category',
-          size: 170,
+          size: 130,
         },
         {
           accessorKey: 'unit',
@@ -54,7 +63,7 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
           ),
           header: '단위',
           meta: { align: 'center' },
-          size: 70,
+          size: 56,
         },
         {
           accessorKey: 'defaultSafetyStock',
@@ -80,15 +89,18 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
               </FgBadge>
             ),
           header: '상태',
-          size: 100,
+          size: 84,
         },
         {
-          accessorKey: 'createdAt',
+          accessorKey: 'updatedAt',
           cell: ({ row }) => (
-            <span className="font-medium text-muted">{formatDate(row.original.createdAt)}</span>
+            <span className="whitespace-nowrap font-medium text-muted">
+              {formatDate(row.original.updatedAt)}
+            </span>
           ),
-          header: '등록일',
-          size: 110,
+          header: '최근 수정일',
+          meta: { cellClassName: 'whitespace-nowrap', headClassName: 'whitespace-nowrap' },
+          size: 125,
         },
       ]
 

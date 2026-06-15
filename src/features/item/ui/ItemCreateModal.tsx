@@ -13,6 +13,7 @@ import { itemFormSchema } from '../model/item-schema'
 import type { ItemFormValues, ItemSkuCheckResult } from '../model/types'
 
 const FORM_ID = 'item-create-form'
+const NUMERIC_INPUT_CLASS_NAME = 'fg-number-input ml-auto max-w-20 text-right font-bold'
 
 const emptyValues: ItemFormValues = {
   categoryCode: '',
@@ -209,27 +210,29 @@ export function ItemCreateModal({
             {formError}
           </FgNotice>
         ) : null}
-        <div className="flex items-start gap-2">
-          <FgInput
-            error={errors.sku?.message ?? skuCheckError}
-            hint={skuCheckHint}
-            inputClassName="font-semibold"
-            label="부품 코드"
-            leftIcon={<IdCard aria-hidden className="h-4 w-4" />}
-            placeholder="HMC-XX-00000"
-            required
-            rootClassName="min-w-0 flex-1"
-            {...skuRegistration}
-          />
-          <FgButton
-            className="mt-7 h-11 px-3"
-            disabled={!normalizedSku || isSubmitting}
-            loading={isSkuChecking && currentSkuCheckState?.status === 'checking'}
-            onClick={() => void handleSkuCheckClick()}
-          >
-            중복 확인
-          </FgButton>
-        </div>
+        <FgInput
+          error={errors.sku?.message ?? skuCheckError}
+          hint={skuCheckHint}
+          inputClassName="font-semibold"
+          label="부품 코드"
+          leftIcon={<IdCard aria-hidden className="h-4 w-4" />}
+          placeholder="HMC-XX-00000"
+          required
+          rightIcon={
+            <FgButton
+              className="shadow-none"
+              disabled={!normalizedSku || isSubmitting}
+              loading={isSkuChecking && currentSkuCheckState?.status === 'checking'}
+              size="sm"
+              variant="primary"
+              onClick={() => void handleSkuCheckClick()}
+            >
+              중복 확인
+            </FgButton>
+          }
+          rightIconClassName="h-auto text-inherit"
+          {...skuRegistration}
+        />
         <FgInput
           error={errors.name?.message}
           label="부품명"
@@ -281,6 +284,18 @@ export function ItemCreateModal({
             />
           )}
         />
+        <FgInput
+          controlGap="tight"
+          error={errors.safetyStock?.message}
+          inputClassName={NUMERIC_INPUT_CLASS_NAME}
+          label="안전재고 기본"
+          min={0}
+          required
+          rightIcon={<span className="inline-flex w-7 justify-start text-meta font-semibold text-faint">{unit}</span>}
+          step={1}
+          type="number"
+          {...register('safetyStock', { valueAsNumber: true })}
+        />
         <Controller
           control={control}
           name="unit"
@@ -302,19 +317,9 @@ export function ItemCreateModal({
           }}
         />
         <FgInput
-          error={errors.safetyStock?.message}
-          inputClassName="text-right font-bold"
-          label="안전재고 기본"
-          min={0}
-          required
-          rightIcon={<span className="text-meta font-semibold text-faint">{unit}</span>}
-          step={1}
-          type="number"
-          {...register('safetyStock', { valueAsNumber: true })}
-        />
-        <FgInput
+          controlGap="tight"
           error={errors.unitPrice?.message}
-          inputClassName="text-right font-bold"
+          inputClassName={NUMERIC_INPUT_CLASS_NAME}
           label="단가"
           leftIcon={<CircleDollarSign aria-hidden className="h-4 w-4" />}
           min={0}

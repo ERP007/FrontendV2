@@ -83,4 +83,26 @@
   .fg-scrollbar::-webkit-scrollbar-thumb {
     @apply rounded-pill bg-line;
   }
+
+  .fg-modal-fixed-scroll {
+    height: calc(100vh - 10rem);
+    max-height: calc(100vh - 10rem);
+  }
+
+  @supports (height: 100dvh) {
+    .fg-modal-fixed-scroll {
+      height: calc(100dvh - 10rem);
+      max-height: calc(100dvh - 10rem);
+    }
+  }
+
+  .fg-number-input {
+    -moz-appearance: textfield;
+  }
+
+  .fg-number-input::-webkit-outer-spin-button,
+  .fg-number-input::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+  }
 }

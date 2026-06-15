@@ -49,12 +49,12 @@ export function FgModal({
         <Dialog.Overlay className="fixed inset-0 z-40 bg-modal-backdrop backdrop-blur-sm" />
         <Dialog.Content
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 max-h-screen w-full -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-modal border border-line bg-surface shadow-modal',
+            'fixed left-1/2 top-20 z-50 flex max-h-modal w-full -translate-x-1/2 flex-col overflow-hidden rounded-modal border border-line bg-surface shadow-modal',
             modalSizeClasses[size],
             className,
           )}
         >
-          <header className="flex items-start justify-between gap-4 border-b border-line-soft px-6 py-5">
+          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line-soft px-6 py-5">
             <div className="min-w-0">
               <Dialog.Title className="flex min-w-0 items-center gap-2 text-modal-title text-ink">
                 {icon}
@@ -75,8 +75,8 @@ export function FgModal({
               </Dialog.Close>
             </div>
           </header>
-          <div className="max-h-screen overflow-y-auto px-6 py-6 fg-scrollbar">{children}</div>
-          {footer ? <footer className="flex items-center justify-end gap-2 border-t border-line-soft bg-background px-6 py-4">{footer}</footer> : null}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-6 fg-scrollbar">{children}</div>
+          {footer ? <footer className="flex shrink-0 items-center justify-end gap-2 border-t border-line-soft bg-background px-6 py-4">{footer}</footer> : null}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
