@@ -3,15 +3,6 @@ import type { SalesOrder, SalesOrderLine, SoItemUnit } from './types'
 /** 본사 출고 창고 옵션 — GET /inventory/warehouses/hq 응답에 해당 */
 export const SO_HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
 
-/** 내 지점(데모 세션 소속) 정보 */
-export const MY_BRANCH = {
-  code: 'BR-04',
-  name: '강남 1지점',
-  receiveWarehouseCode: 'WH-04A',
-  receiveWarehouseName: '강남 1지점 · 부품창고',
-  region: '서울 강남구',
-} as const
-
 /** SO-02/03/06 데모용 공통 6라인 (요청 → 승인 → 출고 단계별 수량) */
 function richLines(stage: 'REQUESTED' | 'APPROVED' | 'DELIVERED'): SalesOrderLine[] {
   const base = [
