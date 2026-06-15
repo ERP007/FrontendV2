@@ -9,7 +9,6 @@ export type SalesOrderStatus =
   | 'DRAFT'
   | 'REJECTED'
   | 'REQUESTED'
-  | 'SHIPPED'
 export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
 export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
@@ -70,7 +69,6 @@ export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
   DRAFT: 'DRAFT',
   REJECTED: 'REJECTED',
   REQUESTED: 'REQUESTED',
-  SHIPPED: 'SHIPPED',
 }
 
 export const SO_PRIORITY_LABELS: Record<SoPriority, string> = {
@@ -113,7 +111,7 @@ export interface SalesOrderFilter {
 /** SO-04 상태 탭 */
 export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'
 
-export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED', 'SHIPPED']
+export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED']
 
 /** SO-05 작성 중 라인 */
 export interface SoLine {
