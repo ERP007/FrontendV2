@@ -224,30 +224,42 @@ export function ItemDetailModal({
       return
     }
 
-    await onSubmit({
-      ...values,
-      name: values.name.trim(),
-    })
-    setIsEditing(false)
+    try {
+      await onSubmit({
+        ...values,
+        name: values.name.trim(),
+      })
+      setIsEditing(false)
+    } catch {
+      // The parent owns API error presentation. Keep edit mode open.
+    }
   }
 
-  function renderEditButton(size: 'md' | 'sm'): ReactNode {
+  function renderStartEditButton(size: 'md' | 'sm'): ReactNode {
     if (!detail?.active) {
       return null
     }
 
-    if (!isEditing) {
-      return (
-        <FgButton
-          leftIcon={<Pencil aria-hidden className="h-4 w-4" />}
-          disabled={isStatusChanging || isSubmitting}
-          size={size}
-          variant="soft"
-          onClick={() => setIsEditing(true)}
-        >
-          수정
-        </FgButton>
-      )
+    return (
+      <FgButton
+        leftIcon={<Pencil aria-hidden className="h-4 w-4" />}
+        disabled={isStatusChanging || isSubmitting || isEditing}
+        size={size}
+        type="button"
+        variant="soft"
+        onClick={(event) => {
+          event.preventDefault()
+          setIsEditing(true)
+        }}
+      >
+        수정
+      </FgButton>
+    )
+  }
+
+  function renderSaveButton(size: 'md' | 'sm'): ReactNode {
+    if (!detail?.active || !isEditing) {
+      return null
     }
 
     return (
@@ -274,6 +286,7 @@ export function ItemDetailModal({
       <FgButton
         disabled={isSubmitting}
         size={size}
+        type="button"
         onClick={() => {
           if (detail) {
             reset(toFormValues(detail))
@@ -298,6 +311,7 @@ export function ItemDetailModal({
         leftIcon={detail.active ? <Power aria-hidden className="h-4 w-4" /> : <RotateCcw aria-hidden className="h-4 w-4" />}
         loading={isStatusChanging}
         size={size}
+        type="button"
         variant={detail.active ? 'danger' : 'soft'}
         onClick={() => {
           if (onToggleActive) void onToggleActive(detail)
@@ -310,19 +324,19 @@ export function ItemDetailModal({
 
   const headerActions = detail && canManage ? (
     <>
-      {renderCancelEditButton('sm')}
-      {renderEditButton('sm')}
-      {renderStatusButton('sm')}
+      {isEditing ? renderCancelEditButton('sm') : null}
+      {isEditing ? renderSaveButton('sm') : renderStartEditButton('sm')}
+      {!isEditing ? renderStatusButton('sm') : null}
     </>
   ) : null
 
   const footer = (
     <>
-      <FgButton onClick={onClose}>닫기</FgButton>
+      <FgButton type="button" onClick={onClose}>닫기</FgButton>
       {detail && canManage ? (
         <>
           {renderCancelEditButton('md')}
-          {renderEditButton('md')}
+          {renderSaveButton('md')}
         </>
       ) : null}
     </>

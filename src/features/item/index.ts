@@ -14,6 +14,10 @@ export {
   itemDetailQueryKey,
   useItemDetailQuery,
 } from './api/use-item-detail-query'
+export {
+  getUpdateItemErrorMessage,
+  useUpdateItemMutation,
+} from './api/use-update-item-mutation'
 export { useItemUnitsQuery } from './api/use-item-units-query'
 export { useItemsQuery } from './api/use-items-query'
 export {

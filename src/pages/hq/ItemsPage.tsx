@@ -6,6 +6,7 @@ import {
   DEFAULT_ITEM_FILTER,
   getCreateItemErrorMessage,
   getItemSkuCheckErrorMessage,
+  getUpdateItemErrorMessage,
   getMockBranchWarehouseCode,
   getMockItemStockRows,
   getMockVisibleItemStockRows,
@@ -13,6 +14,7 @@ import {
   ItemDetailModal,
   ItemFilterBar,
   ItemTable,
+  itemDetailQueryKey,
   useCreateItemMutation,
   useItemCategoriesQuery,
   useItemDetailQuery,
@@ -20,8 +22,9 @@ import {
   useItemSkuCheckMutation,
   useItemUnitsQuery,
   useItemsQuery,
+  useUpdateItemMutation,
 } from '@/features/item'
-import type { Item, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import type { Item, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -40,6 +43,7 @@ export function ItemsPage() {
   const [detailMajorCategoryCode, setDetailMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
+  const [detailFormError, setDetailFormError] = useState<string | null>(null)
   const [detailWarehouseCode, setDetailWarehouseCode] = useState(ALL_WAREHOUSES)
   const { data: session } = useSession()
   const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
@@ -91,6 +95,7 @@ export function ItemsPage() {
   } = useItemDetailQuery(detailTarget?.code ?? null)
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
+  const updateItemMutation = useUpdateItemMutation()
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -183,6 +188,7 @@ export function ItemsPage() {
   }, [])
   const handleSelectItem = useCallback((item: Item) => {
     setDetailTarget(item)
+    setDetailFormError(null)
     setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [])
   useEffect(() => {
@@ -191,6 +197,7 @@ export function ItemsPage() {
     }
 
     setDetailTarget(null)
+    setDetailFormError(null)
     setDetailWarehouseCode(ALL_WAREHOUSES)
   }, [detailTarget, itemDetailError])
   const handleSkuCheck = useCallback(
@@ -221,6 +228,57 @@ export function ItemsPage() {
       }
     },
     [createItemMutation],
+  )
+  const handleUpdateItem = useCallback(
+    async (values: ItemDetailFormValues) => {
+      if (!itemDetail) {
+        return
+      }
+
+      setDetailFormError(null)
+
+      try {
+        const updatedItem = await updateItemMutation.mutateAsync({
+          sku: itemDetail.sku,
+          values,
+        })
+
+        queryClient.setQueryData(itemDetailQueryKey(updatedItem.sku), updatedItem)
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['items'] }),
+          queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(updatedItem.sku) }),
+        ])
+        toast.success('부품 정보가 수정되었습니다.')
+      } catch (error) {
+        if (!isErrorResponse(error)) {
+          toast.error(getUpdateItemErrorMessage(error))
+          throw error
+        }
+
+        if (error.errorCode === 'ITM-019') {
+          await queryClient.invalidateQueries({ queryKey: ['items'] })
+          setDetailTarget(null)
+          setDetailFormError(null)
+          setDetailMajorCategoryCode('')
+          setDetailWarehouseCode(ALL_WAREHOUSES)
+          throw error
+        }
+
+        if (error.errorCode === 'ITM-020') {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['items'] }),
+            queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(itemDetail.sku) }),
+          ])
+        }
+
+        if (error.status === 400 || error.status === 409) {
+          setDetailFormError(getUpdateItemErrorMessage(error))
+        }
+
+        throw error
+      }
+    },
+    [itemDetail, updateItemMutation],
   )
 
   const items = data?.content ?? []
@@ -323,8 +381,10 @@ export function ItemsPage() {
         <ItemDetailModal
           canManage={canCreateItem}
           detail={itemDetail ?? null}
+          formError={detailFormError}
           isLoading={isItemDetailLoading}
           isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
+          isSubmitting={updateItemMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           open
@@ -336,10 +396,12 @@ export function ItemsPage() {
           warehouseValue={canCreateItem ? detailWarehouseCode : undefined}
           onClose={() => {
             setDetailTarget(null)
+            setDetailFormError(null)
             setDetailMajorCategoryCode('')
             setDetailWarehouseCode(ALL_WAREHOUSES)
           }}
           onCategoryChange={setDetailMajorCategoryCode}
+          onSubmit={handleUpdateItem}
           onWarehouseChange={canCreateItem ? setDetailWarehouseCode : undefined}
         />
       ) : null}
