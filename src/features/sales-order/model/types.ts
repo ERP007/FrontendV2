@@ -70,15 +70,6 @@ export interface SalesOrder {
   transport: string | null
 }
 
-export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  APPROVED: 'APPROVED',
-  CANCELED: 'CANCELED',
-  DELIVERED: 'DELIVERED',
-  DRAFT: 'DRAFT',
-  REJECTED: 'REJECTED',
-  REQUESTED: 'REQUESTED',
-}
-
 export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
   'DRAFT',
   'REQUESTED',
@@ -88,13 +79,13 @@ export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
   'REJECTED',
 ]
 
-export const SO_BRANCH_STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  APPROVED: '도착 대기',
-  CANCELED: '취소',
-  DELIVERED: '입고',
+export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
   DRAFT: '임시저장',
-  REJECTED: '거절',
   REQUESTED: '출고 대기',
+  APPROVED: '도착 대기',
+  DELIVERED: '입고',
+  CANCELED: '취소',
+  REJECTED: '거절',
 }
 
 export const SO_TAB_STATUS_MAP: Record<SoStatusTab, SalesOrderStatus[] | undefined> = {
@@ -124,14 +115,6 @@ export const REJECT_REASON_OPTIONS = [
   '예산 초과',
   '기타',
 ] as const
-
-export interface SalesOrderFilter {
-  branchCode: 'ALL' | string
-  endDate: string
-  search: string
-  startDate: string
-  status: 'ALL' | SalesOrderStatus
-}
 
 /** SO-04 상태 탭 */
 export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'

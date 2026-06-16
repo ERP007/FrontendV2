@@ -29,18 +29,21 @@ export type {
   DeliverSalesOrderResponse,
 } from './api/use-sales-order-deliver-mutation'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
+export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
+export type {
+  HqSalesOrderListItem,
+  HqSalesOrderListParams,
+  HqSalesOrderPageSize,
+  HqSalesOrderSortDirection,
+  HqSalesOrderSortField,
+} from './api/use-hq-sales-orders-query'
+export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
+export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
 export type {
   SalesOrderHistoryActor,
   SalesOrderHistoryEntry,
 } from './api/use-sales-order-histories-query'
-export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
-export {
-  applyStatusTab,
-  createDefaultSoFilter,
-  deriveSoHqKpi,
-  filterSalesOrders,
-} from './model/filter-sales-orders'
-export type { SoBranchKpi, SoHqKpi } from './model/filter-sales-orders'
+export type { SoBranchKpi } from './model/filter-sales-orders'
 export { SALES_ORDER_FIXTURES } from './model/fixtures'
 export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
 export { soDraftFormSchema } from './model/so-draft-schema'
@@ -59,7 +62,6 @@ export type {
   CarrierType,
   SalesOrder,
   SalesOrderEvent,
-  SalesOrderFilter,
   SalesOrderLine,
   SalesOrderStatus,
   SoLine as SoDraftLine,
@@ -73,7 +75,7 @@ export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
 export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
-export type { SoBranchOption } from './ui/SoFilterBar'
+export type { SoFilterBarValues } from './ui/SoFilterBar'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'
 export { SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
 export { SoBranchTable, SoTable } from './ui/SoTable'
