@@ -8,19 +8,31 @@ import type { UserRole } from '@/shared/config/session'
 import { FgButton, FgInput, FgModal, FgNotice, FgSegmentedControl, FgSelect } from '@/shared/ui'
 
 import { RANK_OPTIONS } from '../model/types'
-import { getUserTenancyRoles, USER_TENANCY_OPTIONS } from '../model/user-tenancy'
+import { getUserTenancyRoles } from '../model/user-tenancy'
 import { userFormSchema } from '../model/user-schema'
 
 import type { UserFormValues } from '../model/types'
+import type { UserTenancyOption } from '../model/user-tenancy'
 
 const FORM_ID = 'user-create-form'
 
-const tenancyOptions = USER_TENANCY_OPTIONS.map((option) => ({
-  label: option.label,
-  supportingText: option.code,
-  value: option.code,
-}))
+const createRoleValues: UserRole[] = ['ADMIN', 'HQ_MANAGER', 'HQ_STAFF', 'BRANCH_MANAGER', 'BRANCH_STAFF']
 const rankOptions = RANK_OPTIONS.map((rank) => ({ label: rank, value: rank }))
+
+function toTenancySelectOption(option: UserTenancyOption) {
+  return {
+    label: option.label,
+    supportingText: option.code,
+    value: option.code,
+  }
+}
+
+function toCreateRoleOption(nextRole: UserRole) {
+  return {
+    label: `${nextRole} · ${ROLE_LABELS[nextRole]}`,
+    value: nextRole,
+  }
+}
 
 export interface UserCreateModalProps {
   /** 자동 채번된 다음 사번 (예: HMC0011) */
@@ -30,6 +42,9 @@ export interface UserCreateModalProps {
   onClose: () => void
   onSubmit: (values: UserFormValues) => Promise<void> | void
   open: boolean
+  tenancyOptions: UserTenancyOption[]
+  tenancyOptionsErrorMessage?: string | null
+  tenancyOptionsLoading?: boolean
 }
 
 export function UserCreateModal({
@@ -39,6 +54,9 @@ export function UserCreateModal({
   onClose,
   onSubmit,
   open,
+  tenancyOptions,
+  tenancyOptionsErrorMessage,
+  tenancyOptionsLoading = false,
 }: UserCreateModalProps) {
   const {
     control,
@@ -65,12 +83,12 @@ export function UserCreateModal({
   const role = useWatch({ control, name: 'role' })
   const tenancyCode = useWatch({ control, name: 'tenancyCode' })
 
+  const tenancySelectOptions = useMemo(
+    () => tenancyOptions.map(toTenancySelectOption),
+    [tenancyOptions],
+  )
   const roleOptions = useMemo(
-    () =>
-      getUserTenancyRoles(tenancyCode).map((nextRole) => ({
-        label: `${nextRole} · ${ROLE_LABELS[nextRole]}`,
-        value: nextRole,
-      })),
+    () => (tenancyCode ? getUserTenancyRoles(tenancyCode) : createRoleValues).map(toCreateRoleOption),
     [tenancyCode],
   )
 
@@ -134,6 +152,14 @@ export function UserCreateModal({
             {errorMessage}
           </FgNotice>
         ) : null}
+        {tenancyOptionsLoading ? (
+          <FgNotice className="col-span-2">소속 목록을 불러오는 중입니다.</FgNotice>
+        ) : null}
+        {tenancyOptionsErrorMessage ? (
+          <FgNotice className="col-span-2" tone="danger">
+            {tenancyOptionsErrorMessage}
+          </FgNotice>
+        ) : null}
         <FgInput
           error={errors.empNo?.message}
           hint="자동 채번된 사번입니다."
@@ -166,7 +192,7 @@ export function UserCreateModal({
             <FgSelect
               error={errors.tenancyCode?.message}
               label="소속"
-              options={tenancyOptions}
+              options={tenancySelectOptions}
               placeholder="소속 선택"
               required
               value={field.value || undefined}

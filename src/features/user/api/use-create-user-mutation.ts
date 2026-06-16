@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 
 import { api, isErrorResponse } from '@/shared/api'
 
-import { getUserTenancyOption } from '../model/user-tenancy'
+import { getUserTenancyTypeFromCode } from '../model/user-tenancy'
 
 import type { ErrorResponse } from '@/shared/api'
 import type { CreateUserRequest, CreateUserResponse, UserFormValues } from '../model/types'
@@ -29,9 +29,9 @@ function isCreateUserResponse(value: unknown): value is CreateUserResponse {
 }
 
 function toCreateUserRequest(values: UserFormValues): CreateUserRequest {
-  const tenancy = getUserTenancyOption(values.tenancyCode)
+  const tenancyCode = values.tenancyCode.trim()
 
-  if (!tenancy) {
+  if (!tenancyCode) {
     throw new Error('소속 정보가 올바르지 않습니다.')
   }
 
@@ -43,8 +43,8 @@ function toCreateUserRequest(values: UserFormValues): CreateUserRequest {
     password_issue_mode: values.passwordMode,
     position: values.rank.trim(),
     role: values.role,
-    tenancy: tenancy.type,
-    tenancy_code: tenancy.code,
+    tenancy: getUserTenancyTypeFromCode(tenancyCode),
+    tenancy_code: tenancyCode,
   }
 }
 

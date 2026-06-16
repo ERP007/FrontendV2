@@ -21,6 +21,11 @@ export {
   userDetailQueryKeys,
 } from './api/use-user-detail-query'
 export {
+  getUserTenancyOptionsErrorMessage,
+  useUserTenancyOptionsQuery,
+  userTenancyOptionsQueryKey,
+} from './api/use-user-tenancy-options-query'
+export {
   getUsersErrorMessage,
   useUsersQuery,
   usersQueryKey,
@@ -39,11 +44,15 @@ export {
   RANK_OPTIONS,
 } from './model/types'
 export {
+  ADMIN_TENANCY_OPTION,
   getUserTenancyLabel,
   getUserTenancyOption,
   getUserTenancyRoles,
+  getUserTenancyTypeFromCode,
+  toUserTenancyOption,
   USER_TENANCY_OPTIONS,
 } from './model/user-tenancy'
+export type { UserTenancyOption, UserTenancyType, WarehouseOption } from './model/user-tenancy'
 export type {
   CreateUserPasswordIssueMode,
   CreateUserRequest,

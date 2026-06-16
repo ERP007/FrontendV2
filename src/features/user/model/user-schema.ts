@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const userApiRoleSchema = z.enum([
+const userApiRoles = [
   'ADMIN',
   'HQ_MANAGER',
   'HQ_STAFF',
@@ -8,7 +8,35 @@ const userApiRoleSchema = z.enum([
   'BRANCH_STAFF',
   'WAREHOUSE_STAFF',
   'WAREHOUSE_MANAGER',
-])
+] as const
+
+type UserApiRoleValue = (typeof userApiRoles)[number]
+
+export function normalizeUserApiRole(value: string): UserApiRoleValue | null {
+  const roleMatch = value
+    .trim()
+    .match(
+      /^(ADMIN|HQ_MANAGER|HQ_STAFF|BRANCH_MANAGER|BRANCH_STAFF|WAREHOUSE_STAFF|WAREHOUSE_MANAGER)(?:\s|·|ㆍ|・|$)/,
+    )
+  const roleCode = roleMatch?.[1] as UserApiRoleValue | undefined
+
+  return roleCode && userApiRoles.some((role) => role === roleCode) ? roleCode : null
+}
+
+const userApiRoleSchema = z.string().transform((value, context) => {
+  const roleCode = normalizeUserApiRole(value)
+
+  if (roleCode) {
+    return roleCode
+  }
+
+  context.addIssue({
+    code: 'custom',
+    message: `Invalid option: expected one of ${userApiRoles.map((role) => `"${role}"`).join('|')}`,
+  })
+
+  return z.NEVER
+})
 
 export const userFormSchema = z
   .object({
@@ -41,3 +69,5 @@ export const userDetailFormSchema = z.object({
   role: userApiRoleSchema,
   tenancyCode: z.string().min(1, '소속을 선택하세요.'),
 })
+
+export type UserDetailFormInput = z.input<typeof userDetailFormSchema>

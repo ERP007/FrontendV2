@@ -28,10 +28,14 @@ import {
 } from '@/shared/ui'
 
 import { RANK_OPTIONS } from '../model/types'
-import { USER_TENANCY_OPTIONS } from '../model/user-tenancy'
-import { userDetailFormSchema } from '../model/user-schema'
+import {
+  normalizeUserApiRole,
+  userDetailFormSchema,
+  type UserDetailFormInput,
+} from '../model/user-schema'
 
 import type { UserApiRole, UserDetailFormValues, UserDetailResponse, UserListItem } from '../model/types'
+import type { UserTenancyOption } from '../model/user-tenancy'
 
 const FORM_ID = 'user-detail-form'
 const DEFAULT_FORM_VALUES: UserDetailFormValues = {
@@ -52,11 +56,13 @@ const defaultRoleOptions: UserApiRole[] = [
   'WAREHOUSE_MANAGER',
 ]
 
-const defaultTenancyOptions = USER_TENANCY_OPTIONS.map((option) => ({
-  label: option.label,
-  supportingText: option.code,
-  value: option.code,
-}))
+function toTenancySelectOption(option: UserTenancyOption) {
+  return {
+    label: option.label,
+    supportingText: option.code,
+    value: option.code,
+  }
+}
 
 function toRoleOption(role: UserApiRole) {
   return {
@@ -79,6 +85,9 @@ export interface UserDetailModalProps {
   open: boolean
   saving?: boolean
   saveErrorMessage?: string | null
+  tenancyOptions: UserTenancyOption[]
+  tenancyOptionsErrorMessage?: string | null
+  tenancyOptionsLoading?: boolean
   user: UserListItem | null
 }
 
@@ -92,16 +101,19 @@ export function UserDetailModal({
   open,
   saving = false,
   saveErrorMessage,
+  tenancyOptions: userTenancyOptions,
+  tenancyOptionsErrorMessage,
+  tenancyOptionsLoading = false,
   user,
 }: UserDetailModalProps) {
-  const formValues = useMemo<UserDetailFormValues>(
+  const formValues = useMemo<UserDetailFormInput>(
     () =>
       detail
         ? {
             email: detail.email,
             name: detail.name,
             position: detail.position ?? '',
-            role: detail.role,
+            role: normalizeUserApiRole(detail.role) ?? detail.role,
             tenancyCode: detail.tenancyCode,
           }
         : DEFAULT_FORM_VALUES,
@@ -113,7 +125,7 @@ export function UserDetailModal({
     handleSubmit,
     register,
     reset,
-  } = useForm<UserDetailFormValues>({
+  } = useForm<UserDetailFormInput, unknown, UserDetailFormValues>({
     defaultValues: DEFAULT_FORM_VALUES,
     resolver: zodResolver(userDetailFormSchema),
   })
@@ -123,7 +135,12 @@ export function UserDetailModal({
   }, [formValues, reset])
 
   const role = useWatch({ control, name: 'role' })
+  const normalizedRole = normalizeUserApiRole(role ?? '')
 
+  const defaultTenancyOptions = useMemo(
+    () => userTenancyOptions.map(toTenancySelectOption),
+    [userTenancyOptions],
+  )
   const tenancyOptions = useMemo(() => {
     if (!detail?.tenancyCode || defaultTenancyOptions.some((option) => option.value === detail.tenancyCode)) {
       return defaultTenancyOptions
@@ -137,17 +154,17 @@ export function UserDetailModal({
       },
       ...defaultTenancyOptions,
     ]
-  }, [detail])
+  }, [defaultTenancyOptions, detail])
 
   const roleOptions = useMemo(() => {
     const options = defaultRoleOptions.map(toRoleOption)
 
-    if (role && !options.some((option) => option.value === role)) {
-      return [toRoleOption(role), ...options]
+    if (normalizedRole && !options.some((option) => option.value === normalizedRole)) {
+      return [toRoleOption(normalizedRole), ...options]
     }
 
     return options
-  }, [role])
+  }, [normalizedRole])
 
   const positionOptions = useMemo(() => {
     const options = RANK_OPTIONS.map((position) => ({ label: position, value: position }))
@@ -198,6 +215,10 @@ export function UserDetailModal({
     >
       <form id={FORM_ID} className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {saveErrorMessage ? <FgNotice tone="danger">{saveErrorMessage}</FgNotice> : null}
+        {tenancyOptionsLoading ? <FgNotice>소속 목록을 불러오는 중입니다.</FgNotice> : null}
+        {tenancyOptionsErrorMessage ? (
+          <FgNotice tone="danger">{tenancyOptionsErrorMessage}</FgNotice>
+        ) : null}
 
         {loading && !detail ? (
           <FgNotice>사용자 상세 정보를 불러오는 중입니다.</FgNotice>
@@ -277,9 +298,7 @@ export function UserDetailModal({
                 {...register('email')}
               />
               <Controller
-                key={`tenancy-${detail.userId}-${detail.tenancyCode}`}
                 control={control}
-                defaultValue={detail.tenancyCode}
                 name="tenancyCode"
                 render={({ field }) => (
                   <FgSelect
@@ -289,15 +308,13 @@ export function UserDetailModal({
                     options={tenancyOptions}
                     placeholder="소속 선택"
                     required
-                    value={field.value || detail.tenancyCode || undefined}
+                    value={field.value || undefined}
                     onValueChange={field.onChange}
                   />
                 )}
               />
               <Controller
-                key={`role-${detail.userId}-${detail.role}`}
                 control={control}
-                defaultValue={detail.role}
                 name="role"
                 render={({ field }) => (
                   <FgSelect
@@ -305,15 +322,13 @@ export function UserDetailModal({
                     label="Role"
                     options={roleOptions}
                     required
-                    value={field.value || detail.role}
-                    onValueChange={(value) => field.onChange(value as UserApiRole)}
+                    value={field.value || undefined}
+                    onValueChange={(value) => field.onChange(normalizeUserApiRole(value) ?? value)}
                   />
                 )}
               />
               <Controller
-                key={`position-${detail.userId}-${detail.position ?? 'empty'}`}
                 control={control}
-                defaultValue={detail.position ?? ''}
                 name="position"
                 render={({ field }) => (
                   <FgSelect
@@ -321,7 +336,7 @@ export function UserDetailModal({
                     label="직급"
                     options={positionOptions}
                     placeholder="직급 선택"
-                    value={field.value || detail.position || undefined}
+                    value={field.value || undefined}
                     onValueChange={field.onChange}
                   />
                 )}
