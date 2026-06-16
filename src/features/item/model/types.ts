@@ -29,17 +29,6 @@ export interface ItemSubCategory extends ItemCategory {
   parentCategoryCode: string
 }
 
-/** 분류 트리: 대분류 → 중분류 목록 */
-export const ITEM_CATEGORIES: Record<string, string[]> = {
-  엔진: ['윤활계통', '필터'],
-  점화: [],
-  제동: [],
-  동력전달: [],
-  '현가·조향': [],
-  전장: [],
-  '외장·기타': [],
-}
-
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
 export interface ItemUnitOption {

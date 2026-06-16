@@ -23,7 +23,6 @@ export { useItemUnitsQuery } from './api/use-item-units-query'
 export { useItemsQuery } from './api/use-items-query'
 export {
   DEFAULT_ITEM_FILTER,
-  ITEM_CATEGORIES,
   ITEM_UNIT_OPTIONS,
 } from './model/types'
 export {

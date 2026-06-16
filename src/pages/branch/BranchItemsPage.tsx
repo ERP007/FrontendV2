@@ -80,31 +80,33 @@ export function BranchItemsPage() {
       })),
     [middleCategories],
   )
+  const detailSafetyStock = itemDetail?.safetyStock ?? detailTarget?.defaultSafetyStock
   const detailAllStockRows = useMemo(
-    () => (detailTarget ? getMockItemStockRows(detailTarget.code) : []),
-    [detailTarget],
+    () => (detailTarget ? getMockItemStockRows(detailTarget.code, detailSafetyStock) : []),
+    [detailSafetyStock, detailTarget],
   )
   const detailStockRows = useMemo(
     () =>
       detailTarget
         ? getMockVisibleItemStockRows({
             canManage: false,
+            safetyStock: detailSafetyStock,
             sku: detailTarget.code,
             tenancyCode: session?.tenancyCode,
           })
         : [],
-    [detailTarget, session?.tenancyCode],
+    [detailSafetyStock, detailTarget, session?.tenancyCode],
   )
   const detailStockScopeLabel = useMemo(() => {
     if (!detailTarget) {
       return undefined
     }
 
-    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode)
+    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode, detailSafetyStock)
     const branchWarehouse = detailAllStockRows.find((row) => row.warehouseCode === branchWarehouseCode)
 
     return branchWarehouse ? `${branchWarehouse.warehouseName} 기준` : '본인 지점 창고 기준'
-  }, [detailAllStockRows, detailTarget, session?.tenancyCode])
+  }, [detailAllStockRows, detailSafetyStock, detailTarget, session?.tenancyCode])
 
   const handleSelectItem = useCallback((item: Item) => {
     setDetailTarget(item)

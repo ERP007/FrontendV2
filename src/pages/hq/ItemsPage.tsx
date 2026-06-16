@@ -145,21 +145,23 @@ export function ItemsPage() {
       })),
     [itemUnits],
   )
+  const detailSafetyStock = itemDetail?.safetyStock ?? detailTarget?.defaultSafetyStock
   const detailAllStockRows = useMemo(
-    () => (detailTarget ? getMockItemStockRows(detailTarget.code) : []),
-    [detailTarget],
+    () => (detailTarget ? getMockItemStockRows(detailTarget.code, detailSafetyStock) : []),
+    [detailSafetyStock, detailTarget],
   )
   const detailStockRows = useMemo(
     () =>
       detailTarget
         ? getMockVisibleItemStockRows({
             canManage: canCreateItem,
+            safetyStock: detailSafetyStock,
             sku: detailTarget.code,
             tenancyCode: session?.tenancyCode,
             warehouseCode: detailWarehouseCode,
           })
         : [],
-    [canCreateItem, detailTarget, detailWarehouseCode, session?.tenancyCode],
+    [canCreateItem, detailSafetyStock, detailTarget, detailWarehouseCode, session?.tenancyCode],
   )
   const detailWarehouseOptions = useMemo(
     () => [
@@ -186,11 +188,11 @@ export function ItemsPage() {
       return selectedWarehouse ? `${selectedWarehouse.warehouseName} 기준` : '선택 창고 기준'
     }
 
-    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode)
+    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode, detailSafetyStock)
     const branchWarehouse = detailAllStockRows.find((row) => row.warehouseCode === branchWarehouseCode)
 
     return branchWarehouse ? `${branchWarehouse.warehouseName} 기준` : '본인 지점 창고 기준'
-  }, [canCreateItem, detailAllStockRows, detailTarget, detailWarehouseCode, session?.tenancyCode])
+  }, [canCreateItem, detailAllStockRows, detailSafetyStock, detailTarget, detailWarehouseCode, session?.tenancyCode])
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
   }, [])
