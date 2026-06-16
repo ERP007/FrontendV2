@@ -1,27 +1,47 @@
 import { useNavigate } from '@tanstack/react-router'
+import { RefreshCw } from 'lucide-react'
 
 import {
+  getMeErrorMessage,
   MY_ACTIVITY_FIXTURES,
   MyActivityCard,
   MyPasswordCard,
   MyProfileCard,
-  PASSWORD_CHANGED_AT,
+  useMeQuery,
 } from '@/features/user'
-import { useSession } from '@/shared/auth/session'
-import { FgPageHeader } from '@/shared/ui'
+import { formatDate } from '@/shared/lib/format'
+import { FgButton, FgNotice, FgPageHeader } from '@/shared/ui'
 
 export function MyPage() {
   const navigate = useNavigate()
-  const { data: session } = useSession()
+  const meQuery = useMeQuery()
+  const me = meQuery.data
+  const errorMessage = meQuery.isError ? getMeErrorMessage(meQuery.error) : null
 
   return (
     <div className="fg-content max-w-content-narrow">
       <FgPageHeader breadcrumbs={[{ label: '설정' }, { label: '마이페이지' }]} title="마이페이지" />
-      {session ? <MyProfileCard session={session} /> : null}
-      <MyPasswordCard
-        changedAt={PASSWORD_CHANGED_AT}
-        onChangePassword={() => void navigate({ to: '/password-change' })}
-      />
+      {meQuery.isLoading ? <FgNotice>마이페이지 정보를 불러오는 중입니다.</FgNotice> : null}
+      {errorMessage ? (
+        <div className="space-y-3">
+          <FgNotice tone="danger">{errorMessage}</FgNotice>
+          <FgButton
+            leftIcon={<RefreshCw aria-hidden className="h-4 w-4" />}
+            size="sm"
+            variant="soft"
+            onClick={() => void meQuery.refetch()}
+          >
+            다시 시도
+          </FgButton>
+        </div>
+      ) : null}
+      {me ? <MyProfileCard profile={me} /> : null}
+      {me ? (
+        <MyPasswordCard
+          changedAt={formatDate(me.lastChangedPassAt)}
+          onChangePassword={() => void navigate({ to: '/password-change' })}
+        />
+      ) : null}
       <MyActivityCard activities={MY_ACTIVITY_FIXTURES} />
     </div>
   )
