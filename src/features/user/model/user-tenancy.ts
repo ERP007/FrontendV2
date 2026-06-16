@@ -9,35 +9,27 @@ export interface UserTenancyOption {
   type: UserTenancyType
 }
 
+export interface WarehouseOption {
+  code: string
+  name: string
+}
+
+const USER_TENANCY_ROLES: Record<UserTenancyType, UserRole[]> = {
+  ADMIN: ['ADMIN'],
+  BRANCH: ['BRANCH_MANAGER', 'BRANCH_STAFF'],
+  HQ: ['HQ_MANAGER', 'HQ_STAFF'],
+  WAREHOUSE: [],
+}
+
+export const ADMIN_TENANCY_OPTION: UserTenancyOption = {
+  code: 'ADMIN',
+  label: '관리자',
+  roles: USER_TENANCY_ROLES.ADMIN,
+  type: 'ADMIN',
+}
+
 export const USER_TENANCY_OPTIONS: UserTenancyOption[] = [
-  { code: 'ADMIN', label: '관리자', roles: ['ADMIN'], type: 'ADMIN' },
-  { code: 'HQ', label: '본사', roles: ['HQ_MANAGER', 'HQ_STAFF'], type: 'HQ' },
-  { code: 'WH-HQ-001', label: '본사 중앙창고', roles: ['HQ_MANAGER', 'HQ_STAFF'], type: 'HQ' },
-  { code: 'WH-HQ-002', label: '판교 물류센터', roles: ['HQ_MANAGER', 'HQ_STAFF'], type: 'HQ' },
-  {
-    code: 'WH-BR-001',
-    label: '강남 1지점',
-    roles: ['BRANCH_MANAGER', 'BRANCH_STAFF'],
-    type: 'BRANCH',
-  },
-  {
-    code: 'WH-BR-002',
-    label: '분당 1지점',
-    roles: ['BRANCH_MANAGER', 'BRANCH_STAFF'],
-    type: 'BRANCH',
-  },
-  {
-    code: 'WH-BR-003',
-    label: '부산 1지점',
-    roles: ['BRANCH_MANAGER', 'BRANCH_STAFF'],
-    type: 'BRANCH',
-  },
-  {
-    code: 'WH-BR-004',
-    label: '대구 1지점',
-    roles: ['BRANCH_MANAGER', 'BRANCH_STAFF'],
-    type: 'BRANCH',
-  },
+  ADMIN_TENANCY_OPTION,
 ]
 
 export function getUserTenancyOption(code: string) {
@@ -49,5 +41,38 @@ export function getUserTenancyLabel(code: string) {
 }
 
 export function getUserTenancyRoles(code: string): UserRole[] {
-  return getUserTenancyOption(code)?.roles ?? []
+  return getUserTenancyRolesByType(getUserTenancyTypeFromCode(code))
+}
+
+export function getUserTenancyRolesByType(type: UserTenancyType): UserRole[] {
+  return USER_TENANCY_ROLES[type]
+}
+
+export function getUserTenancyTypeFromCode(code: string): UserTenancyType {
+  const normalizedCode = code.trim().toUpperCase()
+
+  if (normalizedCode === 'ADMIN') {
+    return 'ADMIN'
+  }
+
+  if (normalizedCode === 'HQ' || normalizedCode.startsWith('HQ-') || normalizedCode.startsWith('WH-HQ-')) {
+    return 'HQ'
+  }
+
+  if (normalizedCode.startsWith('BR-') || normalizedCode.startsWith('WH-BR-')) {
+    return 'BRANCH'
+  }
+
+  return 'WAREHOUSE'
+}
+
+export function toUserTenancyOption(option: WarehouseOption): UserTenancyOption {
+  const type = getUserTenancyTypeFromCode(option.code)
+
+  return {
+    code: option.code,
+    label: option.name,
+    roles: getUserTenancyRolesByType(type),
+    type,
+  }
 }

@@ -8,8 +8,13 @@ import {
   getCreateUserErrorMessage,
   getResetPasswordErrorMessage,
   getToggleUserSuspensionErrorMessage,
+  getUpdateUserErrorMessage,
+  getUserDetailErrorMessage,
+  getUserTenancyOptionsErrorMessage,
   getUsersErrorMessage,
+  USER_TENANCY_OPTIONS,
   UserCreateModal,
+  UserDetailModal,
   UserFilterBar,
   UserPasswordResetModal,
   UserSuspendToggleModal,
@@ -17,11 +22,16 @@ import {
   useCreateUserMutation,
   useResetUserPasswordMutation,
   useToggleUserSuspensionMutation,
+  useUpdateUserMutation,
+  useUserDetailQuery,
+  useUserTenancyOptionsQuery,
   useUsersQuery,
+  userDetailQueryKeys,
   usersQueryKey,
 } from '@/features/user'
 import type {
   FetchUsersParams,
+  UserDetailFormValues,
   UserFilter,
   UserFormValues,
   UserListItem,
@@ -34,6 +44,7 @@ import { FgButton, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '관리' }, { label: '사용자' }, { label: '사용자 목록' }]
 const SEARCH_DEBOUNCE_MS = 350
+const EMPTY_USER_LIST: UserListItem[] = []
 type ToastId = string | number
 
 interface UserListSortState {
@@ -58,6 +69,48 @@ function nextEmpNo(users: UserListItem[]): string {
   }, 0)
 
   return `HMC${String(max + 1).padStart(4, '0')}`
+}
+
+const USER_SORT_COLLATOR = new Intl.Collator('ko-KR', {
+  numeric: true,
+  sensitivity: 'base',
+})
+
+function compareDateString(left: string, right: string) {
+  const leftTime = Date.parse(left)
+  const rightTime = Date.parse(right)
+
+  if (!Number.isNaN(leftTime) && !Number.isNaN(rightTime)) {
+    return leftTime - rightTime
+  }
+
+  return USER_SORT_COLLATOR.compare(left, right)
+}
+
+function compareUsersBySort(left: UserListItem, right: UserListItem, sort: UserListSortState) {
+  if (sort.key === 'joinedAt') {
+    return compareDateString(left.joinedAt, right.joinedAt)
+  }
+
+  if (sort.key === 'name') {
+    return USER_SORT_COLLATOR.compare(left.name, right.name)
+  }
+
+  return USER_SORT_COLLATOR.compare(left.employeeNo, right.employeeNo)
+}
+
+function sortUserList(users: UserListItem[], sort: UserListSortState) {
+  const direction = sort.direction === 'ASC' ? 1 : -1
+
+  return [...users].sort((left, right) => {
+    const result = compareUsersBySort(left, right, sort)
+
+    if (result !== 0) {
+      return result * direction
+    }
+
+    return USER_SORT_COLLATOR.compare(left.employeeNo, right.employeeNo)
+  })
 }
 
 function maskTemporaryPassword(password: string) {
@@ -159,11 +212,15 @@ export function UsersPage() {
   const [resetPasswordErrorMessage, setResetPasswordErrorMessage] = useState<string | null>(null)
   const [suspendToggleTarget, setSuspendToggleTarget] = useState<UserListItem | null>(null)
   const [suspendToggleErrorMessage, setSuspendToggleErrorMessage] = useState<string | null>(null)
+  const [detailTarget, setDetailTarget] = useState<UserListItem | null>(null)
+  const [detailSaveErrorMessage, setDetailSaveErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const { data: session } = useSession()
   const createUserMutation = useCreateUserMutation()
   const resetUserPasswordMutation = useResetUserPasswordMutation()
   const toggleUserSuspensionMutation = useToggleUserSuspensionMutation()
+  const updateUserMutation = useUpdateUserMutation()
+  const userTenancyOptionsQuery = useUserTenancyOptionsQuery()
 
   useEffect(() => {
     const nextQuery = filter.keyword.trim()
@@ -194,11 +251,23 @@ export function UsersPage() {
     [filter.role, filter.status, filter.tenancyCode, page, pageSize, query, sort.direction, sort.key],
   )
   const usersQuery = useUsersQuery(usersParams)
-  const users = usersQuery.data?.content ?? []
+  const users = usersQuery.data?.content ?? EMPTY_USER_LIST
+  const sortedUsers = useMemo(() => sortUserList(users, sort), [sort, users])
   const totalCount = usersQuery.data?.totalElements ?? 0
   const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1)
   const currentPage = Math.min(page, totalPages)
   const usersErrorMessage = usersQuery.isError ? getUsersErrorMessage(usersQuery.error) : null
+  const userDetailQuery = useUserDetailQuery(detailTarget?.userId, detailTarget !== null)
+  const detailErrorMessage = userDetailQuery.isError
+    ? getUserDetailErrorMessage(userDetailQuery.error)
+    : null
+  const selectedUserDetail =
+    userDetailQuery.data?.userId === detailTarget?.userId ? userDetailQuery.data : undefined
+  const freshUserDetail = userDetailQuery.isFetching ? undefined : selectedUserDetail
+  const tenancyOptions = userTenancyOptionsQuery.data ?? USER_TENANCY_OPTIONS
+  const tenancyOptionsErrorMessage = userTenancyOptionsQuery.isError
+    ? getUserTenancyOptionsErrorMessage(userTenancyOptionsQuery.error)
+    : null
 
   useEffect(() => {
     if (page > totalPages) {
@@ -318,8 +387,50 @@ export function UsersPage() {
     }
   }
 
+  function openUserDetailModal(user: UserListItem) {
+    setDetailSaveErrorMessage(null)
+    setDetailTarget(user)
+  }
+
+  function closeUserDetailModal() {
+    if (updateUserMutation.isPending) {
+      return
+    }
+
+    setDetailSaveErrorMessage(null)
+    setDetailTarget(null)
+  }
+
+  async function handleUserDetailSubmit(values: UserDetailFormValues) {
+    if (!detailTarget) {
+      return
+    }
+
+    setDetailSaveErrorMessage(null)
+
+    try {
+      const response = await updateUserMutation.mutateAsync({
+        payload: {
+          display_name: values.name.trim(),
+          email: values.email.trim(),
+          position: values.position.trim(),
+          role: values.role,
+          tenancy_code: values.tenancyCode,
+        },
+        userId: detailTarget.userId,
+      })
+
+      queryClient.setQueryData(userDetailQueryKeys.detail(detailTarget.userId), response)
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setDetailTarget(null)
+      toast.success('사용자 정보가 저장되었습니다.')
+    } catch (error) {
+      setDetailSaveErrorMessage(getUpdateUserErrorMessage(error))
+    }
+  }
+
   const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const rangeEnd = totalCount === 0 ? 0 : Math.min(rangeStart + users.length - 1, totalCount)
+  const rangeEnd = totalCount === 0 ? 0 : Math.min(rangeStart + sortedUsers.length - 1, totalCount)
 
   return (
     <div className="fg-content">
@@ -349,6 +460,7 @@ export function UsersPage() {
       />
       <UserFilterBar
         filter={filter}
+        tenancyOptions={tenancyOptions}
         onChange={handleFilterChange}
         onReset={() => handleFilterChange(DEFAULT_USER_FILTER)}
       />
@@ -374,7 +486,8 @@ export function UsersPage() {
         loading={usersQuery.isLoading}
         sortBy={sort.key}
         sortDirection={sort.direction}
-        users={users}
+        users={sortedUsers}
+        onEditUser={openUserDetailModal}
         onResetPassword={openResetPasswordModal}
         onSortChange={handleSortChange}
         onToggleSuspension={openSuspendToggleModal}
@@ -397,11 +510,29 @@ export function UsersPage() {
         loading={createUserMutation.isPending}
         nextEmpNo={nextEmpNo(users)}
         open={createOpen}
+        tenancyOptions={tenancyOptions}
+        tenancyOptionsErrorMessage={tenancyOptionsErrorMessage}
+        tenancyOptionsLoading={userTenancyOptionsQuery.isLoading}
         onClose={() => {
           setCreateErrorMessage(null)
           setCreateOpen(false)
         }}
         onSubmit={handleCreate}
+      />
+      <UserDetailModal
+        detail={freshUserDetail}
+        errorMessage={detailErrorMessage}
+        loading={userDetailQuery.isFetching}
+        open={detailTarget !== null}
+        saveErrorMessage={detailSaveErrorMessage}
+        saving={updateUserMutation.isPending}
+        tenancyOptions={tenancyOptions}
+        tenancyOptionsErrorMessage={tenancyOptionsErrorMessage}
+        tenancyOptionsLoading={userTenancyOptionsQuery.isLoading}
+        user={detailTarget}
+        onClose={closeUserDetailModal}
+        onRetry={() => void userDetailQuery.refetch()}
+        onSubmit={handleUserDetailSubmit}
       />
       <UserPasswordResetModal
         errorMessage={resetPasswordErrorMessage}

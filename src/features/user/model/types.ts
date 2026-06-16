@@ -7,16 +7,7 @@ import type { UserRole } from '@/shared/config/session'
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'SUSPENDED'
 export type UserApiRole = UserRole | 'WAREHOUSE_STAFF' | 'WAREHOUSE_MANAGER'
 export type UserRoleFilter = 'ALL' | UserApiRole
-export type UserTenancyCodeFilter =
-  | 'ALL'
-  | 'ADMIN'
-  | 'HQ'
-  | 'WH-HQ-001'
-  | 'WH-HQ-002'
-  | 'WH-BR-001'
-  | 'WH-BR-002'
-  | 'WH-BR-003'
-  | 'WH-BR-004'
+export type UserTenancyCodeFilter = 'ALL' | string
 export type UserStatusFilter = 'ALL' | UserStatus
 export type UserSortBy = 'employeeNo' | 'name' | 'joinedAt'
 export type UserSortDirection = 'ASC' | 'DESC'
@@ -167,6 +158,14 @@ export interface UserDetailResponse {
 }
 
 export type MyPageResponse = Omit<UserDetailResponse, 'createdAt'>
+
+export interface UserDetailFormValues {
+  email: string
+  name: string
+  position: string
+  role: UserApiRole
+  tenancyCode: string
+}
 
 export interface UpdateUserRequest {
   display_name: string

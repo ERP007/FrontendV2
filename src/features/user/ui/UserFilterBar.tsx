@@ -1,11 +1,11 @@
 import { RotateCcw, Search } from 'lucide-react'
+import { useMemo } from 'react'
 
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
-import { USER_TENANCY_OPTIONS } from '../model/user-tenancy'
-
 import type { UserApiRole, UserFilter, UserRoleFilter, UserStatus, UserTenancyCodeFilter } from '../model/types'
+import type { UserTenancyOption } from '../model/user-tenancy'
 
 const roleValues: UserApiRole[] = [
   'ADMIN',
@@ -32,18 +32,22 @@ const statusOptions = [
   { label: 'SUSPENDED · 정지', value: 'SUSPENDED' },
 ]
 
-const belongOptions = [
-  { label: '소속 : 전체', value: 'ALL' },
-  ...USER_TENANCY_OPTIONS.map((option) => ({ label: option.label, value: option.code })),
-]
-
 export interface UserFilterBarProps {
   filter: UserFilter
   onChange: (filter: UserFilter) => void
   onReset: () => void
+  tenancyOptions: UserTenancyOption[]
 }
 
-export function UserFilterBar({ filter, onChange, onReset }: UserFilterBarProps) {
+export function UserFilterBar({ filter, onChange, onReset, tenancyOptions }: UserFilterBarProps) {
+  const belongOptions = useMemo(
+    () => [
+      { label: '소속 : 전체', value: 'ALL' },
+      ...tenancyOptions.map((option) => ({ label: option.label, value: option.code })),
+    ],
+    [tenancyOptions],
+  )
+
   return (
     <FgCard className="flex items-center gap-3 p-4">
       <FgInput

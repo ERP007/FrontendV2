@@ -12,6 +12,20 @@ export {
   useToggleUserSuspensionMutation,
 } from './api/use-toggle-user-suspension-mutation'
 export {
+  getUpdateUserErrorMessage,
+  useUpdateUserMutation,
+} from './api/use-update-user-mutation'
+export {
+  getUserDetailErrorMessage,
+  useUserDetailQuery,
+  userDetailQueryKeys,
+} from './api/use-user-detail-query'
+export {
+  getUserTenancyOptionsErrorMessage,
+  useUserTenancyOptionsQuery,
+  userTenancyOptionsQueryKey,
+} from './api/use-user-tenancy-options-query'
+export {
   getUsersErrorMessage,
   useUsersQuery,
   usersQueryKey,
@@ -30,11 +44,15 @@ export {
   RANK_OPTIONS,
 } from './model/types'
 export {
+  ADMIN_TENANCY_OPTION,
   getUserTenancyLabel,
   getUserTenancyOption,
   getUserTenancyRoles,
+  getUserTenancyTypeFromCode,
+  toUserTenancyOption,
   USER_TENANCY_OPTIONS,
 } from './model/user-tenancy'
+export type { UserTenancyOption, UserTenancyType, WarehouseOption } from './model/user-tenancy'
 export type {
   CreateUserPasswordIssueMode,
   CreateUserRequest,
@@ -44,6 +62,7 @@ export type {
   MyPageResponse,
   SuspendToggleResponse,
   Me,
+  UserDetailFormValues,
   User,
   UserActivity,
   UserApiRole,
@@ -64,6 +83,7 @@ export type {
 } from './model/types'
 export { MyActivityCard, MyPasswordCard, MyProfileCard } from './ui/MyPageCards'
 export { UserCreateModal } from './ui/UserCreateModal'
+export { UserDetailModal } from './ui/UserDetailModal'
 export { UserFilterBar } from './ui/UserFilterBar'
 export { UserPasswordResetModal } from './ui/UserPasswordResetModal'
 export { UserSuspendToggleModal } from './ui/UserSuspendToggleModal'
