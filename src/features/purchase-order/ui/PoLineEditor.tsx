@@ -5,9 +5,9 @@ import type { ReactNode } from 'react'
 import { formatCurrency } from '@/shared/lib/format'
 import { FgButton, FgCard } from '@/shared/ui'
 
-import { draftLineAmount, emptyDraftLine } from '../model/ui-mock-types'
+import { draftLineAmount, emptyDraftLine } from '../model/ui-types'
 
-import type { PoDraftLine } from '../model/ui-mock-types'
+import type { PoDraftLine } from '../model/ui-types'
 
 const MAX_LINES = 100
 

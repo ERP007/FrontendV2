@@ -60,14 +60,6 @@ export interface PurchaseOrderFilter {
   to: string
 }
 
-export interface PoDraftLine {
-  itemName: string
-  quantity: number
-  sku: string | null
-  unit: string | null
-  unitPrice: number
-}
-
 export const PO_STATUS_LABELS: Record<PoUiStatus, string> = {
   APPROVED: 'APPROVED',
   CANCELED: 'CANCELED',
@@ -76,20 +68,12 @@ export const PO_STATUS_LABELS: Record<PoUiStatus, string> = {
   SHIPPED: 'SHIPPED',
 }
 
-export function emptyDraftLine(): PoDraftLine {
-  return { itemName: '', quantity: 0, sku: null, unit: null, unitPrice: 0 }
-}
-
 export function poTotalQuantity(lines: Pick<PurchaseOrderLine, 'quantity'>[]): number {
   return lines.reduce((sum, line) => sum + line.quantity, 0)
 }
 
 export function poTotalAmount(lines: Pick<PurchaseOrderLine, 'amount'>[]): number {
   return lines.reduce((sum, line) => sum + line.amount, 0)
-}
-
-export function draftLineAmount(line: PoDraftLine): number {
-  return line.quantity * line.unitPrice
 }
 
 export function poDominantUnit(lines: PurchaseOrderLine[]): string {
