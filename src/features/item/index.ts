@@ -17,6 +17,11 @@ export {
   useItemDetailQuery,
 } from './api/use-item-detail-query'
 export {
+  itemStocksQueryBaseKey,
+  itemStocksQueryKey,
+  useItemStocksQuery,
+} from './api/use-item-stocks-query'
+export {
   useUpdateItemMutation,
 } from './api/use-update-item-mutation'
 export { useItemUnitsQuery } from './api/use-item-units-query'
@@ -27,6 +32,7 @@ export {
 } from './model/types'
 export {
   getItemErrorDetail,
+  getItemStockErrorDetail,
   isItemErrorCode,
 } from './model/item-error-policy'
 export {

@@ -4,21 +4,19 @@ import { Loader2 } from 'lucide-react'
 import {
   DEFAULT_ITEM_FILTER,
   getItemErrorDetail,
-  getMockBranchWarehouseCode,
-  getMockItemStockRows,
-  getMockVisibleItemStockRows,
+  getItemStockErrorDetail,
   ItemDetailModal,
   ItemFilterBar,
   ItemTable,
   useItemCategoriesQuery,
   useItemDetailQuery,
+  useItemStocksQuery,
   useItemSubCategoriesQuery,
   useItemsQuery,
   isItemErrorCode,
 } from '@/features/item'
 import type { Item, ItemFilter, ItemListParams } from '@/features/item'
 import { isErrorResponse } from '@/shared/api'
-import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
@@ -32,7 +30,6 @@ export function BranchItemsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [detailTarget, setDetailTarget] = useState<Item | null>(null)
   const [detailFormError, setDetailFormError] = useState<string | null>(null)
-  const { data: session } = useSession()
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -63,6 +60,11 @@ export function BranchItemsPage() {
     error: itemDetailError,
     isLoading: isItemDetailLoading,
   } = useItemDetailQuery(detailTarget?.code ?? null)
+  const {
+    data: detailStockRows = [],
+    error: detailStockError,
+    isLoading: isDetailStockLoading,
+  } = useItemStocksQuery(detailTarget?.code ?? null)
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -80,33 +82,16 @@ export function BranchItemsPage() {
       })),
     [middleCategories],
   )
-  const detailSafetyStock = itemDetail?.safetyStock ?? detailTarget?.defaultSafetyStock
-  const detailAllStockRows = useMemo(
-    () => (detailTarget ? getMockItemStockRows(detailTarget.code, detailSafetyStock) : []),
-    [detailSafetyStock, detailTarget],
-  )
-  const detailStockRows = useMemo(
-    () =>
-      detailTarget
-        ? getMockVisibleItemStockRows({
-            canManage: false,
-            safetyStock: detailSafetyStock,
-            sku: detailTarget.code,
-            tenancyCode: session?.tenancyCode,
-          })
-        : [],
-    [detailSafetyStock, detailTarget, session?.tenancyCode],
-  )
   const detailStockScopeLabel = useMemo(() => {
     if (!detailTarget) {
       return undefined
     }
 
-    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode, detailSafetyStock)
-    const branchWarehouse = detailAllStockRows.find((row) => row.warehouseCode === branchWarehouseCode)
+    const branchWarehouse = detailStockRows[0]
 
     return branchWarehouse ? `${branchWarehouse.warehouseName} 기준` : '본인 지점 창고 기준'
-  }, [detailAllStockRows, detailSafetyStock, detailTarget, session?.tenancyCode])
+  }, [detailStockRows, detailTarget])
+  const detailStockErrorMessage = detailStockError ? getItemStockErrorDetail(detailStockError) : null
 
   const handleSelectItem = useCallback((item: Item) => {
     setDetailTarget(item)
@@ -206,8 +191,11 @@ export function BranchItemsPage() {
           detail={itemDetail ?? null}
           formError={visibleDetailFormError}
           isLoading={isItemDetailLoading}
+          isStockLoading={isDetailStockLoading}
           majorCategoryOptions={majorCategoryOptions}
           open
+          stockEmptyDescription="본인 지점 창고에 등록된 재고가 없습니다"
+          stockErrorMessage={detailStockErrorMessage}
           stockRows={detailStockRows}
           stockScopeLabel={detailStockScopeLabel}
           subCategoryOptions={middleCategoryOptions}

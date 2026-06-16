@@ -20,6 +20,14 @@ export function getItemErrorDetail(error: unknown, fallbackMessage: string) {
   return fallbackMessage
 }
 
+export function getItemStockErrorDetail(error: unknown) {
+  if (isErrorResponse(error) && error.status === 403) {
+    return getItemErrorDetail(error, '재고 조회 권한이 없습니다.')
+  }
+
+  return getItemErrorDetail(error, '재고 조회 중 오류가 발생했습니다.')
+}
+
 export function isItemErrorCode(error: unknown, errorCode: ItemErrorCode) {
   return isErrorResponse(error) && error.errorCode === errorCode
 }

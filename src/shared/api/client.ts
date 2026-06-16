@@ -6,6 +6,12 @@ import { queryClient } from '@/shared/api/query-client'
 
 import type { ErrorResponse } from '@/shared/api/error'
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    suppressGlobalErrorToast?: boolean
+  }
+}
+
 const API_PATH_PREFIX = '/api'
 const DEFAULT_API_ORIGIN = ''
 const KEYCLOAK_AUTHORIZATION_PATH = '/oauth2/authorization/keycloak'
@@ -112,11 +118,15 @@ export function redirectToAuthLogin({ force = false }: { force?: boolean } = {})
   return true
 }
 
-function handleGlobalError(error: ErrorResponse) {
+function handleGlobalError(error: ErrorResponse, { suppressToast = false }: { suppressToast?: boolean } = {}) {
   if (error.status === 401) {
     queryClient.clear()
     const isRedirecting = redirectToAuthLogin({ force: true })
     return isRedirecting
+  }
+
+  if (suppressToast) {
+    return false
   }
 
   if (error.status === 403) {
@@ -139,8 +149,9 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
+    const suppressToast = axios.isAxiosError(error) && Boolean(error.config?.suppressGlobalErrorToast)
     const errorResponse = normalizeErrorResponse(error)
-    const isWaitingForAuthRedirect = handleGlobalError(errorResponse)
+    const isWaitingForAuthRedirect = handleGlobalError(errorResponse, { suppressToast })
 
     if (isWaitingForAuthRedirect) {
       return waitForAuthRedirect()

@@ -5,14 +5,13 @@ import { toast } from 'sonner'
 import {
   DEFAULT_ITEM_FILTER,
   getItemErrorDetail,
-  getMockBranchWarehouseCode,
-  getMockItemStockRows,
-  getMockVisibleItemStockRows,
+  getItemStockErrorDetail,
   ItemCreateModal,
   ItemDetailModal,
   ItemFilterBar,
   ItemTable,
   itemDetailQueryKey,
+  itemStocksQueryBaseKey,
   useActivateItemMutation,
   useCreateItemMutation,
   useDeactivateItemMutation,
@@ -20,6 +19,7 @@ import {
   useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemSkuCheckMutation,
+  useItemStocksQuery,
   useItemUnitsQuery,
   useItemsQuery,
   useUpdateItemMutation,
@@ -99,6 +99,17 @@ export function ItemsPage() {
     error: itemDetailError,
     isLoading: isItemDetailLoading,
   } = useItemDetailQuery(detailTarget?.code ?? null)
+  const selectedDetailWarehouseCode = detailWarehouseCode === ALL_WAREHOUSES ? undefined : detailWarehouseCode
+  const {
+    data: detailAllStockRows = [],
+    error: detailAllStockError,
+    isLoading: isDetailAllStockLoading,
+  } = useItemStocksQuery(detailTarget?.code ?? null)
+  const {
+    data: selectedDetailStockRows = [],
+    error: selectedDetailStockError,
+    isLoading: isSelectedDetailStockLoading,
+  } = useItemStocksQuery(selectedDetailWarehouseCode ? detailTarget?.code ?? null : null, selectedDetailWarehouseCode)
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
   const updateItemMutation = useUpdateItemMutation()
@@ -145,24 +156,7 @@ export function ItemsPage() {
       })),
     [itemUnits],
   )
-  const detailSafetyStock = itemDetail?.safetyStock ?? detailTarget?.defaultSafetyStock
-  const detailAllStockRows = useMemo(
-    () => (detailTarget ? getMockItemStockRows(detailTarget.code, detailSafetyStock) : []),
-    [detailSafetyStock, detailTarget],
-  )
-  const detailStockRows = useMemo(
-    () =>
-      detailTarget
-        ? getMockVisibleItemStockRows({
-            canManage: canCreateItem,
-            safetyStock: detailSafetyStock,
-            sku: detailTarget.code,
-            tenancyCode: session?.tenancyCode,
-            warehouseCode: detailWarehouseCode,
-          })
-        : [],
-    [canCreateItem, detailSafetyStock, detailTarget, detailWarehouseCode, session?.tenancyCode],
-  )
+  const detailStockRows = selectedDetailWarehouseCode ? selectedDetailStockRows : detailAllStockRows
   const detailWarehouseOptions = useMemo(
     () => [
       { label: '전체 창고', value: ALL_WAREHOUSES },
@@ -179,20 +173,22 @@ export function ItemsPage() {
       return undefined
     }
 
-    if (canCreateItem) {
-      if (detailWarehouseCode === ALL_WAREHOUSES) {
-        return '전체 창고'
-      }
-
-      const selectedWarehouse = detailAllStockRows.find((row) => row.warehouseCode === detailWarehouseCode)
-      return selectedWarehouse ? `${selectedWarehouse.warehouseName} 기준` : '선택 창고 기준'
+    if (detailWarehouseCode === ALL_WAREHOUSES) {
+      return '전체 창고'
     }
 
-    const branchWarehouseCode = getMockBranchWarehouseCode(detailTarget.code, session?.tenancyCode, detailSafetyStock)
-    const branchWarehouse = detailAllStockRows.find((row) => row.warehouseCode === branchWarehouseCode)
+    const selectedWarehouse =
+      detailStockRows[0] ?? detailAllStockRows.find((row) => row.warehouseCode === detailWarehouseCode)
 
-    return branchWarehouse ? `${branchWarehouse.warehouseName} 기준` : '본인 지점 창고 기준'
-  }, [canCreateItem, detailAllStockRows, detailSafetyStock, detailTarget, detailWarehouseCode, session?.tenancyCode])
+    return selectedWarehouse ? `${selectedWarehouse.warehouseName} 기준` : '선택 창고 기준'
+  }, [detailAllStockRows, detailStockRows, detailTarget, detailWarehouseCode])
+  const activeDetailStockError = selectedDetailWarehouseCode ? selectedDetailStockError : detailAllStockError
+  const detailStockErrorMessage = activeDetailStockError ? getItemStockErrorDetail(activeDetailStockError) : null
+  const isDetailStockLoading = selectedDetailWarehouseCode ? isSelectedDetailStockLoading : isDetailAllStockLoading
+  const detailStockEmptyDescription =
+    detailWarehouseCode === ALL_WAREHOUSES
+      ? '조회 가능한 창고 재고가 없습니다'
+      : '선택한 창고에 등록된 재고가 없습니다'
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
   }, [])
@@ -257,6 +253,7 @@ export function ItemsPage() {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['items'] }),
           queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(updatedItem.sku) }),
+          queryClient.invalidateQueries({ queryKey: itemStocksQueryBaseKey(updatedItem.sku) }),
         ])
         toast.success('부품 정보가 수정되었습니다.')
       } catch (error) {
@@ -458,11 +455,14 @@ export function ItemsPage() {
           formError={visibleDetailFormError}
           isLoading={isItemDetailLoading}
           isStatusChanging={activateItemMutation.isPending || deactivateItemMutation.isPending}
+          isStockLoading={isDetailStockLoading}
           isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
           isSubmitting={updateItemMutation.isPending}
           isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
           majorCategoryOptions={majorCategoryOptions}
           open
+          stockEmptyDescription={detailStockEmptyDescription}
+          stockErrorMessage={detailStockErrorMessage}
           stockRows={detailStockRows}
           stockScopeLabel={detailStockScopeLabel}
           subCategoryOptions={detailMiddleCategoryOptions}

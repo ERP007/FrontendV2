@@ -77,7 +77,7 @@ function ItemStockStatusBadge({ row }: { row: ItemStockRow }) {
   const meta = stockStatusMeta[status]
 
   return (
-    <FgBadge dot variant={meta.variant}>
+    <FgBadge className="whitespace-nowrap" dot variant={meta.variant}>
       {meta.label}
     </FgBadge>
   )
@@ -90,6 +90,7 @@ export interface ItemDetailModalProps {
   isCategoryLoading?: boolean
   isLoading?: boolean
   isStatusChanging?: boolean
+  isStockLoading?: boolean
   isSubCategoryLoading?: boolean
   isSubmitting?: boolean
   isUnitLoading?: boolean
@@ -101,6 +102,8 @@ export interface ItemDetailModalProps {
   onWarehouseChange?: (warehouseCode: string) => void
   open: boolean
   stockRows: ItemStockRow[]
+  stockEmptyDescription?: string
+  stockErrorMessage?: string | null
   stockScopeLabel?: string
   subCategoryOptions: FgSelectOption[]
   unitOptions: FgSelectOption[]
@@ -115,6 +118,7 @@ export function ItemDetailModal({
   isCategoryLoading = false,
   isLoading = false,
   isStatusChanging = false,
+  isStockLoading = false,
   isSubCategoryLoading = false,
   isSubmitting = false,
   isUnitLoading = false,
@@ -126,6 +130,8 @@ export function ItemDetailModal({
   onWarehouseChange,
   open,
   stockRows,
+  stockEmptyDescription = '조회 가능한 창고 재고가 없습니다',
+  stockErrorMessage,
   stockScopeLabel,
   subCategoryOptions,
   unitOptions,
@@ -166,6 +172,7 @@ export function ItemDetailModal({
   const canEdit = canEnterEdit && isEditing
   const lockedControlClassName = canEdit ? READ_ONLY_CONTROL_CLASS : undefined
   const hasWarehouseFilter = canManage && warehouseOptions.length > 0 && Boolean(onWarehouseChange)
+  const displayedStockRows = stockErrorMessage ? [] : stockRows
   const categoryOptions = useMemo(
     () => ensureOption(majorCategoryOptions, detail?.categoryCode, detail?.categoryName),
     [detail?.categoryCode, detail?.categoryName, majorCategoryOptions],
@@ -213,8 +220,8 @@ export function ItemDetailModal({
         cell: ({ row }) => <ItemStockStatusBadge row={row.original} />,
         header: '상태',
         id: 'status',
-        meta: { align: 'center' },
-        size: 90,
+        meta: { align: 'center', cellClassName: 'whitespace-nowrap', headClassName: 'whitespace-nowrap' },
+        size: 112,
       },
     ],
     [],
@@ -540,19 +547,21 @@ export function ItemDetailModal({
                 <FgBadge variant="outline">{stockScopeLabel}</FgBadge>
               ) : null}
             </div>
+            {stockErrorMessage ? <FgNotice tone="danger">{stockErrorMessage}</FgNotice> : null}
             <FgDataTable
               columns={stockColumns}
-              data={stockRows}
+              data={displayedStockRows}
               emptyState={
                 <FgEmptyState
-                  description="재고 API 연결 전에는 목데이터 또는 빈 상태로 표시됩니다"
-                  title="표시할 재고가 없습니다"
+                  description={isStockLoading ? '잠시만 기다려 주세요' : stockEmptyDescription}
+                  icon={isStockLoading ? <Loader2 aria-hidden className="h-6 w-6 animate-spin" /> : undefined}
+                  title={isStockLoading ? '재고를 불러오는 중입니다' : '표시할 재고가 없습니다'}
                 />
               }
               header={
                 <>
                   <span>
-                    전체 <strong className="text-ink">{formatNumber(stockRows.length)}</strong>개 창고
+                    전체 <strong className="text-ink">{formatNumber(displayedStockRows.length)}</strong>개 창고
                   </span>
                   {hasWarehouseFilter ? (
                     <FgSelect
