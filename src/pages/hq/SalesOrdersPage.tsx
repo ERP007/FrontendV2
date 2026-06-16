@@ -3,12 +3,12 @@ import { useMemo, useState } from 'react'
 
 import {
   createDefaultSoFilter,
-  deriveSoHqKpi,
   filterSalesOrders,
   SALES_ORDER_FIXTURES,
   SoFilterBar,
   SoHqKpiCards,
   SoTable,
+  useSalesOrderHqKpiQuery,
 } from '@/features/sales-order'
 import type { SalesOrderFilter } from '@/features/sales-order'
 import { formatNumber } from '@/shared/lib/format'
@@ -22,7 +22,7 @@ export function SalesOrdersPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  const kpi = useMemo(() => deriveSoHqKpi(SALES_ORDER_FIXTURES), [])
+  const { data: kpi } = useSalesOrderHqKpiQuery()
   const filtered = useMemo(() => filterSalesOrders(SALES_ORDER_FIXTURES, filter), [filter])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
@@ -50,7 +50,7 @@ export function SalesOrdersPage() {
         breadcrumbs={breadcrumbs}
         title="발주 요청"
       />
-      <SoHqKpiCards kpi={kpi} />
+      {kpi && <SoHqKpiCards kpi={kpi} />}
       <SoFilterBar
         branches={branchOptions}
         filter={filter}

@@ -29,6 +29,8 @@ export type {
   DeliverSalesOrderResponse,
 } from './api/use-sales-order-deliver-mutation'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
+export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
+export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
 export type {
   SalesOrderHistoryActor,
   SalesOrderHistoryEntry,
@@ -36,10 +38,9 @@ export type {
 export {
   applyStatusTab,
   createDefaultSoFilter,
-  deriveSoHqKpi,
   filterSalesOrders,
 } from './model/filter-sales-orders'
-export type { SoBranchKpi, SoHqKpi } from './model/filter-sales-orders'
+export type { SoBranchKpi } from './model/filter-sales-orders'
 export { SALES_ORDER_FIXTURES } from './model/fixtures'
 export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
 export { soDraftFormSchema } from './model/so-draft-schema'

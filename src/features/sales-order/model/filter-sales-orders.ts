@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 
-import { IN_PROGRESS_STATUSES, isSoDelayed } from './types'
+import { IN_PROGRESS_STATUSES } from './types'
 
 import type { SalesOrder, SalesOrderFilter, SoStatusTab } from './types'
 
@@ -53,24 +53,6 @@ export function applyStatusTab(orders: SalesOrder[], tab: SoStatusTab): SalesOrd
       return orders.filter((order) => order.status === 'REJECTED' || order.status === 'CANCELED')
     default:
       return orders
-  }
-}
-
-export interface SoHqKpi {
-  delayedCount: number
-  pendingApprovalCount: number
-  pendingShipCount: number
-  totalCount: number
-}
-
-export function deriveSoHqKpi(orders: SalesOrder[]): SoHqKpi {
-  const today = dayjs().format('YYYY-MM-DD')
-
-  return {
-    delayedCount: orders.filter((order) => isSoDelayed(order, today)).length,
-    pendingApprovalCount: orders.filter((order) => order.status === 'REQUESTED').length,
-    pendingShipCount: orders.filter((order) => order.status === 'APPROVED').length,
-    totalCount: orders.length,
   }
 }
 

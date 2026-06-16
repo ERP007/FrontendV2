@@ -5,15 +5,15 @@ import { FgBadge, FgKpiCard } from '@/shared/ui'
 
 import { cn } from '@/shared/lib/cn'
 
+import type { SalesOrderHqKpi } from '../api/use-sales-order-hq-kpi-query'
 import type { SalesOrderStatus } from '../model/types'
 
-import type { SoBranchKpi, SoHqKpi } from '../model/filter-sales-orders'
+import type { SoBranchKpi } from '../model/filter-sales-orders'
 
-export function SoHqKpiCards({ kpi }: { kpi: SoHqKpi }) {
+export function SoHqKpiCards({ kpi }: { kpi: SalesOrderHqKpi }) {
   return (
     <div className="grid grid-cols-4 gap-5">
       <FgKpiCard
-        footer="최근 30일 기준"
         icon={<ClipboardList aria-hidden className="h-4 w-4" />}
         label="전체 요청"
         metric={formatNumber(kpi.totalCount)}
@@ -21,15 +21,15 @@ export function SoHqKpiCards({ kpi }: { kpi: SoHqKpi }) {
       <FgKpiCard
         icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
         label="승인 대기"
-        metric={<span className="text-primary-strong">{formatNumber(kpi.pendingApprovalCount)}</span>}
+        metric={<span className="text-primary-strong">{formatNumber(kpi.requestedCount)}</span>}
         tag={<FgBadge variant="primary">검토 필요</FgBadge>}
         tone="primary"
       />
       <FgKpiCard
-        footer="승인 완료 · 출고 전"
+        footer="승인 완료 · 배송 중"
         icon={<Truck aria-hidden className="h-4 w-4" />}
-        label="출고 대기"
-        metric={formatNumber(kpi.pendingShipCount)}
+        label="배송 중"
+        metric={formatNumber(kpi.approvedCount)}
       />
       <FgKpiCard
         icon={<AlertTriangle aria-hidden className="h-4 w-4" />}
