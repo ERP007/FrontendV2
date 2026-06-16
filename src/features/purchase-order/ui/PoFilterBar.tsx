@@ -2,13 +2,13 @@ import { Calendar, RotateCcw, Search } from 'lucide-react'
 
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
-import { PO_STATUS_LABELS } from '../model/types'
+import { PO_STATUS_LABELS } from '../model/ui-mock-types'
 
-import type { PurchaseOrderFilter, PurchaseOrderStatus, Supplier } from '../model/types'
+import type { PoUiStatus, PurchaseOrderFilter, Supplier } from '../model/ui-mock-types'
 
 const statusOptions = [
   { label: '상태 : 전체', value: 'ALL' },
-  ...(Object.keys(PO_STATUS_LABELS) as PurchaseOrderStatus[]).map((status) => ({
+  ...(Object.keys(PO_STATUS_LABELS) as PoUiStatus[]).map((status) => ({
     label: PO_STATUS_LABELS[status],
     value: status,
   })),
