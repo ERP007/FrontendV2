@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { Box, Building2, Calendar, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -10,10 +10,13 @@ import {
   emptyDraftLine,
   poHeaderFormSchema,
   PoLineEditor,
+  usePurchaseOrderVendorsQuery,
 } from '@/features/purchase-order'
-import type { PoDraftLine, PoHeaderFormValues, Supplier } from '@/features/purchase-order'
+import type { PoDraftLine, PoHeaderFormValues } from '@/features/purchase-order'
 import { MOCK_SESSION } from '@/shared/config/session'
+import { cn } from '@/shared/lib/cn'
 import { formatCurrency } from '@/shared/lib/format'
+import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgBadge, FgButton, FgCard, FgInput, FgNotice, FgPageHeader, FgSelect, FgTextarea } from '@/shared/ui'
 
 const FORM_ID = 'po-header-form'
@@ -21,27 +24,125 @@ const DRAFT_PO_NO = 'PO-2026-0422'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }, { label: '신규 등록' }]
 
-const SUPPLIER_FIXTURES: Supplier[] = [
-  { code: 'SUP-001', id: 1, name: '현대오토파츠' },
-  { code: 'SUP-007', id: 2, name: '(주)성일전장' },
-  { code: 'SUP-009', id: 3, name: '대성브레이크' },
-  { code: 'SUP-014', id: 4, name: '(주)동성정밀' },
-  { code: 'SUP-018', id: 5, name: '신성라이팅' },
-  { code: 'SUP-021', id: 6, name: '(주)우진시스템' },
-  { code: 'SUP-031', id: 7, name: '한일기연' },
-]
-
 const HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
-
-const supplierOptions = SUPPLIER_FIXTURES.map((supplier) => ({
-  label: `${supplier.name} ${supplier.code}`,
-  value: supplier.code,
-}))
 
 const warehouseOptions = HQ_WAREHOUSE_OPTIONS.map((warehouse) => ({
   label: `${warehouse.name} ${warehouse.code}`,
   value: warehouse.code,
 }))
+
+interface VendorPickerProps {
+  error?: string
+  onChange: (code: string) => void
+  value: string
+}
+
+function VendorPicker({ error, onChange, value }: VendorPickerProps) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [selectedName, setSelectedName] = useState<string | null>(null)
+  const debouncedQuery = useDebouncedValue(query, 300)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  const { data: vendors, isFetching } = usePurchaseOrderVendorsQuery(debouncedQuery.trim())
+  const results = vendors ?? []
+
+  useEffect(() => {
+    if (!open) return
+    function handlePointerDown(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [open])
+
+  return (
+    <div className="space-y-2">
+      <span className="block text-label text-ink-2">
+        공급사 <span className="text-danger">*</span>
+      </span>
+      <div ref={containerRef} className="relative">
+        <div
+          className={cn(
+            'flex h-11 items-center gap-2.5 rounded-control border bg-surface px-3 transition-colors',
+            error ? 'border-danger' : 'border-line',
+          )}
+        >
+          <Building2 aria-hidden className="h-4 w-4 shrink-0 text-faint" />
+          {value && selectedName && !open ? (
+            <button
+              className="min-w-0 flex-1 text-left"
+              type="button"
+              onClick={() => setOpen(true)}
+            >
+              <span className="block truncate text-body font-semibold text-ink">
+                {selectedName}
+                <span className="ml-1.5 text-meta font-medium text-faint">{value}</span>
+              </span>
+            </button>
+          ) : (
+            <input
+              className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none ring-0 placeholder:text-faint focus:outline-none focus:ring-0"
+              placeholder="공급사명 검색"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onFocus={() => setOpen(true)}
+            />
+          )}
+        </div>
+        {open ? (
+          <div className="absolute inset-x-0 top-full z-30 mt-1.5 overflow-hidden rounded-control border border-line bg-surface shadow-popover">
+            <p className="border-b border-line-soft px-3.5 py-2 text-meta font-semibold text-faint">
+              {isFetching ? '검색 중…' : `검색 결과 ${results.length}건`}
+            </p>
+            <div className="max-h-72 overflow-y-auto">
+              {results.map((vendor) => (
+                <button
+                  key={vendor.code}
+                  className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
+                  type="button"
+                  onMouseDown={(event) => {
+                    event.preventDefault()
+                    onChange(vendor.code)
+                    setSelectedName(vendor.name)
+                    setQuery('')
+                    setOpen(false)
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-label font-semibold text-ink">
+                      {vendor.name}
+                    </span>
+                    <span className="block text-meta font-medium text-faint">{vendor.code}</span>
+                  </span>
+                  {!vendor.active ? (
+                    <span className="shrink-0 text-meta font-semibold text-faint">비활성</span>
+                  ) : null}
+                </button>
+              ))}
+              {!isFetching && results.length === 0 ? (
+                <p className="px-3.5 py-3 text-meta text-faint">일치하는 공급사가 없습니다</p>
+              ) : null}
+            </div>
+            <button
+              className="w-full border-t border-line-soft px-3.5 py-2 text-left text-meta font-semibold text-muted hover:text-ink-2"
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault()
+                setOpen(false)
+              }}
+            >
+              닫기
+            </button>
+          </div>
+        ) : null}
+      </div>
+      {error ? <p className="text-meta font-medium text-danger">{error}</p> : null}
+    </div>
+  )
+}
 
 export function PurchaseOrderCreatePage() {
   const navigate = useNavigate()
@@ -126,15 +227,10 @@ export function PurchaseOrderCreatePage() {
             control={control}
             name="supplierCode"
             render={({ field }) => (
-              <FgSelect
+              <VendorPicker
                 error={errors.supplierCode?.message}
-                label="공급사"
-                leftIcon={<Building2 aria-hidden className="h-4 w-4" />}
-                options={supplierOptions}
-                placeholder="공급사 선택"
-                required
-                value={field.value || undefined}
-                onValueChange={field.onChange}
+                value={field.value}
+                onChange={field.onChange}
               />
             )}
           />
