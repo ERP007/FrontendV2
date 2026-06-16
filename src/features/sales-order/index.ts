@@ -29,6 +29,14 @@ export type {
   DeliverSalesOrderResponse,
 } from './api/use-sales-order-deliver-mutation'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
+export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
+export type {
+  HqSalesOrderListItem,
+  HqSalesOrderListParams,
+  HqSalesOrderPageSize,
+  HqSalesOrderSortDirection,
+  HqSalesOrderSortField,
+} from './api/use-hq-sales-orders-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
 export type {
