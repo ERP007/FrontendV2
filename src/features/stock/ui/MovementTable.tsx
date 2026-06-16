@@ -56,7 +56,8 @@ function SortableHead({ className, field, label, onSortChange, sort }: SortableH
 }
 
 function MovementRow({ movement }: { movement: Movement }) {
-  const executor = movement.executorName ?? movement.executorEmpNo
+  // 수행자는 사번이 아니라 이름으로 표시한다(executorName은 응답에 항상 포함).
+  const executor = movement.executorName
 
   return (
     <FgTableRow>

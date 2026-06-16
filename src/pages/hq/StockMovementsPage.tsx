@@ -12,11 +12,7 @@ import {
   useMovementListQuery,
 } from '@/features/stock'
 import type { MovementFilter, MovementSort, MovementSortField } from '@/features/stock'
-import {
-  DEFAULT_WAREHOUSE_FILTER,
-  DEFAULT_WAREHOUSE_SORT,
-  useWarehouseListQuery,
-} from '@/features/warehouse'
+import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgButton, FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
 
@@ -42,36 +38,29 @@ export function StockMovementsPage() {
   // 시작일이 종료일보다 늦으면 조회를 막고 인라인 경고를 띄운다(IV-03 경계 케이스).
   const rangeInvalid = Boolean(filter.from && filter.to && dayjs(filter.from).isAfter(filter.to, 'day'))
 
+  // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
+  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
+  const effectiveWarehouseCode = isBranch
+    ? (branchLockedCode ?? filter.warehouseCode)
+    : filter.warehouseCode
+
   const listParams = useMemo(
     () => ({
       enabled: !rangeInvalid,
-      filter: { ...filter, keyword: debouncedKeyword },
+      filter: { ...filter, keyword: debouncedKeyword, warehouseCode: effectiveWarehouseCode },
       page,
       size: pageSize,
       sort,
     }),
-    [filter, debouncedKeyword, page, pageSize, sort, rangeInvalid],
+    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize, sort, rangeInvalid],
   )
 
   const listQuery = useMovementListQuery(listParams)
-  // 창고 필터 옵션: 전체 창고 목록(서버 페이지네이션과 무관하게 전량 필요).
-  const warehouseListQuery = useWarehouseListQuery({
-    ...DEFAULT_WAREHOUSE_FILTER,
-    sort: DEFAULT_WAREHOUSE_SORT,
-  })
 
   const movements = listQuery.data?.content ?? []
   const totalElements = listQuery.data?.totalElements ?? 0
   const totalPages = listQuery.data?.totalPages ?? 1
-
-  const warehouseOptions = useMemo(
-    () =>
-      (warehouseListQuery.data?.content ?? []).map((warehouse) => ({
-        code: warehouse.code,
-        name: warehouse.name,
-      })),
-    [warehouseListQuery.data],
-  )
 
   // 기간이 상한을 넘으면 시작일을 당겨 자동 보정하고 안내한다.
   function clampRange(next: MovementFilter): MovementFilter {
@@ -112,7 +101,8 @@ export function StockMovementsPage() {
         title="재고 이력"
       />
       <MovementFilterBar
-        filter={filter}
+        filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
+        includeAllOption={!isBranch}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
         onReset={() => {

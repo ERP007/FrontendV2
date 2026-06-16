@@ -69,13 +69,12 @@ export interface StockSkuDetail {
 
 /**
  * swagger MovementResponse 기준(GET /inventory/stocks/movements).
- * 목록 응답에는 executorName이 없어 옵셔널이다 — 없으면 화면에서 executorEmpNo로 대체한다.
- * (백엔드 확장 또는 User 서비스 조인 시 채워짐)
+ * executorName(수행자 이름)은 이력 스냅샷이라 목록 응답에 항상 포함된다 — 화면은 사번 대신 이름을 표시한다.
  */
 export interface Movement {
   delta: number
   executorEmpNo: string
-  executorName?: string
+  executorName: string
   id: number
   itemName: string
   occurredAt: string
