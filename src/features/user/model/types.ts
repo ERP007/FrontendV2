@@ -168,6 +168,14 @@ export interface UserDetailResponse {
 
 export type MyPageResponse = Omit<UserDetailResponse, 'createdAt'>
 
+export interface UserDetailFormValues {
+  email: string
+  name: string
+  position: string
+  role: UserApiRole
+  tenancyCode: string
+}
+
 export interface UpdateUserRequest {
   display_name: string
   email: string

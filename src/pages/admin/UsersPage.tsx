@@ -8,8 +8,11 @@ import {
   getCreateUserErrorMessage,
   getResetPasswordErrorMessage,
   getToggleUserSuspensionErrorMessage,
+  getUpdateUserErrorMessage,
+  getUserDetailErrorMessage,
   getUsersErrorMessage,
   UserCreateModal,
+  UserDetailModal,
   UserFilterBar,
   UserPasswordResetModal,
   UserSuspendToggleModal,
@@ -17,11 +20,15 @@ import {
   useCreateUserMutation,
   useResetUserPasswordMutation,
   useToggleUserSuspensionMutation,
+  useUpdateUserMutation,
+  useUserDetailQuery,
   useUsersQuery,
+  userDetailQueryKeys,
   usersQueryKey,
 } from '@/features/user'
 import type {
   FetchUsersParams,
+  UserDetailFormValues,
   UserFilter,
   UserFormValues,
   UserListItem,
@@ -159,11 +166,14 @@ export function UsersPage() {
   const [resetPasswordErrorMessage, setResetPasswordErrorMessage] = useState<string | null>(null)
   const [suspendToggleTarget, setSuspendToggleTarget] = useState<UserListItem | null>(null)
   const [suspendToggleErrorMessage, setSuspendToggleErrorMessage] = useState<string | null>(null)
+  const [detailTarget, setDetailTarget] = useState<UserListItem | null>(null)
+  const [detailSaveErrorMessage, setDetailSaveErrorMessage] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const { data: session } = useSession()
   const createUserMutation = useCreateUserMutation()
   const resetUserPasswordMutation = useResetUserPasswordMutation()
   const toggleUserSuspensionMutation = useToggleUserSuspensionMutation()
+  const updateUserMutation = useUpdateUserMutation()
 
   useEffect(() => {
     const nextQuery = filter.keyword.trim()
@@ -199,6 +209,13 @@ export function UsersPage() {
   const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1)
   const currentPage = Math.min(page, totalPages)
   const usersErrorMessage = usersQuery.isError ? getUsersErrorMessage(usersQuery.error) : null
+  const userDetailQuery = useUserDetailQuery(detailTarget?.userId, detailTarget !== null)
+  const detailErrorMessage = userDetailQuery.isError
+    ? getUserDetailErrorMessage(userDetailQuery.error)
+    : null
+  const selectedUserDetail =
+    userDetailQuery.data?.userId === detailTarget?.userId ? userDetailQuery.data : undefined
+  const freshUserDetail = userDetailQuery.isFetching ? undefined : selectedUserDetail
 
   useEffect(() => {
     if (page > totalPages) {
@@ -318,6 +335,48 @@ export function UsersPage() {
     }
   }
 
+  function openUserDetailModal(user: UserListItem) {
+    setDetailSaveErrorMessage(null)
+    setDetailTarget(user)
+  }
+
+  function closeUserDetailModal() {
+    if (updateUserMutation.isPending) {
+      return
+    }
+
+    setDetailSaveErrorMessage(null)
+    setDetailTarget(null)
+  }
+
+  async function handleUserDetailSubmit(values: UserDetailFormValues) {
+    if (!detailTarget) {
+      return
+    }
+
+    setDetailSaveErrorMessage(null)
+
+    try {
+      const response = await updateUserMutation.mutateAsync({
+        payload: {
+          display_name: values.name.trim(),
+          email: values.email.trim(),
+          position: values.position.trim(),
+          role: values.role,
+          tenancy_code: values.tenancyCode,
+        },
+        userId: detailTarget.userId,
+      })
+
+      queryClient.setQueryData(userDetailQueryKeys.detail(detailTarget.userId), response)
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setDetailTarget(null)
+      toast.success('사용자 정보가 저장되었습니다.')
+    } catch (error) {
+      setDetailSaveErrorMessage(getUpdateUserErrorMessage(error))
+    }
+  }
+
   const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const rangeEnd = totalCount === 0 ? 0 : Math.min(rangeStart + users.length - 1, totalCount)
 
@@ -375,6 +434,7 @@ export function UsersPage() {
         sortBy={sort.key}
         sortDirection={sort.direction}
         users={users}
+        onEditUser={openUserDetailModal}
         onResetPassword={openResetPasswordModal}
         onSortChange={handleSortChange}
         onToggleSuspension={openSuspendToggleModal}
@@ -402,6 +462,18 @@ export function UsersPage() {
           setCreateOpen(false)
         }}
         onSubmit={handleCreate}
+      />
+      <UserDetailModal
+        detail={freshUserDetail}
+        errorMessage={detailErrorMessage}
+        loading={userDetailQuery.isFetching}
+        open={detailTarget !== null}
+        saveErrorMessage={detailSaveErrorMessage}
+        saving={updateUserMutation.isPending}
+        user={detailTarget}
+        onClose={closeUserDetailModal}
+        onRetry={() => void userDetailQuery.refetch()}
+        onSubmit={handleUserDetailSubmit}
       />
       <UserPasswordResetModal
         errorMessage={resetPasswordErrorMessage}

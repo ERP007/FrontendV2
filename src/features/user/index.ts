@@ -12,6 +12,15 @@ export {
   useToggleUserSuspensionMutation,
 } from './api/use-toggle-user-suspension-mutation'
 export {
+  getUpdateUserErrorMessage,
+  useUpdateUserMutation,
+} from './api/use-update-user-mutation'
+export {
+  getUserDetailErrorMessage,
+  useUserDetailQuery,
+  userDetailQueryKeys,
+} from './api/use-user-detail-query'
+export {
   getUsersErrorMessage,
   useUsersQuery,
   usersQueryKey,
@@ -44,6 +53,7 @@ export type {
   MyPageResponse,
   SuspendToggleResponse,
   Me,
+  UserDetailFormValues,
   User,
   UserActivity,
   UserApiRole,
@@ -64,6 +74,7 @@ export type {
 } from './model/types'
 export { MyActivityCard, MyPasswordCard, MyProfileCard } from './ui/MyPageCards'
 export { UserCreateModal } from './ui/UserCreateModal'
+export { UserDetailModal } from './ui/UserDetailModal'
 export { UserFilterBar } from './ui/UserFilterBar'
 export { UserPasswordResetModal } from './ui/UserPasswordResetModal'
 export { UserSuspendToggleModal } from './ui/UserSuspendToggleModal'

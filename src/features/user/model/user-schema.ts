@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+const userApiRoleSchema = z.enum([
+  'ADMIN',
+  'HQ_MANAGER',
+  'HQ_STAFF',
+  'BRANCH_MANAGER',
+  'BRANCH_STAFF',
+  'WAREHOUSE_STAFF',
+  'WAREHOUSE_MANAGER',
+])
+
 export const userFormSchema = z
   .object({
     email: z.string().trim().min(1, '이메일을 입력하세요.').email('이메일 형식이 올바르지 않습니다.'),
@@ -23,3 +33,11 @@ export const userFormSchema = z
       })
     }
   })
+
+export const userDetailFormSchema = z.object({
+  email: z.string().trim().min(1, '이메일을 입력하세요.').email('이메일 형식이 올바르지 않습니다.'),
+  name: z.string().trim().min(1, '이름을 입력하세요.').max(50, '이름은 50자 이하로 입력하세요.'),
+  position: z.string().trim().max(50, '직급은 50자 이하로 입력하세요.'),
+  role: userApiRoleSchema,
+  tenancyCode: z.string().min(1, '소속을 선택하세요.'),
+})
