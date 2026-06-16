@@ -28,6 +28,7 @@ import {
 } from '@/shared/ui'
 
 import { RANK_OPTIONS } from '../model/types'
+import { getUserTenancyRoles } from '../model/user-tenancy'
 import {
   normalizeUserApiRole,
   userDetailFormSchema,
@@ -125,6 +126,7 @@ export function UserDetailModal({
     handleSubmit,
     register,
     reset,
+    setValue,
   } = useForm<UserDetailFormInput, unknown, UserDetailFormValues>({
     defaultValues: DEFAULT_FORM_VALUES,
     resolver: zodResolver(userDetailFormSchema),
@@ -135,6 +137,7 @@ export function UserDetailModal({
   }, [formValues, reset])
 
   const role = useWatch({ control, name: 'role' })
+  const tenancyCode = useWatch({ control, name: 'tenancyCode' })
   const normalizedRole = normalizeUserApiRole(role ?? '')
 
   const defaultTenancyOptions = useMemo(
@@ -157,14 +160,20 @@ export function UserDetailModal({
   }, [defaultTenancyOptions, detail])
 
   const roleOptions = useMemo(() => {
-    const options = defaultRoleOptions.map(toRoleOption)
+    const allowedRoles = tenancyCode
+      ? new Set<UserApiRole>(getUserTenancyRoles(tenancyCode))
+      : new Set<UserApiRole>(defaultRoleOptions)
 
-    if (normalizedRole && !options.some((option) => option.value === normalizedRole)) {
-      return [toRoleOption(normalizedRole), ...options]
+    return defaultRoleOptions.filter((nextRole) => allowedRoles.has(nextRole)).map(toRoleOption)
+  }, [tenancyCode])
+
+  useEffect(() => {
+    if (normalizedRole && roleOptions.some((option) => option.value === normalizedRole)) {
+      return
     }
 
-    return options
-  }, [normalizedRole])
+    setValue('role', roleOptions[0]?.value ?? '')
+  }, [normalizedRole, roleOptions, setValue])
 
   const positionOptions = useMemo(() => {
     const options = RANK_OPTIONS.map((position) => ({ label: position, value: position }))
