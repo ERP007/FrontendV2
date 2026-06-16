@@ -32,7 +32,7 @@ export function MyProfileCard({ profile }: { profile: MyPageResponse }) {
             <p className="text-xl font-extrabold text-ink">{profile.name}</p>
             <p className="mt-1 text-meta font-medium text-faint">{profile.employeeNo.toUpperCase()}</p>
           </div>
-          <FgBadge variant="primary">{formatRole(profile)}</FgBadge>
+        <FgBadge variant="primary">{roleLabel(profile.role)}</FgBadge>
         </div>
         <div className="min-w-0 flex-1">
           <dl className="grid grid-cols-2 gap-x-10 gap-y-6">
