@@ -1,21 +1,30 @@
 import { useParams } from '@tanstack/react-router'
 import {
+  Ban,
   Building2,
   Calendar,
+  Check,
   CircleDollarSign,
+  Package,
   User as UserIcon,
   Warehouse as WarehouseIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useState } from 'react'
+import { toast } from 'sonner'
+
 import {
   PoHistoryTimeline,
+  PoReceiveModal,
+  useApprovePurchaseOrderMutation,
   usePurchaseOrderHistoriesQuery,
   usePurchaseOrderQuery,
+  useReceivePurchaseOrderMutation,
 } from '@/features/purchase-order'
 import { cn } from '@/shared/lib/cn'
 import { formatDateWithDay } from '@/shared/lib/format'
-import { FgBadge, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
+import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
 function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
@@ -34,12 +43,80 @@ export function PurchaseOrderDetailPage() {
   const code = params.poNo ?? ''
   const { data: po } = usePurchaseOrderQuery(code)
   const { data: histories = [] } = usePurchaseOrderHistoriesQuery(code)
+  const approveMutation = useApprovePurchaseOrderMutation()
+  const receiveMutation = useReceivePurchaseOrderMutation()
+  const [receiveOpen, setReceiveOpen] = useState(false)
 
   if (!po) return null
+
+  const canCancel = po.status === 'DRAFT' || po.status === 'APPROVED'
+  const canApprove = po.status === 'DRAFT'
+  const canReceive = po.status === 'APPROVED'
+  const isSubmitting = approveMutation.isPending || receiveMutation.isPending
+
+  async function handleApprove() {
+    try {
+      const result = await approveMutation.mutateAsync(code)
+      toast.success(`${result.code} 구매 주문이 확정되었습니다.`)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  }
+
+  function handleCancel() {
+    // TODO: useCancelPurchaseOrderMutation 연결
+  }
+
+  async function handleReceive(receivedDate: string) {
+    try {
+      const result = await receiveMutation.mutateAsync({
+        code,
+        payload: { receivedDate },
+      })
+      toast.success(`${result.code} 입고 처리되었습니다.`)
+      setReceiveOpen(false)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  }
 
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={
+          <>
+            {canCancel ? (
+              <FgButton
+                disabled={isSubmitting}
+                leftIcon={<Ban aria-hidden className="h-4 w-4" />}
+                variant="danger"
+                onClick={handleCancel}
+              >
+                취소
+              </FgButton>
+            ) : null}
+            {canApprove ? (
+              <FgButton
+                disabled={isSubmitting}
+                leftIcon={<Check aria-hidden className="h-4 w-4" />}
+                variant="primary"
+                onClick={handleApprove}
+              >
+                확정
+              </FgButton>
+            ) : null}
+            {canReceive ? (
+              <FgButton
+                disabled={isSubmitting}
+                leftIcon={<Package aria-hidden className="h-4 w-4" />}
+                variant="primary"
+                onClick={() => setReceiveOpen(true)}
+              >
+                입고 처리
+              </FgButton>
+            ) : null}
+          </>
+        }
         badge={<FgDomainStatusBadge label={po.statusLabel} status={po.status} />}
         breadcrumbs={[{ label: '구매' }, { label: '구매 주문' }, { label: po.code }]}
         title={po.code}
@@ -171,6 +248,14 @@ export function PurchaseOrderDetailPage() {
           <PoHistoryTimeline rows={histories} />
         </div>
       </div>
+
+      <PoReceiveModal
+        isSubmitting={receiveMutation.isPending}
+        open={receiveOpen}
+        po={po}
+        onClose={() => setReceiveOpen(false)}
+        onConfirm={handleReceive}
+      />
     </div>
   )
 }
