@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import type { SortingState } from '@tanstack/react-table'
 
 import {
-  mapPurchaseOrderSummary,
   PoFilterBar,
   PoKpiCards,
   PoTable,
@@ -38,7 +37,7 @@ export function PurchaseOrdersPage() {
   const { data: vendors } = usePurchaseOrderVendorsQuery()
   const { data } = usePurchaseOrdersQuery(params)
 
-  const rows = useMemo(() => data?.content.map(mapPurchaseOrderSummary) ?? [], [data])
+  const rows = data?.content ?? []
 
   const totalElements = data?.totalElements ?? 0
   const totalPages = data?.totalPages ?? 1

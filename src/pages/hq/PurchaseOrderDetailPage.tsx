@@ -9,7 +9,8 @@ import {
 import type { ReactNode } from 'react'
 
 import {
-  mapPurchaseOrderDetail,
+  PoHistoryTimeline,
+  usePurchaseOrderHistoriesQuery,
   usePurchaseOrderQuery,
 } from '@/features/purchase-order'
 import { cn } from '@/shared/lib/cn'
@@ -31,11 +32,10 @@ function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; valu
 export function PurchaseOrderDetailPage() {
   const params = useParams({ strict: false })
   const code = params.poNo ?? ''
-  const { data } = usePurchaseOrderQuery(code)
+  const { data: po } = usePurchaseOrderQuery(code)
+  const { data: histories = [] } = usePurchaseOrderHistoriesQuery(code)
 
-  if (!data) return null
-
-  const po = mapPurchaseOrderDetail(data)
+  if (!po) return null
 
   return (
     <div className="fg-content">
@@ -165,6 +165,10 @@ export function PurchaseOrderDetailPage() {
               </span>
             </div>
           </FgCard>
+        </div>
+
+        <div className="w-96 shrink-0">
+          <PoHistoryTimeline rows={histories} />
         </div>
       </div>
     </div>
