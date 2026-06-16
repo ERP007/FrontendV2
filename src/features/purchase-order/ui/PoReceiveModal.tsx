@@ -5,9 +5,9 @@ import { useState } from 'react'
 import { formatCurrency, formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgInput, FgModal, FgNotice } from '@/shared/ui'
 
-import { poTotalAmount, poTotalQuantity } from '../model/types'
+import { poTotalAmount, poTotalQuantity } from '../model/ui-mock-types'
 
-import type { PurchaseOrder } from '../model/types'
+import type { PurchaseOrder } from '../model/ui-mock-types'
 
 export interface PoReceiveModalProps {
   onClose: () => void

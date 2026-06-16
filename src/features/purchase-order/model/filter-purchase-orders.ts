@@ -1,8 +1,8 @@
 import dayjs from 'dayjs'
 
-import { isPoDelayed } from './types'
+import { isPoDelayed } from './ui-mock-types'
 
-import type { PurchaseOrder, PurchaseOrderFilter } from './types'
+import type { PurchaseOrder, PurchaseOrderFilter } from './ui-mock-types'
 
 export function createDefaultPoFilter(): PurchaseOrderFilter {
   return {

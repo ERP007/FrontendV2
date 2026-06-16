@@ -1,111 +1,168 @@
-/**
- * Procurement 서비스 swagger 미수신 — HANDOFF §11(PO-01~03) 기반 UI 모델.
- * swagger 수신 시 필드명을 응답 스키마와 정합시킨다.
- */
-export type PurchaseOrderStatus = 'DRAFT' | 'APPROVED' | 'SHIPPED' | 'RECEIVED' | 'CANCELED'
-export type PurchaseOrderEventType = PurchaseOrderStatus | 'EDITED'
-export type PoItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
+export type PurchaseOrderStatus = 'DRAFT' | 'APPROVED' | 'RECEIVED' | 'CANCELED'
+export type SortField = 'createdAt' | 'desiredArrivalDate' | 'totalAmount'
+export type SortDirection = 'asc' | 'desc'
+export type PageSize = 10 | 20 | 50
 
-export interface Supplier {
+export interface PersonInfo {
   code: string
-  id: number
+  name: string
+  position: string
+}
+
+export interface VendorRef {
+  code: string
   name: string
 }
 
-export interface PurchaseOrderLine {
-  amount: number
-  itemName: string
-  lineNo: number
+export interface WarehouseRef {
+  code: string
+  name: string
+}
+
+export interface PurchaseOrderLineRequest {
+  itemSku: string
   quantity: number
-  sku: string
-  unit: PoItemUnit
   unitPrice: number
 }
 
-export interface PurchaseOrderEvent {
-  actorName: string
-  actorTeam: string
-  description: string
-  id: number
-  occurredAt: string
-  type: PurchaseOrderEventType
+export interface SearchPurchaseOrderRequest {
+  search?: string
+  status?: string
+  vendorCode?: string
+  startDate?: string
+  endDate?: string
+  sortField?: SortField
+  sortDirection?: SortDirection
+  size?: PageSize
+  page?: number
 }
 
-export interface PurchaseOrder {
-  confirmedBy: string | null
-  confirmedTeam: string | null
+export interface PurchaseOrderSummaryResponse {
+  code: string
+  vendorCode: string
+  vendorName: string
   createdAt: string
-  events: PurchaseOrderEvent[]
-  expectedAt: string | null
-  id: number
-  lines: PurchaseOrderLine[]
-  note: string | null
-  paymentTerm: string
-  poNo: string
+  desiredArrivalDate: string
+  lineCount: number
+  totalQuantity: number | null
+  unit: string | null
+  totalAmount: number
+  currency: string
   status: PurchaseOrderStatus
-  supplierCode: string
-  supplierName: string
-  updatedAt: string
-  warehouseCode: string
-  warehouseName: string
 }
 
-export const PO_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
-  APPROVED: 'APPROVED',
-  CANCELED: 'CANCELED',
-  DRAFT: 'DRAFT',
-  RECEIVED: 'RECEIVED',
-  SHIPPED: 'SHIPPED',
+export interface PurchaseOrderPageResponse {
+  content: PurchaseOrderSummaryResponse[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
 }
 
-export interface PurchaseOrderFilter {
-  from: string
-  keyword: string
-  status: 'ALL' | PurchaseOrderStatus
-  supplierCode: 'ALL' | string
-  to: string
-}
-
-export interface PoHeaderFormValues {
-  expectedAt: string
-  note: string
-  supplierCode: string
-  warehouseCode: string
-}
-
-/** PO-02 라인 편집기의 작성 중 라인 */
-export interface PoDraftLine {
-  itemName: string
+export interface PurchaseOrderDetailLine {
+  id: number
+  sku: string
+  name: string
+  unit: string
   quantity: number
-  sku: string | null
-  unit: PoItemUnit | null
   unitPrice: number
 }
 
-export function emptyDraftLine(): PoDraftLine {
-  return { itemName: '', quantity: 0, sku: null, unit: null, unitPrice: 0 }
+export interface PurchaseOrderDetailResponse {
+  code: string
+  vendor: VendorRef
+  warehouse: WarehouseRef
+  approvedBy: PersonInfo | null
+  createdAt: string
+  desiredArrivalDate: string
+  status: PurchaseOrderStatus
+  totalAmount: number
+  currency: string
+  lines: PurchaseOrderDetailLine[]
 }
 
-export function poTotalQuantity(lines: Pick<PurchaseOrderLine, 'quantity'>[]): number {
-  return lines.reduce((sum, line) => sum + line.quantity, 0)
+export interface PurchaseOrderHistoryResponse {
+  status: PurchaseOrderStatus
+  changedBy: PersonInfo | null
+  changedAt: string
 }
 
-export function poTotalAmount(lines: Pick<PurchaseOrderLine, 'amount'>[]): number {
-  return lines.reduce((sum, line) => sum + line.amount, 0)
+export interface PurchaseOrderKpiResponse {
+  totalCount: number
+  draftCount: number
+  approvedCount: number
+  delayedCount: number
 }
 
-export function draftLineAmount(line: PoDraftLine): number {
-  return line.quantity * line.unitPrice
+export interface VendorResponse {
+  code: string
+  name: string
+  active: boolean
 }
 
-/** 목록 총 수량에 붙일 대표 단위 (라인 단위가 섞이면 첫 라인 기준) */
-export function poDominantUnit(lines: PurchaseOrderLine[]): PoItemUnit {
-  return lines[0]?.unit ?? 'EA'
+export interface DraftPurchaseOrderRequest {
+  vendorCode: string
+  warehouseCode: string
+  desiredArrivalDate: string
+  memo?: string
+  lines?: PurchaseOrderLineRequest[]
 }
 
-/** 도착 예정일이 지났고 아직 입고/취소되지 않은 PO */
-export function isPoDelayed(po: Pick<PurchaseOrder, 'expectedAt' | 'status'>, today: string): boolean {
-  if (!po.expectedAt) return false
-  if (po.status === 'RECEIVED' || po.status === 'CANCELED') return false
-  return po.expectedAt < today
+export interface CreatePurchaseOrderRequest {
+  vendorCode: string
+  warehouseCode: string
+  desiredArrivalDate: string
+  memo?: string
+  lines: PurchaseOrderLineRequest[]
+}
+
+export interface CreatePurchaseOrderResponse {
+  code: string
+  vendorCode: string
+  warehouseCode: string
+  desiredArrivalDate: string
+  status: PurchaseOrderStatus
+  totalAmount: number
+  currency: string
+  createdAt: string
+}
+
+export interface ApprovePurchaseOrderResponse {
+  code: string
+  vendorCode: string
+  warehouseCode: string
+  desiredArrivalDate: string
+  status: PurchaseOrderStatus
+  totalAmount: number
+  currency: string
+  approvedAt: string
+}
+
+export interface ReceivePurchaseOrderRequest {
+  receivedDate: string
+}
+
+export interface ReceivePurchaseOrderResponse {
+  code: string
+  vendorCode: string
+  warehouseCode: string
+  receivedDate: string
+  status: PurchaseOrderStatus
+  totalAmount: number
+  currency: string
+  receivedAt: string
+}
+
+export interface CancelPurchaseOrderRequest {
+  reason: string
+}
+
+export interface CancelPurchaseOrderResponse {
+  code: string
+  status: PurchaseOrderStatus
+  canceledBy: string
+  canceledAt: string
+  reason: string
 }
