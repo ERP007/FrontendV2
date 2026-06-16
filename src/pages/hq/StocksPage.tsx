@@ -21,11 +21,7 @@ import {
   useStockSkuDetailQuery,
 } from '@/features/stock'
 import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter } from '@/features/stock'
-import {
-  DEFAULT_WAREHOUSE_FILTER,
-  DEFAULT_WAREHOUSE_SORT,
-  useWarehouseListQuery,
-} from '@/features/warehouse'
+import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
@@ -53,21 +49,27 @@ export function StocksPage() {
   const canManage = MANAGER_ROLES.has(userRole)
   const canCreate = userRole === 'ADMIN'
 
+  // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
+  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
+  const effectiveWarehouseCode = isBranch
+    ? (branchLockedCode ?? filter.warehouseCode)
+    : filter.warehouseCode
+
   // 검색어는 300ms 디바운스. 창고·상태·정렬·페이지는 즉시 반영한다.
   const debouncedKeyword = useDebouncedValue(filter.keyword, 300)
   const listParams = useMemo(
-    () => ({ filter: { ...filter, keyword: debouncedKeyword }, page, size: pageSize }),
-    [filter, debouncedKeyword, page, pageSize],
+    () => ({
+      filter: { ...filter, keyword: debouncedKeyword, warehouseCode: effectiveWarehouseCode },
+      page,
+      size: pageSize,
+    }),
+    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize],
   )
 
   const kpiQuery = useStockKpiQuery()
   const listQuery = useStockListQuery(listParams)
   const detailQuery = useStockSkuDetailQuery(selectedStock?.sku ?? null)
-  // 창고 필터·재고추가 옵션: 전체 창고 목록(서버 페이지네이션과 무관하게 전량 필요).
-  const warehouseListQuery = useWarehouseListQuery({
-    ...DEFAULT_WAREHOUSE_FILTER,
-    sort: DEFAULT_WAREHOUSE_SORT,
-  })
   const adjustMutation = useStockAdjustMutation()
   const createMutation = useStockCreateMutation()
 
@@ -83,15 +85,6 @@ export function StocksPage() {
   const totalElements = listQuery.data?.totalElements ?? 0
   const totalPages = listQuery.data?.totalPages ?? 1
   const detail = detailQuery.data ?? null
-
-  const warehouseOptions = useMemo(
-    () =>
-      (warehouseListQuery.data?.content ?? []).map((warehouse) => ({
-        code: warehouse.code,
-        name: warehouse.name,
-      })),
-    [warehouseListQuery.data],
-  )
 
   // 조정 모달의 창고 선택·현재고: 선택한 sku의 창고별 재고(상세 응답)에서 구성한다.
   const skuRows = useMemo<Stock[]>(() => {
@@ -219,7 +212,8 @@ export function StocksPage() {
         />
       ) : null}
       <StockFilterBar
-        filter={filter}
+        filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
+        includeAllOption={!isBranch}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
         onReset={() => handleFilterChange(DEFAULT_STOCK_FILTER)}

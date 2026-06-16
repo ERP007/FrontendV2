@@ -6,7 +6,7 @@ import type { Movement, MovementFilter, MovementSort } from '../model/types'
 
 /**
  * GET /inventory/stocks/movements 응답 (swagger MovementListResponse). page는 1-base.
- * content의 executorName은 목록 응답에 없어 Movement에서 옵셔널로 둔다.
+ * content는 executorName(수행자 이름)을 포함한다 — 화면은 사번 대신 이름을 표시한다.
  */
 export interface MovementListResponse {
   content: Movement[]
