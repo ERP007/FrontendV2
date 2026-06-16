@@ -3,11 +3,7 @@ export type { PurchaseOrderRow } from './model/po-list-row'
 export { purchaseOrderDraftFormSchema } from './model/po-schema'
 export type { PurchaseOrderDraftFormValues } from './model/po-schema'
 export { poTotalAmount, poTotalQuantity } from './model/ui-mock-types'
-export type {
-  PurchaseOrder,
-  PurchaseOrderFilter,
-  Supplier,
-} from './model/ui-mock-types'
+export type { PurchaseOrder } from './model/ui-mock-types'
 export { draftLineAmount, emptyDraftLine } from './model/ui-types'
 export type { PoDraftLine } from './model/ui-types'
 export { PoFilterBar } from './ui/PoFilterBar'
