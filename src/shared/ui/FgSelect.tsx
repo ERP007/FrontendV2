@@ -82,7 +82,7 @@ export function FgSelect({
         </Select.Trigger>
         <Select.Portal>
           <Select.Content
-            className="z-50 max-h-80 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-control border border-line bg-surface shadow-popover"
+            className="z-50 max-h-80 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-control bg-surface/95 shadow-popover backdrop-blur focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             position="popper"
             sideOffset={6}
           >
@@ -94,6 +94,7 @@ export function FgSelect({
                   disabled={option.disabled}
                   className={cn(
                     'relative flex min-h-10 cursor-pointer select-none items-center gap-3 rounded-control px-3 py-2 pr-8 text-sm text-ink outline-none',
+                    'focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
                     'data-[disabled]:pointer-events-none data-[disabled]:text-faint',
                     'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
                   )}
