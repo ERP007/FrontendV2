@@ -13,6 +13,7 @@ import {
   usePurchaseOrderVendorsQuery,
 } from '@/features/purchase-order'
 import type { PoDraftLine, PoHeaderFormValues } from '@/features/purchase-order'
+import { useHqWarehousesQuery } from '@/features/warehouse'
 import { MOCK_SESSION } from '@/shared/config/session'
 import { cn } from '@/shared/lib/cn'
 import { formatCurrency } from '@/shared/lib/format'
@@ -23,13 +24,6 @@ const FORM_ID = 'po-header-form'
 const DRAFT_PO_NO = 'PO-2026-0422'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }, { label: '신규 등록' }]
-
-const HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
-
-const warehouseOptions = HQ_WAREHOUSE_OPTIONS.map((warehouse) => ({
-  label: `${warehouse.name} ${warehouse.code}`,
-  value: warehouse.code,
-}))
 
 interface VendorPickerProps {
   error?: string
@@ -61,16 +55,18 @@ function VendorPicker({ error, onChange, value }: VendorPickerProps) {
   return (
     <div className="space-y-2">
       <span className="block text-label text-ink-2">
-        공급사 <span className="text-danger">*</span>
+        공급사<span className="text-danger"> *</span>
       </span>
       <div ref={containerRef} className="relative">
         <div
           className={cn(
-            'flex h-11 items-center gap-2.5 rounded-control border bg-surface px-3 transition-colors',
+            'flex h-11 items-center gap-3 rounded-control border bg-surface px-3.5 text-body transition-colors',
             error ? 'border-danger' : 'border-line',
           )}
         >
-          <Building2 aria-hidden className="h-4 w-4 shrink-0 text-faint" />
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center text-faint">
+            <Building2 aria-hidden className="h-4 w-4" />
+          </span>
           {value && selectedName && !open ? (
             <button
               className="min-w-0 flex-1 text-left"
@@ -84,7 +80,7 @@ function VendorPicker({ error, onChange, value }: VendorPickerProps) {
             </button>
           ) : (
             <input
-              className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none ring-0 placeholder:text-faint focus:outline-none focus:ring-0"
+              className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none ring-0 placeholder:text-faint focus:outline-none focus:ring-0"
               placeholder="공급사명 검색"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -149,6 +145,7 @@ export function PurchaseOrderCreatePage() {
   const router = useRouter()
   const [lines, setLines] = useState<PoDraftLine[]>([emptyDraftLine()])
   const [lineError, setLineError] = useState<string | null>(null)
+  const { data: hqWarehouses } = useHqWarehousesQuery()
 
   const {
     control,
@@ -156,7 +153,7 @@ export function PurchaseOrderCreatePage() {
     handleSubmit,
     register,
   } = useForm<PoHeaderFormValues>({
-    defaultValues: { expectedAt: '', note: '', supplierCode: '', warehouseCode: 'WH-HQ-001' },
+    defaultValues: { expectedAt: '', note: '', supplierCode: '', warehouseCode: '' },
     resolver: zodResolver(poHeaderFormSchema),
   })
 
@@ -250,9 +247,16 @@ export function PurchaseOrderCreatePage() {
                 error={errors.warehouseCode?.message}
                 label="납품 창고"
                 leftIcon={<Building2 aria-hidden className="h-4 w-4" />}
-                options={warehouseOptions}
+                options={
+                  hqWarehouses?.map((warehouse) => ({
+                    label: warehouse.name,
+                    supportingText: warehouse.code,
+                    value: warehouse.code,
+                  })) ?? []
+                }
+                placeholder="납품 창고 선택"
                 required
-                value={field.value}
+                value={field.value || undefined}
                 onValueChange={field.onChange}
               />
             )}
