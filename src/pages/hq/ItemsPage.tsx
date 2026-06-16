@@ -4,19 +4,28 @@ import { toast } from 'sonner'
 
 import {
   DEFAULT_ITEM_FILTER,
-  getCreateItemErrorMessage,
-  getItemSkuCheckErrorMessage,
+  getItemErrorDetail,
+  getItemStockErrorDetail,
   ItemCreateModal,
+  ItemDetailModal,
   ItemFilterBar,
   ItemTable,
+  itemDetailQueryKey,
+  itemStocksQueryBaseKey,
+  useActivateItemMutation,
   useCreateItemMutation,
+  useDeactivateItemMutation,
   useItemCategoriesQuery,
+  useItemDetailQuery,
   useItemSubCategoriesQuery,
   useItemSkuCheckMutation,
+  useItemStocksQuery,
   useItemUnitsQuery,
   useItemsQuery,
+  useUpdateItemMutation,
+  isItemErrorCode,
 } from '@/features/item'
-import type { ItemFilter, ItemFormValues } from '@/features/item'
+import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -24,6 +33,11 @@ import { FgButton, FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '마스터' }, { label: '부품 마스터' }]
 const ITEM_CREATE_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'HQ_STAFF'])
+const ALL_WAREHOUSES = 'ALL'
+const CREATE_ITEM_ERROR_FALLBACK = '부품 등록 중 오류가 발생했습니다.'
+const ITEM_DETAIL_ERROR_FALLBACK = '부품 상세 조회 중 오류가 발생했습니다.'
+const UPDATE_ITEM_ERROR_FALLBACK = '부품 수정 중 오류가 발생했습니다.'
+const ITEM_STATUS_CHANGE_ERROR_FALLBACK = '부품 상태 변경 중 오류가 발생했습니다.'
 
 export function ItemsPage() {
   const [filter, setFilter] = useState<ItemFilter>(DEFAULT_ITEM_FILTER)
@@ -31,7 +45,12 @@ export function ItemsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [createMajorCategoryCode, setCreateMajorCategoryCode] = useState('')
+  const [detailMajorCategoryCode, setDetailMajorCategoryCode] = useState('')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [createFormError, setCreateFormError] = useState<string | null>(null)
+  const [detailTarget, setDetailTarget] = useState<Item | null>(null)
+  const [detailFormError, setDetailFormError] = useState<string | null>(null)
+  const [detailWarehouseCode, setDetailWarehouseCode] = useState(ALL_WAREHOUSES)
   const { data: session } = useSession()
   const canCreateItem = ITEM_CREATE_ROLES.has(session?.userRole ?? '')
 
@@ -65,13 +84,37 @@ export function ItemsPage() {
     isLoading: isCreateMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(createMajorCategoryCode || undefined)
   const {
+    data: detailMiddleCategories = [],
+    isFetching: isDetailMiddleCategoryFetching,
+    isLoading: isDetailMiddleCategoryLoading,
+  } = useItemSubCategoriesQuery(detailMajorCategoryCode || undefined)
+  const {
     data: itemUnits = [],
     isFetching: isItemUnitsFetching,
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
   const { data, isFetching, isLoading } = useItemsQuery(itemListFilter, page, pageSize)
+  const {
+    data: itemDetail,
+    error: itemDetailError,
+    isLoading: isItemDetailLoading,
+  } = useItemDetailQuery(detailTarget?.code ?? null)
+  const selectedDetailWarehouseCode = detailWarehouseCode === ALL_WAREHOUSES ? undefined : detailWarehouseCode
+  const {
+    data: detailAllStockRows = [],
+    error: detailAllStockError,
+    isLoading: isDetailAllStockLoading,
+  } = useItemStocksQuery(detailTarget?.code ?? null)
+  const {
+    data: selectedDetailStockRows = [],
+    error: selectedDetailStockError,
+    isLoading: isSelectedDetailStockLoading,
+  } = useItemStocksQuery(selectedDetailWarehouseCode ? detailTarget?.code ?? null : null, selectedDetailWarehouseCode)
   const createItemMutation = useCreateItemMutation()
   const skuCheckMutation = useItemSkuCheckMutation()
+  const updateItemMutation = useUpdateItemMutation()
+  const activateItemMutation = useActivateItemMutation()
+  const deactivateItemMutation = useDeactivateItemMutation()
 
   const majorCategoryOptions = useMemo(
     () =>
@@ -97,6 +140,14 @@ export function ItemsPage() {
       })),
     [createMiddleCategories],
   )
+  const detailMiddleCategoryOptions = useMemo(
+    () =>
+      detailMiddleCategories.map((category) => ({
+        label: category.categoryName,
+        value: category.categoryCode,
+      })),
+    [detailMiddleCategories],
+  )
   const unitOptions = useMemo(
     () =>
       itemUnits.map((itemUnit) => ({
@@ -105,42 +156,187 @@ export function ItemsPage() {
       })),
     [itemUnits],
   )
+  const detailStockRows = selectedDetailWarehouseCode ? selectedDetailStockRows : detailAllStockRows
+  const detailWarehouseOptions = useMemo(
+    () => [
+      { label: '전체 창고', value: ALL_WAREHOUSES },
+      ...detailAllStockRows.map((row) => ({
+        label: row.warehouseName,
+        supportingText: row.warehouseCode,
+        value: row.warehouseCode,
+      })),
+    ],
+    [detailAllStockRows],
+  )
+  const detailStockScopeLabel = useMemo(() => {
+    if (!detailTarget) {
+      return undefined
+    }
+
+    if (detailWarehouseCode === ALL_WAREHOUSES) {
+      return '전체 창고'
+    }
+
+    const selectedWarehouse =
+      detailStockRows[0] ?? detailAllStockRows.find((row) => row.warehouseCode === detailWarehouseCode)
+
+    return selectedWarehouse ? `${selectedWarehouse.warehouseName} 기준` : '선택 창고 기준'
+  }, [detailAllStockRows, detailStockRows, detailTarget, detailWarehouseCode])
+  const activeDetailStockError = selectedDetailWarehouseCode ? selectedDetailStockError : detailAllStockError
+  const detailStockErrorMessage = activeDetailStockError ? getItemStockErrorDetail(activeDetailStockError) : null
+  const isDetailStockLoading = selectedDetailWarehouseCode ? isSelectedDetailStockLoading : isDetailAllStockLoading
+  const detailStockEmptyDescription =
+    detailWarehouseCode === ALL_WAREHOUSES
+      ? '조회 가능한 창고 재고가 없습니다'
+      : '선택한 창고에 등록된 재고가 없습니다'
   const handleCreateMajorCategoryChange = useCallback((categoryCode: string) => {
     setCreateMajorCategoryCode(categoryCode)
   }, [])
+  const handleSelectItem = useCallback((item: Item) => {
+    setDetailTarget(item)
+    setDetailFormError(null)
+    setDetailWarehouseCode(ALL_WAREHOUSES)
+  }, [])
+  const itemDetailResponseError = isErrorResponse(itemDetailError) ? itemDetailError : null
+  const isDetailUnavailable = Boolean(
+    detailTarget &&
+      itemDetailResponseError &&
+      (itemDetailResponseError.status === 404 || isItemErrorCode(itemDetailResponseError, 'ITM-019')),
+  )
+  const detailFetchFormError =
+    detailTarget && itemDetailResponseError?.status === 400
+      ? getItemErrorDetail(itemDetailResponseError, ITEM_DETAIL_ERROR_FALLBACK)
+      : null
+  const visibleDetailFormError = detailFormError ?? detailFetchFormError
   const handleSkuCheck = useCallback(
-    async (sku: string) => {
-      try {
-        return await skuCheckMutation.mutateAsync(sku)
-      } catch (error) {
-        throw new Error(getItemSkuCheckErrorMessage(error), { cause: error })
-      }
-    },
+    (sku: string) => skuCheckMutation.mutateAsync(sku),
     [skuCheckMutation],
   )
   const handleCreateItem = useCallback(
     async (values: ItemFormValues) => {
+      setCreateFormError(null)
+
       try {
         await createItemMutation.mutateAsync(values)
         await queryClient.invalidateQueries({ queryKey: ['items'] })
         setIsCreateModalOpen(false)
+        setCreateFormError(null)
         toast.success('부품이 등록되었습니다.')
       } catch (error) {
-        if (isErrorResponse(error)) {
-          if (error.status !== 400 && error.status !== 409) {
-            return
-          }
+        if (!isErrorResponse(error)) {
+          toast.error(getItemErrorDetail(error, CREATE_ITEM_ERROR_FALLBACK))
+          return
         }
 
-        toast.error(getCreateItemErrorMessage(error))
+        if (error.status === 400 || error.status === 409) {
+          setCreateFormError(getItemErrorDetail(error, CREATE_ITEM_ERROR_FALLBACK))
+        }
       }
     },
     [createItemMutation],
+  )
+  const handleUpdateItem = useCallback(
+    async (values: ItemDetailFormValues) => {
+      if (!itemDetail) {
+        return
+      }
+
+      setDetailFormError(null)
+
+      try {
+        const updatedItem = await updateItemMutation.mutateAsync({
+          sku: itemDetail.sku,
+          values,
+        })
+
+        queryClient.setQueryData(itemDetailQueryKey(updatedItem.sku), updatedItem)
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['items'] }),
+          queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(updatedItem.sku) }),
+          queryClient.invalidateQueries({ queryKey: itemStocksQueryBaseKey(updatedItem.sku) }),
+        ])
+        toast.success('부품 정보가 수정되었습니다.')
+      } catch (error) {
+        if (!isErrorResponse(error)) {
+          toast.error(getItemErrorDetail(error, UPDATE_ITEM_ERROR_FALLBACK))
+          throw error
+        }
+
+        if (error.status === 404 || isItemErrorCode(error, 'ITM-019')) {
+          await queryClient.invalidateQueries({ queryKey: ['items'] })
+          setDetailTarget(null)
+          setDetailFormError(null)
+          setDetailMajorCategoryCode('')
+          setDetailWarehouseCode(ALL_WAREHOUSES)
+          throw error
+        }
+
+        if (isItemErrorCode(error, 'ITM-020')) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['items'] }),
+            queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(itemDetail.sku) }),
+          ])
+        }
+
+        if (error.status === 400 || error.status === 409) {
+          setDetailFormError(getItemErrorDetail(error, UPDATE_ITEM_ERROR_FALLBACK))
+        }
+
+        throw error
+      }
+    },
+    [itemDetail, updateItemMutation],
+  )
+  const handleToggleItemActive = useCallback(
+    async (detail: ItemDetail) => {
+      setDetailFormError(null)
+
+      try {
+        if (detail.active) {
+          await deactivateItemMutation.mutateAsync(detail.sku)
+        } else {
+          await activateItemMutation.mutateAsync(detail.sku)
+        }
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['items'] }),
+          queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
+        ])
+        toast.success(detail.active ? '부품이 비활성화되었습니다.' : '부품이 활성화되었습니다.')
+      } catch (error) {
+        if (!isErrorResponse(error)) {
+          toast.error(getItemErrorDetail(error, ITEM_STATUS_CHANGE_ERROR_FALLBACK))
+          return
+        }
+
+        if (error.status === 404 || isItemErrorCode(error, 'ITM-019')) {
+          await queryClient.invalidateQueries({ queryKey: ['items'] })
+          setDetailTarget(null)
+          setDetailFormError(null)
+          setDetailMajorCategoryCode('')
+          setDetailWarehouseCode(ALL_WAREHOUSES)
+          return
+        }
+
+        if (isItemErrorCode(error, 'ITM-017') || isItemErrorCode(error, 'ITM-020')) {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['items'] }),
+            queryClient.invalidateQueries({ queryKey: itemDetailQueryKey(detail.sku) }),
+          ])
+        }
+
+        if (error.status === 400 || error.status === 409) {
+          toast.error(getItemErrorDetail(error, ITEM_STATUS_CHANGE_ERROR_FALLBACK))
+        }
+      }
+    },
+    [activateItemMutation, deactivateItemMutation],
   )
 
   const items = data?.content ?? []
   const totalCount = data?.totalElements ?? 0
   const totalPages = Math.max(1, data?.totalPages ?? 1)
+  const isListUpdating = isFetching && !isLoading
 
   function handleFilterChange(next: ItemFilter) {
     const isOnlyKeywordChanged =
@@ -167,7 +363,10 @@ export function ItemsPage() {
             <FgButton
               leftIcon={<Plus aria-hidden className="h-4 w-4" />}
               variant="primary"
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => {
+                setCreateFormError(null)
+                setIsCreateModalOpen(true)
+              }}
             >
               부품 추가
             </FgButton>
@@ -196,13 +395,25 @@ export function ItemsPage() {
           ) : undefined
         }
         header={
-          <span>
-            {isFetching ? '새로고침 중 · ' : null}
-            전체 <strong className="text-ink">{formatNumber(totalCount)}</strong>건 중 {rangeStart}-
-            {rangeEnd}
-          </span>
+          <div className="flex w-full items-center justify-between gap-3">
+            <span>
+              전체 <strong className="text-ink">{formatNumber(totalCount)}</strong>건 중 {rangeStart}-
+              {rangeEnd}
+            </span>
+            {isListUpdating ? (
+              <span
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 text-label font-semibold text-primary"
+                role="status"
+              >
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                목록 업데이트 중
+              </span>
+            ) : null}
+          </div>
         }
         items={items}
+        onSelect={handleSelectItem}
       />
       <FgPagination
         page={page}
@@ -217,6 +428,7 @@ export function ItemsPage() {
       />
       {canCreateItem && isCreateModalOpen ? (
         <ItemCreateModal
+          formError={createFormError}
           isMajorCategoryLoading={isMajorCategoryLoading}
           isMiddleCategoryFetched={isCreateMiddleCategoryFetched}
           isMiddleCategoryLoading={isCreateMiddleCategoryLoading || isCreateMiddleCategoryFetching}
@@ -226,11 +438,47 @@ export function ItemsPage() {
           majorCategoryOptions={majorCategoryOptions}
           middleCategoryOptions={createMiddleCategoryOptions}
           open
-          onClose={() => setIsCreateModalOpen(false)}
+          onClose={() => {
+            setIsCreateModalOpen(false)
+            setCreateFormError(null)
+          }}
           onMajorCategoryChange={handleCreateMajorCategoryChange}
           onSkuCheck={handleSkuCheck}
           onSubmit={handleCreateItem}
           unitOptions={unitOptions}
+        />
+      ) : null}
+      {detailTarget && !isDetailUnavailable ? (
+        <ItemDetailModal
+          canManage={canCreateItem}
+          detail={itemDetail ?? null}
+          formError={visibleDetailFormError}
+          isLoading={isItemDetailLoading}
+          isStatusChanging={activateItemMutation.isPending || deactivateItemMutation.isPending}
+          isStockLoading={isDetailStockLoading}
+          isSubCategoryLoading={isDetailMiddleCategoryLoading || isDetailMiddleCategoryFetching}
+          isSubmitting={updateItemMutation.isPending}
+          isUnitLoading={isItemUnitsLoading || isItemUnitsFetching}
+          majorCategoryOptions={majorCategoryOptions}
+          open
+          stockEmptyDescription={detailStockEmptyDescription}
+          stockErrorMessage={detailStockErrorMessage}
+          stockRows={detailStockRows}
+          stockScopeLabel={detailStockScopeLabel}
+          subCategoryOptions={detailMiddleCategoryOptions}
+          unitOptions={unitOptions}
+          warehouseOptions={canCreateItem ? detailWarehouseOptions : undefined}
+          warehouseValue={canCreateItem ? detailWarehouseCode : undefined}
+          onClose={() => {
+            setDetailTarget(null)
+            setDetailFormError(null)
+            setDetailMajorCategoryCode('')
+            setDetailWarehouseCode(ALL_WAREHOUSES)
+          }}
+          onCategoryChange={setDetailMajorCategoryCode}
+          onSubmit={handleUpdateItem}
+          onToggleActive={handleToggleItemActive}
+          onWarehouseChange={canCreateItem ? setDetailWarehouseCode : undefined}
         />
       ) : null}
     </div>

@@ -25,14 +25,22 @@ export interface StockWarehouseOption {
 
 export interface StockFilterBarProps {
   filter: StockFilter
+  /** "창고 : 전체" 옵션 노출 여부. BRANCH 사용자는 자기 창고만 보여야 하므로 false로 숨긴다. */
+  includeAllOption?: boolean
   onChange: (filter: StockFilter) => void
   onReset: () => void
   warehouses: StockWarehouseOption[]
 }
 
-export function StockFilterBar({ filter, onChange, onReset, warehouses }: StockFilterBarProps) {
+export function StockFilterBar({
+  filter,
+  includeAllOption = true,
+  onChange,
+  onReset,
+  warehouses,
+}: StockFilterBarProps) {
   const warehouseOptions = [
-    { label: '창고 : 전체', value: 'ALL' },
+    ...(includeAllOption ? [{ label: '창고 : 전체', value: 'ALL' }] : []),
     ...warehouses.map((warehouse) => ({ label: warehouse.name, value: warehouse.code })),
   ]
 

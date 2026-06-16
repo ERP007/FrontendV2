@@ -13,6 +13,14 @@ export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
 export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
 
+export type CarrierType = 'VEHICLE' | 'DELIVERY_SERVICE' | 'OTHER'
+
+export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
+  DELIVERY_SERVICE: '택배',
+  OTHER: '기타',
+  VEHICLE: '차량',
+}
+
 export interface SalesOrderLine {
   /** 본사 출고 창고 가용 재고 (검토 시점) */
   availableStock: number
@@ -62,15 +70,6 @@ export interface SalesOrder {
   transport: string | null
 }
 
-export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  APPROVED: 'APPROVED',
-  CANCELED: 'CANCELED',
-  DELIVERED: 'DELIVERED',
-  DRAFT: 'DRAFT',
-  REJECTED: 'REJECTED',
-  REQUESTED: 'REQUESTED',
-}
-
 export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
   'DRAFT',
   'REQUESTED',
@@ -80,13 +79,13 @@ export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
   'REJECTED',
 ]
 
-export const SO_BRANCH_STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  APPROVED: '도착 대기',
-  CANCELED: '취소',
-  DELIVERED: '입고',
+export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
   DRAFT: '임시저장',
-  REJECTED: '거절',
   REQUESTED: '출고 대기',
+  APPROVED: '도착 대기',
+  DELIVERED: '입고',
+  CANCELED: '취소',
+  REJECTED: '거절',
 }
 
 export const SO_TAB_STATUS_MAP: Record<SoStatusTab, SalesOrderStatus[] | undefined> = {
@@ -116,22 +115,6 @@ export const REJECT_REASON_OPTIONS = [
   '예산 초과',
   '기타',
 ] as const
-
-export const ARRIVAL_DIFF_REASON_OPTIONS = [
-  '배송 누락',
-  '파손',
-  '오배송',
-  '수량 오류',
-  '기타',
-] as const
-
-export interface SalesOrderFilter {
-  branchCode: 'ALL' | string
-  endDate: string
-  search: string
-  startDate: string
-  status: 'ALL' | SalesOrderStatus
-}
 
 /** SO-04 상태 탭 */
 export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'

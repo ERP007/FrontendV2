@@ -35,3 +35,5 @@ export const branchFormSchema = z.object({
     .min(1, '지점명을 입력하세요.')
     .max(100, '지점명은 100자 이하로 입력하세요.'),
 })
+
+export type BranchFormSchema = z.infer<typeof branchFormSchema>

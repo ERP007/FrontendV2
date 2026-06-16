@@ -17,14 +17,22 @@ const typeOptions = [
 
 export interface MovementFilterBarProps {
   filter: MovementFilter
+  /** "창고 : 전체" 옵션 노출 여부. BRANCH 사용자는 자기 창고만 보여야 하므로 false로 숨긴다. */
+  includeAllOption?: boolean
   onChange: (filter: MovementFilter) => void
   onReset: () => void
   warehouses: StockWarehouseOption[]
 }
 
-export function MovementFilterBar({ filter, onChange, onReset, warehouses }: MovementFilterBarProps) {
+export function MovementFilterBar({
+  filter,
+  includeAllOption = true,
+  onChange,
+  onReset,
+  warehouses,
+}: MovementFilterBarProps) {
   const warehouseOptions = [
-    { label: '창고 : 전체', value: 'ALL' },
+    ...(includeAllOption ? [{ label: '창고 : 전체', value: 'ALL' }] : []),
     ...warehouses.map((warehouse) => ({ label: warehouse.name, value: warehouse.code })),
   ]
 

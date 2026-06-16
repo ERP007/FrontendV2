@@ -36,9 +36,17 @@ export interface WarehouseFormModalProps {
   onClose: () => void
   onSubmit: (values: WarehouseFormValues) => void
   open: boolean
+  submitting?: boolean
 }
 
-export function WarehouseFormModal({ branches, initial, onClose, onSubmit, open }: WarehouseFormModalProps) {
+export function WarehouseFormModal({
+  branches,
+  initial,
+  onClose,
+  onSubmit,
+  open,
+  submitting = false,
+}: WarehouseFormModalProps) {
   const isEdit = Boolean(initial)
 
   const {
@@ -78,10 +86,13 @@ export function WarehouseFormModal({ branches, initial, onClose, onSubmit, open 
     <FgModal
       footer={
         <>
-          <FgButton onClick={onClose}>취소</FgButton>
+          <FgButton disabled={submitting} onClick={onClose}>
+            취소
+          </FgButton>
           <FgButton
             form={FORM_ID}
             leftIcon={<Check aria-hidden className="h-4 w-4" />}
+            loading={submitting}
             type="submit"
             variant="primary"
           >

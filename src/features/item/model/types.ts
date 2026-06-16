@@ -29,17 +29,6 @@ export interface ItemSubCategory extends ItemCategory {
   parentCategoryCode: string
 }
 
-/** 분류 트리: 대분류 → 중분류 목록 */
-export const ITEM_CATEGORIES: Record<string, string[]> = {
-  엔진: ['윤활계통', '필터'],
-  점화: [],
-  제동: [],
-  동력전달: [],
-  '현가·조향': [],
-  전장: [],
-  '외장·기타': [],
-}
-
 export const ITEM_UNIT_OPTIONS: ItemUnit[] = ['EA', 'BOX', 'SET', 'L']
 
 export interface ItemUnitOption {
@@ -51,6 +40,49 @@ export interface ItemSkuCheckResult {
   available: boolean
   message: string
   sku: string
+}
+
+export type ItemStockStatus = 'NORMAL' | 'LOW' | 'OUT'
+
+export interface ItemDetail {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  safetyStock: number
+  sku: string
+  subCategoryCode: string
+  subCategoryName: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
+}
+
+export interface ItemDetailFormValues {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  subCategoryCode: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface UpdateItemRequest {
+  categoryCode: string
+  name: string
+  safetyStock: number
+  subCategoryCode: string
+  unit: ItemUnit
+  unitPrice: number
+}
+
+export interface ItemStockRow {
+  currentStock: number
+  safetyStock: number
+  status?: ItemStockStatus
+  warehouseCode: string
+  warehouseName: string
 }
 
 export interface CreateItemRequest {
@@ -128,4 +160,16 @@ export interface ItemFormValues {
   sku: string
   unit: ItemUnit
   unitPrice: number
+}
+
+export function resolveItemStockStatus(stock: Pick<ItemStockRow, 'currentStock' | 'safetyStock' | 'status'>): ItemStockStatus {
+  if (stock.status) {
+    return stock.status
+  }
+
+  if (stock.currentStock === 0) {
+    return 'OUT'
+  }
+
+  return stock.currentStock < stock.safetyStock ? 'LOW' : 'NORMAL'
 }

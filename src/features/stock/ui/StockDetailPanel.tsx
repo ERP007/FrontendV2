@@ -15,12 +15,22 @@ const gaugeColorClasses: Record<StockStatus, string> = {
 }
 
 export interface StockDetailPanelProps {
+  canAdjust?: boolean
   detail: StockSkuDetail | null
+  loading?: boolean
   onAdjust: () => void
   onViewHistory: () => void
 }
 
-export function StockDetailPanel({ detail, onAdjust, onViewHistory }: StockDetailPanelProps) {
+export function StockDetailPanel({ canAdjust = false, detail, loading = false, onAdjust, onViewHistory }: StockDetailPanelProps) {
+  if (loading && !detail) {
+    return (
+      <FgCard className="h-fit">
+        <div className="p-8 text-center text-meta text-muted">상세 정보를 불러오는 중…</div>
+      </FgCard>
+    )
+  }
+
   if (!detail) {
     return (
       <FgCard className="h-fit">
@@ -41,8 +51,8 @@ export function StockDetailPanel({ detail, onAdjust, onViewHistory }: StockDetai
         <h2 className="mt-2 text-modal-title text-ink">{detail.itemName}</h2>
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           <span className="text-meta font-semibold text-muted">{detail.sku}</span>
-          <FgBadge variant="primary">{detail.majorCategory}</FgBadge>
-          <FgBadge variant="outline">{detail.middleCategory}</FgBadge>
+          {detail.majorCategory ? <FgBadge variant="primary">{detail.majorCategory}</FgBadge> : null}
+          {detail.middleCategory ? <FgBadge variant="outline">{detail.middleCategory}</FgBadge> : null}
         </div>
       </div>
 
@@ -142,6 +152,7 @@ export function StockDetailPanel({ detail, onAdjust, onViewHistory }: StockDetai
         </FgButton>
         <FgButton
           className="flex-1"
+          disabled={!canAdjust}
           leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
           variant="primary"
           onClick={onAdjust}
