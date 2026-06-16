@@ -3,7 +3,6 @@ import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/
 import { AppShellLayout } from '@/app/layouts/AppShellLayout'
 import { UsersPage } from '@/pages/admin/UsersPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
-import { PasswordChangePage } from '@/pages/auth/PasswordChangePage'
 import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArrivalPage'
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
 import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
@@ -42,12 +41,6 @@ const loginRoute = createRoute({
   component: LoginPage,
   getParentRoute: () => rootRoute,
   path: '/login',
-})
-
-const passwordChangeRoute = createRoute({
-  component: PasswordChangePage,
-  getParentRoute: () => rootRoute,
-  path: '/password-change',
 })
 
 const shellRoute = createRoute({
@@ -124,6 +117,14 @@ const myPageRoute = createRoute({
   path: '/my-page',
 })
 
+const myPageLegacyRoute = createRoute({
+  beforeLoad: () => {
+    throw redirect({ to: '/my-page' })
+  },
+  getParentRoute: () => shellRoute,
+  path: '/mypage',
+})
+
 const purchaseOrdersRoute = createRoute({
   component: PurchaseOrdersPage,
   getParentRoute: () => shellRoute,
@@ -186,7 +187,6 @@ const branchSalesOrderDetailRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  passwordChangeRoute,
   shellRoute.addChildren([
     indexRoute,
     dashboardRoute,
@@ -196,6 +196,7 @@ const routeTree = rootRoute.addChildren([
     warehousesRoute,
     usersRoute,
     myPageRoute,
+    myPageLegacyRoute,
     purchaseOrdersRoute,
     purchaseOrderCreateRoute,
     purchaseOrderDetailRoute,

@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 
 import {
@@ -9,11 +8,11 @@ import {
   MyProfileCard,
   useMeQuery,
 } from '@/features/user'
+import { PASSWORD_CHANGE_URL } from '@/shared/api'
 import { formatDate } from '@/shared/lib/format'
 import { FgButton, FgNotice, FgPageHeader } from '@/shared/ui'
 
 export function MyPage() {
-  const navigate = useNavigate()
   const meQuery = useMeQuery()
   const me = meQuery.data
   const errorMessage = meQuery.isError ? getMeErrorMessage(meQuery.error) : null
@@ -39,7 +38,7 @@ export function MyPage() {
       {me ? (
         <MyPasswordCard
           changedAt={formatDate(me.lastChangedPassAt)}
-          onChangePassword={() => void navigate({ to: '/password-change' })}
+          onChangePassword={() => window.location.assign(PASSWORD_CHANGE_URL)}
         />
       ) : null}
       <MyActivityCard activities={MY_ACTIVITY_FIXTURES} />
