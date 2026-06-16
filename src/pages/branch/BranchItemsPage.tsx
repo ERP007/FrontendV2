@@ -15,7 +15,7 @@ import {
   useItemsQuery,
   isItemErrorCode,
 } from '@/features/item'
-import type { Item, ItemFilter, ItemListParams } from '@/features/item'
+import type { Item, ItemFilter } from '@/features/item'
 import { isErrorResponse } from '@/shared/api'
 import { formatNumber } from '@/shared/lib/format'
 import { FgEmptyState, FgPageHeader, FgPagination } from '@/shared/ui'
@@ -40,9 +40,9 @@ export function BranchItemsPage() {
     return () => window.clearTimeout(timeoutId)
   }, [filter.keyword])
 
-  const itemListParams = useMemo<ItemListParams>(
-    () => ({ ...filter, keyword: debouncedKeyword, page, size: pageSize }),
-    [debouncedKeyword, filter, page, pageSize],
+  const itemListFilter = useMemo<ItemFilter>(
+    () => ({ ...filter, keyword: debouncedKeyword }),
+    [debouncedKeyword, filter],
   )
   const selectedMajorCategoryCode = filter.majorCategory === 'ALL' ? undefined : filter.majorCategory
   const {
@@ -54,7 +54,7 @@ export function BranchItemsPage() {
     isFetching: isMiddleCategoryFetching,
     isLoading: isMiddleCategoryLoading,
   } = useItemSubCategoriesQuery(selectedMajorCategoryCode)
-  const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const { data, isFetching, isLoading } = useItemsQuery(itemListFilter, page, pageSize)
   const {
     data: itemDetail,
     error: itemDetailError,

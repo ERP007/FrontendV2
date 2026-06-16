@@ -25,7 +25,7 @@ import {
   useUpdateItemMutation,
   isItemErrorCode,
 } from '@/features/item'
-import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues, ItemListParams } from '@/features/item'
+import type { Item, ItemDetail, ItemDetailFormValues, ItemFilter, ItemFormValues } from '@/features/item'
 import { isErrorResponse, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -93,7 +93,7 @@ export function ItemsPage() {
     isFetching: isItemUnitsFetching,
     isLoading: isItemUnitsLoading,
   } = useItemUnitsQuery(canCreateItem)
-  const { data, isFetching, isLoading } = useItemsQuery(itemListParams)
+  const { data, isFetching, isLoading } = useItemsQuery(itemListFilter, page, pageSize)
   const {
     data: itemDetail,
     error: itemDetailError,
