@@ -1,7 +1,5 @@
 import dayjs from 'dayjs'
 
-import { isPoDelayed } from './ui-mock-types'
-
 import type { PurchaseOrder, PurchaseOrderFilter } from './ui-mock-types'
 
 export function createDefaultPoFilter(): PurchaseOrderFilter {
@@ -47,25 +45,3 @@ export function filterPurchaseOrders(
     })
 }
 
-export interface PoKpi {
-  arrivingCount: number
-  delayedCount: number
-  draftCount: number
-  totalCount: number
-}
-
-export function derivePoKpi(orders: PurchaseOrder[]): PoKpi {
-  const today = dayjs().format('YYYY-MM-DD')
-
-  return {
-    arrivingCount: orders.filter(
-      (order) =>
-        (order.status === 'APPROVED' || order.status === 'SHIPPED') &&
-        order.expectedAt !== null &&
-        order.expectedAt >= today,
-    ).length,
-    delayedCount: orders.filter((order) => isPoDelayed(order, today)).length,
-    draftCount: orders.filter((order) => order.status === 'DRAFT').length,
-    totalCount: orders.length,
-  }
-}

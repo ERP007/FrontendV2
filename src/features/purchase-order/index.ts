@@ -1,9 +1,4 @@
-export {
-  createDefaultPoFilter,
-  derivePoKpi,
-  filterPurchaseOrders,
-} from './model/filter-purchase-orders'
-export type { PoKpi } from './model/filter-purchase-orders'
+export { createDefaultPoFilter, filterPurchaseOrders } from './model/filter-purchase-orders'
 export { purchaseOrderDraftFormSchema } from './model/po-schema'
 export type { PurchaseOrderDraftFormValues } from './model/po-schema'
 export { poTotalAmount, poTotalQuantity } from './model/ui-mock-types'

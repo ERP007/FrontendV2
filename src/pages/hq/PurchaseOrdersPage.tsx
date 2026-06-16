@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 
 import {
   createDefaultPoFilter,
-  derivePoKpi,
   filterPurchaseOrders,
   PoFilterBar,
   PoKpiCards,
   PoTable,
+  usePurchaseOrderKpiQuery,
 } from '@/features/purchase-order'
 import type { PurchaseOrder, PurchaseOrderFilter, Supplier } from '@/features/purchase-order'
 import { formatNumber } from '@/shared/lib/format'
@@ -275,7 +275,7 @@ export function PurchaseOrdersPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
-  const kpi = useMemo(() => derivePoKpi(PURCHASE_ORDER_FIXTURES), [])
+  const { data: kpi } = usePurchaseOrderKpiQuery()
   const filtered = useMemo(() => filterPurchaseOrders(PURCHASE_ORDER_FIXTURES, filter), [filter])
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
@@ -303,7 +303,7 @@ export function PurchaseOrdersPage() {
         breadcrumbs={breadcrumbs}
         title="구매 주문"
       />
-      <PoKpiCards kpi={kpi} />
+      {kpi ? <PoKpiCards kpi={kpi} /> : null}
       <PoFilterBar
         filter={filter}
         suppliers={SUPPLIER_FIXTURES}
