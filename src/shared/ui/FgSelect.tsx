@@ -106,7 +106,9 @@ export function FgSelect({
         </Select.Portal>
       </Select.Root>
       {helperText ? (
-        <p className={cn('text-meta text-faint', error && 'text-danger')}>{helperText}</p>
+        <p className={cn('text-meta font-medium', error ? 'text-danger' : 'text-faint')}>
+          {helperText}
+        </p>
       ) : null}
     </div>
   )

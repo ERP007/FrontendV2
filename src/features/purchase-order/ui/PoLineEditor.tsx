@@ -7,14 +7,14 @@ import { FgButton, FgCard } from '@/shared/ui'
 
 import { draftLineAmount, emptyDraftLine } from '../model/ui-mock-types'
 
-import type { PoDraftLine, PoItemUnit } from '../model/ui-mock-types'
+import type { PoDraftLine } from '../model/ui-mock-types'
 
 interface PoCatalogItem {
   hqStock: number
   lastPrice: number
   name: string
   sku: string
-  unit: PoItemUnit
+  unit: string
 }
 
 const PO_ITEM_CATALOG: PoCatalogItem[] = [

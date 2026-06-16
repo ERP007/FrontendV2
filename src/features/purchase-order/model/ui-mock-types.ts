@@ -5,7 +5,6 @@
 // 백엔드 연동 완료 후 이 파일은 제거 대상이다.
 // =============================================================================
 
-export type PoItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
 export type PoUiStatus = 'DRAFT' | 'APPROVED' | 'SHIPPED' | 'RECEIVED' | 'CANCELED'
 export type PurchaseOrderEventType = PoUiStatus | 'EDITED'
 
@@ -21,7 +20,7 @@ export interface PurchaseOrderLine {
   lineNo: number
   quantity: number
   sku: string
-  unit: PoItemUnit
+  unit: string
   unitPrice: number
 }
 
@@ -61,18 +60,11 @@ export interface PurchaseOrderFilter {
   to: string
 }
 
-export interface PoHeaderFormValues {
-  expectedAt: string
-  note: string
-  supplierCode: string
-  warehouseCode: string
-}
-
 export interface PoDraftLine {
   itemName: string
   quantity: number
   sku: string | null
-  unit: PoItemUnit | null
+  unit: string | null
   unitPrice: number
 }
 
@@ -100,7 +92,7 @@ export function draftLineAmount(line: PoDraftLine): number {
   return line.quantity * line.unitPrice
 }
 
-export function poDominantUnit(lines: PurchaseOrderLine[]): PoItemUnit {
+export function poDominantUnit(lines: PurchaseOrderLine[]): string {
   return lines[0]?.unit ?? 'EA'
 }
 

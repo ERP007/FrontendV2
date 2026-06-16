@@ -8,22 +8,42 @@ import { toast } from 'sonner'
 import {
   draftLineAmount,
   emptyDraftLine,
-  poHeaderFormSchema,
   PoLineEditor,
+  purchaseOrderDraftFormSchema,
+  useCreatePurchaseOrderDraftMutation,
   usePurchaseOrderVendorsQuery,
 } from '@/features/purchase-order'
-import type { PoDraftLine, PoHeaderFormValues } from '@/features/purchase-order'
+import type {
+  DraftPurchaseOrderRequest,
+  PoDraftLine,
+  PurchaseOrderDraftFormValues,
+  PurchaseOrderLineRequest,
+} from '@/features/purchase-order'
+import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
-import { MOCK_SESSION } from '@/shared/config/session'
 import { cn } from '@/shared/lib/cn'
 import { formatCurrency } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgBadge, FgButton, FgCard, FgInput, FgNotice, FgPageHeader, FgSelect, FgTextarea } from '@/shared/ui'
-
-const FORM_ID = 'po-header-form'
-const DRAFT_PO_NO = 'PO-2026-0422'
+import { FgButton, FgCard, FgInput, FgPageHeader, FgSelect, FgTextarea } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }, { label: '신규 등록' }]
+
+const defaultFormValues: PurchaseOrderDraftFormValues = {
+  desiredArrivalDate: '',
+  memo: '',
+  vendorCode: '',
+  warehouseCode: '',
+}
+
+function linesToRequest(lines: PoDraftLine[]): PurchaseOrderLineRequest[] {
+  return lines
+    .filter((line): line is PoDraftLine & { sku: string } => line.sku !== null)
+    .map((line) => ({
+      itemSku: line.sku,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+    }))
+}
 
 interface VendorPickerProps {
   error?: string
@@ -71,7 +91,10 @@ function VendorPicker({ error, onChange, value }: VendorPickerProps) {
             <button
               className="min-w-0 flex-1 text-left"
               type="button"
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setQuery(selectedName)
+                setOpen(true)
+              }}
             >
               <span className="block truncate text-body font-semibold text-ink">
                 {selectedName}
@@ -144,58 +167,62 @@ export function PurchaseOrderCreatePage() {
   const navigate = useNavigate()
   const router = useRouter()
   const [lines, setLines] = useState<PoDraftLine[]>([emptyDraftLine()])
-  const [lineError, setLineError] = useState<string | null>(null)
   const { data: hqWarehouses } = useHqWarehousesQuery()
+  const { data: me } = useMeQuery()
+  const draftMutation = useCreatePurchaseOrderDraftMutation()
 
   const {
     control,
     formState: { errors },
     handleSubmit,
     register,
-  } = useForm<PoHeaderFormValues>({
-    defaultValues: { expectedAt: '', note: '', supplierCode: '', warehouseCode: '' },
-    resolver: zodResolver(poHeaderFormSchema),
+    watch,
+  } = useForm<PurchaseOrderDraftFormValues>({
+    defaultValues: defaultFormValues,
+    resolver: zodResolver(purchaseOrderDraftFormSchema),
   })
 
   const totalAmount = lines.reduce((sum, line) => sum + draftLineAmount(line), 0)
-
-  function validateLines(): boolean {
-    const completed = lines.filter((line) => line.sku !== null)
-    if (completed.length === 0) {
-      setLineError('주문 품목을 1개 이상 추가하세요.')
-      return false
-    }
-    if (completed.some((line) => line.quantity <= 0 || line.unitPrice <= 0)) {
-      setLineError('모든 품목의 수량과 단가를 1 이상으로 입력하세요.')
-      return false
-    }
-    setLineError(null)
-    return true
-  }
+  const isSubmitting = draftMutation.isPending
 
   function handleConfirm() {
-    if (!validateLines()) return
-    toast.success(`${DRAFT_PO_NO} 구매 주문이 확정되었습니다.`)
-    void navigate({ to: '/purchase-orders' })
+    // TODO: 구매 주문 확정 로직 연결
   }
 
-  function handleDraftSave() {
-    toast.success('임시저장되었습니다.')
-  }
+  const handleDraftSave = handleSubmit(async (values) => {
+    const payloadLines = linesToRequest(lines)
+    const payload: DraftPurchaseOrderRequest = {
+      desiredArrivalDate: values.desiredArrivalDate,
+      lines: payloadLines.length > 0 ? payloadLines : undefined,
+      memo: values.memo || undefined,
+      vendorCode: values.vendorCode,
+      warehouseCode: values.warehouseCode,
+    }
+    try {
+      const draft = await draftMutation.mutateAsync(payload)
+      toast.success(`${draft.code} 임시저장되었습니다.`)
+      void navigate({ to: '/purchase-orders' })
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  })
 
   return (
     <div className="fg-content">
       <FgPageHeader
         actions={
           <>
-            <FgButton leftIcon={<Box aria-hidden className="h-4 w-4" />} onClick={handleDraftSave}>
+            <FgButton
+              disabled={isSubmitting}
+              leftIcon={<Box aria-hidden className="h-4 w-4" />}
+              onClick={handleDraftSave}
+            >
               임시저장
             </FgButton>
             <FgButton
-              form={FORM_ID}
               leftIcon={<Check aria-hidden className="h-4 w-4" />}
-              type="submit"
               variant="primary"
+              onClick={handleConfirm}
             >
               확정
             </FgButton>
@@ -209,41 +236,42 @@ export function PurchaseOrderCreatePage() {
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <h2 className="text-section text-ink">주문 정보</h2>
-            <FgBadge variant="primary">{DRAFT_PO_NO}</FgBadge>
           </div>
           <span className="text-meta font-medium text-faint">
-            담당자 · {MOCK_SESSION.name} / 구매팀
+            담당자 · {me?.name ?? '—'} / {me?.position ?? '—'}
           </span>
         </div>
-        <form
-          className="grid grid-cols-2 gap-x-6 gap-y-5"
-          id={FORM_ID}
-          onSubmit={handleSubmit(handleConfirm)}
-        >
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
           <Controller
             control={control}
-            name="supplierCode"
+            name="vendorCode"
             render={({ field }) => (
               <VendorPicker
-                error={errors.supplierCode?.message}
+                error={errors.vendorCode?.message}
                 value={field.value}
                 onChange={field.onChange}
               />
             )}
           />
           <FgInput
-            error={errors.expectedAt?.message}
+            error={errors.desiredArrivalDate?.message}
+            inputClassName="appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
             label="도착 예정일"
             leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
             required
             type="date"
-            {...register('expectedAt')}
+            {...register('desiredArrivalDate')}
+            onClick={(event) => {
+              const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void }
+              input.showPicker?.()
+            }}
           />
           <Controller
             control={control}
             name="warehouseCode"
             render={({ field }) => (
               <FgSelect
+                className="[&_[data-placeholder]]:text-faint"
                 error={errors.warehouseCode?.message}
                 label="납품 창고"
                 leftIcon={<Building2 aria-hidden className="h-4 w-4" />}
@@ -262,16 +290,18 @@ export function PurchaseOrderCreatePage() {
             )}
           />
           <FgTextarea
+            error={errors.memo?.message}
             label="메모"
+            labelTrailing={`${(watch('memo') ?? '').length} / 500`}
+            maxLength={500}
             placeholder="배송 요청사항, 결제 조건 등"
             rows={3}
-            {...register('note')}
+            {...register('memo')}
           />
-        </form>
+        </div>
       </FgCard>
 
       <PoLineEditor lines={lines} onChange={setLines} />
-      {lineError ? <FgNotice tone="danger">{lineError}</FgNotice> : null}
 
       <FgCard className="flex items-center justify-end gap-4" compact>
         <span className="text-label font-medium text-muted">총 금액 (VAT 별도)</span>
@@ -286,10 +316,9 @@ export function PurchaseOrderCreatePage() {
           임시저장
         </FgButton>
         <FgButton
-          form={FORM_ID}
           leftIcon={<Check aria-hidden className="h-4 w-4" />}
-          type="submit"
           variant="primary"
+          onClick={handleConfirm}
         >
           확정
         </FgButton>

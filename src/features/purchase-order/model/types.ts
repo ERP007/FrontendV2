@@ -22,7 +22,7 @@ export interface WarehouseRef {
 export interface PurchaseOrderLineRequest {
   itemSku: string
   quantity: number
-  unitPrice: string
+  unitPrice: number
 }
 
 export interface SearchPurchaseOrderRequest {
@@ -46,7 +46,7 @@ export interface PurchaseOrderSummaryResponse {
   lineCount: number
   totalQuantity: number | null
   unit: string | null
-  totalAmount: string
+  totalAmount: number
   currency: string
   status: PurchaseOrderStatus
 }
@@ -67,7 +67,7 @@ export interface PurchaseOrderDetailLine {
   name: string
   unit: string
   quantity: number
-  unitPrice: string
+  unitPrice: number
 }
 
 export interface PurchaseOrderDetailResponse {
@@ -78,7 +78,7 @@ export interface PurchaseOrderDetailResponse {
   createdAt: string
   desiredArrivalDate: string
   status: PurchaseOrderStatus
-  totalAmount: string
+  totalAmount: number
   currency: string
   lines: PurchaseOrderDetailLine[]
 }
@@ -124,7 +124,7 @@ export interface CreatePurchaseOrderResponse {
   warehouseCode: string
   desiredArrivalDate: string
   status: PurchaseOrderStatus
-  totalAmount: string
+  totalAmount: number
   currency: string
   createdAt: string
 }
@@ -135,7 +135,7 @@ export interface ApprovePurchaseOrderResponse {
   warehouseCode: string
   desiredArrivalDate: string
   status: PurchaseOrderStatus
-  totalAmount: string
+  totalAmount: number
   currency: string
   approvedAt: string
 }
@@ -150,7 +150,7 @@ export interface ReceivePurchaseOrderResponse {
   warehouseCode: string
   receivedDate: string
   status: PurchaseOrderStatus
-  totalAmount: string
+  totalAmount: number
   currency: string
   receivedAt: string
 }
