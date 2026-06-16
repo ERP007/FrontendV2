@@ -3,7 +3,7 @@ import { Clock, User as UserIcon } from 'lucide-react'
 import { formatDateTime } from '@/shared/lib/format'
 import { FgCard, FgCardHeader, FgDomainStatusBadge } from '@/shared/ui'
 
-import type { PurchaseOrderEvent } from '../model/types'
+import type { PurchaseOrderEvent } from '../model/ui-mock-types'
 
 export interface PoTimelineProps {
   events: PurchaseOrderEvent[]

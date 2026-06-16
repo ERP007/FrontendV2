@@ -8,12 +8,10 @@ import { toast } from 'sonner'
 import {
   draftLineAmount,
   emptyDraftLine,
-  HQ_WAREHOUSE_OPTIONS,
   poHeaderFormSchema,
   PoLineEditor,
-  SUPPLIER_FIXTURES,
 } from '@/features/purchase-order'
-import type { PoDraftLine, PoHeaderFormValues } from '@/features/purchase-order'
+import type { PoDraftLine, PoHeaderFormValues, Supplier } from '@/features/purchase-order'
 import { MOCK_SESSION } from '@/shared/config/session'
 import { formatCurrency } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgInput, FgNotice, FgPageHeader, FgSelect, FgTextarea } from '@/shared/ui'
@@ -22,6 +20,18 @@ const FORM_ID = 'po-header-form'
 const DRAFT_PO_NO = 'PO-2026-0422'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }, { label: '신규 등록' }]
+
+const SUPPLIER_FIXTURES: Supplier[] = [
+  { code: 'SUP-001', id: 1, name: '현대오토파츠' },
+  { code: 'SUP-007', id: 2, name: '(주)성일전장' },
+  { code: 'SUP-009', id: 3, name: '대성브레이크' },
+  { code: 'SUP-014', id: 4, name: '(주)동성정밀' },
+  { code: 'SUP-018', id: 5, name: '신성라이팅' },
+  { code: 'SUP-021', id: 6, name: '(주)우진시스템' },
+  { code: 'SUP-031', id: 7, name: '한일기연' },
+]
+
+const HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
 
 const supplierOptions = SUPPLIER_FIXTURES.map((supplier) => ({
   label: `${supplier.name} ${supplier.code}`,

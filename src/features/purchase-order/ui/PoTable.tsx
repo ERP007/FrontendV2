@@ -8,9 +8,14 @@ import { cn } from '@/shared/lib/cn'
 import { formatCurrency, formatDate, formatDday, formatNumber } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/shared/ui'
 
-import { isPoDelayed, poDominantUnit, poTotalAmount, poTotalQuantity } from '../model/types'
+import {
+  isPoDelayed,
+  poDominantUnit,
+  poTotalAmount,
+  poTotalQuantity,
+} from '../model/ui-mock-types'
 
-import type { PurchaseOrder } from '../model/types'
+import type { PurchaseOrder } from '../model/ui-mock-types'
 
 export interface PoTableProps {
   header?: ReactNode

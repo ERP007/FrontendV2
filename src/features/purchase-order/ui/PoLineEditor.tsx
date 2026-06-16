@@ -5,11 +5,32 @@ import { cn } from '@/shared/lib/cn'
 import { formatCurrency, formatNumber } from '@/shared/lib/format'
 import { FgButton, FgCard } from '@/shared/ui'
 
-import { PO_ITEM_CATALOG } from '../model/fixtures'
-import { draftLineAmount, emptyDraftLine } from '../model/types'
+import { draftLineAmount, emptyDraftLine } from '../model/ui-mock-types'
 
-import type { PoCatalogItem } from '../model/fixtures'
-import type { PoDraftLine } from '../model/types'
+import type { PoDraftLine, PoItemUnit } from '../model/ui-mock-types'
+
+interface PoCatalogItem {
+  hqStock: number
+  lastPrice: number
+  name: string
+  sku: string
+  unit: PoItemUnit
+}
+
+const PO_ITEM_CATALOG: PoCatalogItem[] = [
+  { hqStock: 6, lastPrice: 8400, name: '엔진오일 필터 (2.0L gasoline)', sku: 'HMC-EN-00214', unit: 'EA' },
+  { hqStock: 420, lastPrice: 36000, name: '브레이크 패드 세트 (전륜)', sku: 'HMC-BR-01102', unit: 'SET' },
+  { hqStock: 84, lastPrice: 36000, name: '브레이크 패드 세트 (후륜)', sku: 'HMC-BR-20818', unit: 'SET' },
+  { hqStock: 36, lastPrice: 70000, name: '브레이크 디스크 로터 14"', sku: 'HMC-BR-21102', unit: 'EA' },
+  { hqStock: 120, lastPrice: 50000, name: '브레이크 오일 DOT4 1L', sku: 'HMC-BR-22045', unit: 'L' },
+  { hqStock: 12, lastPrice: 100000, name: '브레이크 캘리퍼 어셈블리', sku: 'HMC-BR-21588', unit: 'EA' },
+  { hqStock: 88, lastPrice: 24000, name: '에어 클리너 카트리지', sku: 'HMC-EN-10331', unit: 'EA' },
+  { hqStock: 960, lastPrice: 6200, name: '스파크 플러그 (이리듐)', sku: 'HMC-SP-00673', unit: 'BOX' },
+  { hqStock: 75, lastPrice: 24000, name: '와이퍼 블레이드 24"', sku: 'HMC-AC-40229', unit: 'EA' },
+  { hqStock: 0, lastPrice: 80000, name: '배터리 12V 80Ah', sku: 'HMC-EL-04481', unit: 'EA' },
+  { hqStock: 0, lastPrice: 12500, name: '트랜스미션 오일 ATF SP-IV', sku: 'HMC-TR-00501', unit: 'L' },
+  { hqStock: 30, lastPrice: 50000, name: '헤드램프 어셈블리 LH', sku: 'HMC-LT-00088', unit: 'EA' },
+]
 
 const MAX_LINES = 50
 

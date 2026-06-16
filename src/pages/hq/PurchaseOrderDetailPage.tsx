@@ -20,9 +20,39 @@ import {
   PoTimeline,
   poTotalAmount,
   poTotalQuantity,
-  PURCHASE_ORDER_FIXTURES,
 } from '@/features/purchase-order'
 import type { PurchaseOrder } from '@/features/purchase-order'
+
+const PURCHASE_ORDER_FIXTURES: PurchaseOrder[] = [
+  {
+    confirmedBy: '김민재',
+    confirmedTeam: '구매팀',
+    createdAt: '2026-06-10',
+    events: [
+      { actorName: '박지훈', actorTeam: '구매팀장', description: '발주 확정 · 공급사 자동 발송', id: 1, occurredAt: '2026-06-10T14:32:00', type: 'APPROVED' },
+      { actorName: '김민재', actorTeam: '구매팀', description: '스파크 플러그 수량 300 → 400 수정', id: 2, occurredAt: '2026-06-10T11:08:00', type: 'EDITED' },
+      { actorName: '김민재', actorTeam: '구매팀', description: '신규 PO 생성 · 5개 라인 등록', id: 3, occurredAt: '2026-06-09T16:45:00', type: 'DRAFT' },
+    ],
+    expectedAt: '2026-06-14',
+    id: 1,
+    lines: [
+      { amount: 1680000, itemName: '엔진오일 필터 (2.0L gasoline)', lineNo: 1, quantity: 200, sku: 'HMC-EN-00214', unit: 'EA', unitPrice: 8400 },
+      { amount: 4320000, itemName: '브레이크 패드 세트 (전륜)', lineNo: 2, quantity: 120, sku: 'HMC-BR-01102', unit: 'SET', unitPrice: 36000 },
+      { amount: 1740000, itemName: '에어 클리너 카트리지', lineNo: 3, quantity: 120, sku: 'HMC-EN-10331', unit: 'EA', unitPrice: 14500 },
+      { amount: 2480000, itemName: '스파크 플러그 (이리듐)', lineNo: 4, quantity: 400, sku: 'HMC-SP-00673', unit: 'BOX', unitPrice: 6200 },
+      { amount: 4590000, itemName: '와이퍼 블레이드 24"', lineNo: 5, quantity: 300, sku: 'HMC-AC-40229', unit: 'EA', unitPrice: 15300 },
+    ],
+    note: null,
+    paymentTerm: '월말 결제 NET 30',
+    poNo: 'PO-2026-0421',
+    status: 'APPROVED',
+    supplierCode: 'SUP-014',
+    supplierName: '(주)동성정밀',
+    updatedAt: '2026-06-10T14:32:00',
+    warehouseCode: 'WH-HQ-001',
+    warehouseName: '본사 중앙창고',
+  },
+]
 import { MOCK_SESSION } from '@/shared/config/session'
 import {
   formatCurrency,
