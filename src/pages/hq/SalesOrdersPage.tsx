@@ -15,7 +15,9 @@ import type {
   SalesOrderStatus,
   SoFilterBarValues,
 } from '@/features/sales-order'
+import { useHqWarehousesQuery } from '@/features/warehouse'
 import { formatNumber } from '@/shared/lib/format'
+import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgBadge, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
@@ -29,6 +31,7 @@ interface SoHqQueryState {
   sortField: HqSalesOrderSortField
   startDate?: string
   status: SalesOrderStatus[]
+  warehouseCode?: string
 }
 
 function createDefaultQueryState(): SoHqQueryState {
@@ -41,6 +44,7 @@ function createDefaultQueryState(): SoHqQueryState {
     sortField: 'requestedAt',
     startDate: undefined,
     status: [],
+    warehouseCode: undefined,
   }
 }
 
@@ -48,16 +52,19 @@ export function SalesOrdersPage() {
   const navigate = useNavigate()
   const [state, setState] = useState<SoHqQueryState>(createDefaultQueryState)
 
+  const debouncedSearch = useDebouncedValue(state.search, 300)
   const { data: kpi } = useSalesOrderHqKpiQuery()
+  const { data: warehouses } = useHqWarehousesQuery()
   const { data: page } = useHqSalesOrdersQuery({
     endDate: state.endDate,
     page: state.page,
-    search: state.search || undefined,
+    search: debouncedSearch || undefined,
     size: state.size,
     sortDirection: state.sortDirection,
     sortField: state.sortField,
     startDate: state.startDate,
     status: state.status,
+    warehouseCode: state.warehouseCode,
   })
 
   const orders = page?.content ?? []
@@ -80,6 +87,7 @@ export function SalesOrdersPage() {
       search: next.search,
       startDate: next.startDate,
       status: next.status,
+      warehouseCode: next.warehouseCode,
     }))
   }
 
@@ -115,7 +123,9 @@ export function SalesOrdersPage() {
           search: state.search,
           startDate: state.startDate,
           status: state.status,
+          warehouseCode: state.warehouseCode,
         }}
+        warehouses={warehouses}
         onChange={handleFilterChange}
         onReset={handleReset}
       />

@@ -103,7 +103,7 @@ export function SoTable({
         header: '품목',
         id: 'itemCount',
         meta: { align: 'right' },
-        size: 60,
+        size: 90,
       },
       {
         cell: ({ row }) => {
