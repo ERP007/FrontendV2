@@ -15,9 +15,11 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import {
+  PoCancelModal,
   PoHistoryTimeline,
   PoReceiveModal,
   useApprovePurchaseOrderMutation,
+  useCancelPurchaseOrderMutation,
   usePurchaseOrderHistoriesQuery,
   usePurchaseOrderQuery,
   useReceivePurchaseOrderMutation,
@@ -45,14 +47,17 @@ export function PurchaseOrderDetailPage() {
   const { data: histories = [] } = usePurchaseOrderHistoriesQuery(code)
   const approveMutation = useApprovePurchaseOrderMutation()
   const receiveMutation = useReceivePurchaseOrderMutation()
+  const cancelMutation = useCancelPurchaseOrderMutation()
   const [receiveOpen, setReceiveOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
 
   if (!po) return null
 
   const canCancel = po.status === 'DRAFT' || po.status === 'APPROVED'
   const canApprove = po.status === 'DRAFT'
   const canReceive = po.status === 'APPROVED'
-  const isSubmitting = approveMutation.isPending || receiveMutation.isPending
+  const isSubmitting =
+    approveMutation.isPending || receiveMutation.isPending || cancelMutation.isPending
 
   async function handleApprove() {
     try {
@@ -63,8 +68,14 @@ export function PurchaseOrderDetailPage() {
     }
   }
 
-  function handleCancel() {
-    // TODO: useCancelPurchaseOrderMutation 연결
+  async function handleCancel(reason: string) {
+    try {
+      const result = await cancelMutation.mutateAsync({ code, payload: { reason } })
+      toast.success(`${result.code} 구매 주문이 취소되었습니다.`)
+      setCancelOpen(false)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
   }
 
   async function handleReceive(receivedDate: string) {
@@ -90,7 +101,7 @@ export function PurchaseOrderDetailPage() {
                 disabled={isSubmitting}
                 leftIcon={<Ban aria-hidden className="h-4 w-4" />}
                 variant="danger"
-                onClick={handleCancel}
+                onClick={() => setCancelOpen(true)}
               >
                 취소
               </FgButton>
@@ -255,6 +266,13 @@ export function PurchaseOrderDetailPage() {
         po={po}
         onClose={() => setReceiveOpen(false)}
         onConfirm={handleReceive}
+      />
+      <PoCancelModal
+        isSubmitting={cancelMutation.isPending}
+        open={cancelOpen}
+        po={po}
+        onClose={() => setCancelOpen(false)}
+        onConfirm={handleCancel}
       />
     </div>
   )
