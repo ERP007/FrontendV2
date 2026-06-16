@@ -18,6 +18,10 @@ export interface Stock {
   safetyStock: number
   sku: string
   status: StockStatus
+  /** 아이템(SKU) 활성 여부. false면 비활성 부품 → 상태에 '비활성화' 표시 + 행 흐리게. (구 응답 호환 위해 옵셔널) */
+  itemActive?: boolean
+  /** 창고 활성 여부. false면 비활성 창고 재고 → 부품명·코드를 흐리게 표시. (구 응답 호환 위해 옵셔널) */
+  warehouseActive?: boolean
   warehouseCode: string
   warehouseId: number
   warehouseName: string
@@ -31,7 +35,7 @@ export interface StockKpi {
   totalSkuCount: number
 }
 
-/** swagger WarehouseStockResponse */
+/** swagger WarehouseStockResponse — 상세 패널은 활성 창고만 노출한다(비활성 창고 행은 서버에서 제외). */
 export interface WarehouseStock {
   quantity: number
   safetyStock: number
@@ -50,13 +54,13 @@ export interface MovementHistoryEntry {
   type: MovementType
 }
 
-/** swagger StockSkuDetailResponse */
+/** swagger StockSkuDetailResponse — majorCategory/middleCategory는 Item 통합 비활성/실패 시 null. */
 export interface StockSkuDetail {
   history: MovementHistoryEntry[]
   itemName: string
   itemUnit: ItemUnit
-  majorCategory: string
-  middleCategory: string
+  majorCategory: string | null
+  middleCategory: string | null
   sku: string
   totalQuantity: number
   totalSafetyStock: number
@@ -64,8 +68,8 @@ export interface StockSkuDetail {
 }
 
 /**
- * swagger MovementResponse 기준.
- * executorName은 swagger에 없는 표시용 필드 — 연동 시 백엔드 확장 또는 User 서비스 조인 필요.
+ * swagger MovementResponse 기준(GET /inventory/stocks/movements).
+ * executorName(수행자 이름)은 이력 스냅샷이라 목록 응답에 항상 포함된다 — 화면은 사번 대신 이름을 표시한다.
  */
 export interface Movement {
   delta: number
@@ -107,12 +111,48 @@ export interface MovementFilter {
   warehouseCode: 'ALL' | string
 }
 
+/**
+ * 백엔드 MovementSort가 지원하는 정렬 속성. 화면은 이 중 일시(occurredAt) 정렬만 노출한다.
+ * (delta는 백엔드 지원이나 현재 UI 미노출 — 필요 시 헤더만 추가하면 된다.)
+ */
+export type MovementSortField = 'occurredAt' | 'delta'
+export type MovementSortDirection = 'asc' | 'desc'
+
+export interface MovementSort {
+  direction: MovementSortDirection
+  field: MovementSortField
+}
+
+/** 백엔드 기본 정렬(occurredAt,desc)과 일치시킨다. */
+export const DEFAULT_MOVEMENT_SORT: MovementSort = { direction: 'desc', field: 'occurredAt' }
+
+/** swagger SafetyStockEditResponse — 안전재고 조정 모달 프리필. */
+export interface SafetyStockEdit {
+  itemName: string
+  itemUnit: ItemUnit
+  quantity: number
+  safetyStock: number
+  sku: string
+  version: number
+  warehouseCode: string
+}
+
 /** swagger StockAdjustmentRequest 대응 폼 값 */
 export interface AdjustmentFormValues {
   adjustmentType: AdjustmentType
   note: string
   quantity: number
   reason: AdjustmentReason
+  warehouseCode: string
+}
+
+/** swagger StockCreateRequest 대응 폼 값 (ADMIN 재고 신규 생성). */
+export interface StockCreateFormValues {
+  itemName: string
+  itemUnit: ItemUnit
+  quantity: number
+  safetyStock: number
+  sku: string
   warehouseCode: string
 }
 

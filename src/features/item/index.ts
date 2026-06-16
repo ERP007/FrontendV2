@@ -25,7 +25,7 @@ export {
   useUpdateItemMutation,
 } from './api/use-update-item-mutation'
 export { useItemUnitsQuery } from './api/use-item-units-query'
-export { useItemsQuery } from './api/use-items-query'
+export { useItemsInfiniteQuery, useItemsQuery } from './api/use-items-query'
 export {
   DEFAULT_ITEM_FILTER,
   ITEM_UNIT_OPTIONS,
@@ -51,8 +51,7 @@ export type {
   ItemDetailFormValues,
   ItemFilter,
   ItemFormValues,
-  ItemListParams,
-  ItemListResponse,
+  ItemListItem,
   ItemSkuCheckResult,
   ItemStockRow,
   ItemStockStatus,

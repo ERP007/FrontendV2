@@ -3,15 +3,23 @@
  * swagger 수신 시 필드명을 응답 스키마와 정합시킨다.
  */
 export type SalesOrderStatus =
-  | 'REQUESTED'
   | 'APPROVED'
-  | 'REJECTED'
-  | 'SHIPPED'
-  | 'DELIVERED'
   | 'CANCELED'
+  | 'DELIVERED'
+  | 'DRAFT'
+  | 'REJECTED'
+  | 'REQUESTED'
 export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
-export type SoItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
+export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
+
+export type CarrierType = 'VEHICLE' | 'DELIVERY_SERVICE' | 'OTHER'
+
+export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
+  DELIVERY_SERVICE: '택배',
+  OTHER: '기타',
+  VEHICLE: '차량',
+}
 
 export interface SalesOrderLine {
   /** 본사 출고 창고 가용 재고 (검토 시점) */
@@ -62,13 +70,29 @@ export interface SalesOrder {
   transport: string | null
 }
 
+export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
+  'DRAFT',
+  'REQUESTED',
+  'APPROVED',
+  'DELIVERED',
+  'CANCELED',
+  'REJECTED',
+]
+
 export const SO_STATUS_LABELS: Record<SalesOrderStatus, string> = {
-  APPROVED: 'APPROVED',
-  CANCELED: 'CANCELED',
-  DELIVERED: 'DELIVERED',
-  REJECTED: 'REJECTED',
-  REQUESTED: 'REQUESTED',
-  SHIPPED: 'SHIPPED',
+  DRAFT: '임시저장',
+  REQUESTED: '출고 대기',
+  APPROVED: '도착 대기',
+  DELIVERED: '입고',
+  CANCELED: '취소',
+  REJECTED: '거절',
+}
+
+export const SO_TAB_STATUS_MAP: Record<SoStatusTab, SalesOrderStatus[] | undefined> = {
+  ALL: undefined,
+  CLOSED: ['REJECTED', 'CANCELED'],
+  DONE: ['DELIVERED'],
+  IN_PROGRESS: ['REQUESTED', 'APPROVED'],
 }
 
 export const SO_PRIORITY_LABELS: Record<SoPriority, string> = {
@@ -92,48 +116,30 @@ export const REJECT_REASON_OPTIONS = [
   '기타',
 ] as const
 
-export const ARRIVAL_DIFF_REASON_OPTIONS = [
-  '배송 누락',
-  '파손',
-  '오배송',
-  '수량 오류',
-  '기타',
-] as const
-
-export interface SalesOrderFilter {
-  branchCode: 'ALL' | string
-  from: string
-  keyword: string
-  status: 'ALL' | SalesOrderStatus
-  to: string
-}
-
 /** SO-04 상태 탭 */
 export type SoStatusTab = 'ALL' | 'IN_PROGRESS' | 'DONE' | 'CLOSED'
 
-export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED', 'SHIPPED']
+export const IN_PROGRESS_STATUSES: SalesOrderStatus[] = ['REQUESTED', 'APPROVED']
 
 /** SO-05 작성 중 라인 */
-export interface SoDraftLine {
+export interface SoLine {
   branchStock: number | null
+  itemCode: string | null
   itemName: string
   priority: SoPriority
   quantity: number
-  safetySource: 'MASTER' | 'OVERRIDE' | null
   safetyStock: number | null
-  sku: string | null
   unit: SoItemUnit | null
 }
 
-export function emptySoDraftLine(): SoDraftLine {
+export function emptySoDraftLine(): SoLine {
   return {
     branchStock: null,
+    itemCode: null,
     itemName: '',
     priority: 'NORMAL',
     quantity: 0,
-    safetySource: null,
     safetyStock: null,
-    sku: null,
     unit: null,
   }
 }

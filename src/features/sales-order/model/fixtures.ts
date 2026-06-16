@@ -1,42 +1,10 @@
 import type { SalesOrder, SalesOrderLine, SoItemUnit } from './types'
 
-/** SO-05 부품 검색용 카탈로그 (지점 현재고·안전재고 포함, 연동 전 임시) */
-export interface SoCatalogItem {
-  branchStock: number
-  name: string
-  safetySource: 'MASTER' | 'OVERRIDE'
-  safetyStock: number
-  sku: string
-  unit: SoItemUnit
-}
-
-export const SO_ITEM_CATALOG: SoCatalogItem[] = [
-  { branchStock: 8, name: '엔진오일 필터 (2.0L gasoline)', safetySource: 'MASTER', safetyStock: 30, sku: 'HMC-EN-00214', unit: 'EA' },
-  { branchStock: 12, name: '브레이크 패드 세트 (전륜)', safetySource: 'OVERRIDE', safetyStock: 15, sku: 'HMC-BR-01102', unit: 'SET' },
-  { branchStock: 42, name: '에어 클리너 카트리지', safetySource: 'MASTER', safetyStock: 25, sku: 'HMC-EN-10331', unit: 'EA' },
-  { branchStock: 4, name: '스파크 플러그 (이리듐)', safetySource: 'MASTER', safetyStock: 40, sku: 'HMC-SP-00673', unit: 'EA' },
-  { branchStock: 28, name: '와이퍼 블레이드 24"', safetySource: 'MASTER', safetyStock: 10, sku: 'HMC-AC-40229', unit: 'EA' },
-  { branchStock: 6, name: '엔진 쿨런트 1L', safetySource: 'MASTER', safetyStock: 12, sku: 'HMC-CL-50710', unit: 'L' },
-  { branchStock: 12, name: '엔진 쿨런트 4L', safetySource: 'MASTER', safetyStock: 8, sku: 'HMC-CL-50714', unit: 'L' },
-  { branchStock: 18, name: '쿨런트 보조탱크 캡', safetySource: 'MASTER', safetyStock: 6, sku: 'HMC-CL-50822', unit: 'EA' },
-  { branchStock: 0, name: '배터리 12V 80Ah', safetySource: 'OVERRIDE', safetyStock: 4, sku: 'HMC-EL-04481', unit: 'EA' },
-  { branchStock: 3, name: '헤드램프 어셈블리 LH', safetySource: 'MASTER', safetyStock: 2, sku: 'HMC-LT-00088', unit: 'EA' },
-]
-
 /** 본사 출고 창고 옵션 — GET /inventory/warehouses/hq 응답에 해당 */
 export const SO_HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
 
-/** 내 지점(데모 세션 소속) 정보 */
-export const MY_BRANCH = {
-  code: 'BR-04',
-  name: '강남 1지점',
-  receiveWarehouseCode: 'WH-04A',
-  receiveWarehouseName: '강남 1지점 · 부품창고',
-  region: '서울 강남구',
-} as const
-
 /** SO-02/03/06 데모용 공통 6라인 (요청 → 승인 → 출고 단계별 수량) */
-function richLines(stage: 'REQUESTED' | 'APPROVED' | 'SHIPPED' | 'DELIVERED'): SalesOrderLine[] {
+function richLines(stage: 'REQUESTED' | 'APPROVED' | 'DELIVERED'): SalesOrderLine[] {
   const base = [
     { availableStock: 420, itemName: '엔진오일 필터 (2.0L gasoline)', requested: 80, approved: 80, shipped: 80, delivered: 80, sku: 'HMC-EN-00214', unit: 'EA' as const },
     { availableStock: 78, itemName: '브레이크 패드 세트 (전륜)', requested: 40, approved: 40, shipped: 40, delivered: 38, sku: 'HMC-BR-01102', unit: 'SET' as const },
@@ -54,7 +22,7 @@ function richLines(stage: 'REQUESTED' | 'APPROVED' | 'SHIPPED' | 'DELIVERED'): S
     lineNo: index + 1,
     priority: line.sku === 'HMC-SP-00673' ? 'URGENT' : 'NORMAL',
     requestedQuantity: line.requested,
-    shippedQuantity: stage === 'SHIPPED' || stage === 'DELIVERED' ? line.shipped : null,
+    shippedQuantity: stage === 'APPROVED' || stage === 'DELIVERED' ? line.shipped : null,
     sku: line.sku,
     unit: line.unit,
   }))
@@ -214,13 +182,13 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     branchRegion: '서울 강남구',
     desiredAt: '2026-06-12',
     events: [
-      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정 · 송장 HMC-44219-026 · 6개 라인 250 EA', id: 1, occurredAt: '2026-06-10T14:18:00', type: 'SHIPPED' },
+      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정 · 송장 HMC-44219-026 · 6개 라인 250 EA', id: 1, occurredAt: '2026-06-10T14:18:00', type: 'APPROVED' },
       { actorName: '오세훈', actorOrg: '본사 물류팀', description: '승인 · 출고 창고 본사 중앙창고 지정', id: 2, occurredAt: '2026-06-09T14:30:00', type: 'APPROVED' },
       { actorName: '정유진', actorOrg: '강남 1지점', description: '발주 요청 제출 · 6개 라인 320 EA', id: 3, occurredAt: '2026-06-09T09:12:00', type: 'REQUESTED' },
     ],
     id: 5,
     invoiceNo: 'HMC-44219-026',
-    lines: richLines('SHIPPED'),
+    lines: richLines('APPROVED'),
     note: null,
     receiveWarehouseCode: 'WH-04A',
     receiveWarehouseName: '강남 1지점 · 부품창고',
@@ -232,7 +200,7 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     shipWarehouseCode: 'WH-HQ-001',
     shipWarehouseName: '본사 중앙창고',
     shippedAt: '2026-06-10T14:18:00',
-    status: 'SHIPPED',
+    status: 'APPROVED',
     transport: '자사 차량 (대형 1톤) · 02머4421',
   },
   {
@@ -309,7 +277,7 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     desiredAt: '2026-06-08',
     events: [
       { actorName: '정유진', actorOrg: '강남 1지점', description: '도착 확정 · 1,180 EA 입고 반영', id: 1, occurredAt: '2026-06-08T10:30:00', type: 'DELIVERED' },
-      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정 · 송장 HMC-44102-871', id: 2, occurredAt: '2026-06-06T13:00:00', type: 'SHIPPED' },
+      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정 · 송장 HMC-44102-871', id: 2, occurredAt: '2026-06-06T13:00:00', type: 'APPROVED' },
       { actorName: '오세훈', actorOrg: '본사 물류팀', description: '승인', id: 3, occurredAt: '2026-06-05T15:20:00', type: 'APPROVED' },
       { actorName: '정유진', actorOrg: '강남 1지점', description: '발주 요청 제출', id: 4, occurredAt: '2026-06-05T09:00:00', type: 'REQUESTED' },
     ],
@@ -344,7 +312,7 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     branchRegion: '대구 수성구',
     desiredAt: '2026-06-12',
     events: [
-      { actorName: '강주원', actorOrg: '본사 중앙창고', description: '출고 확정 · 3개 라인 76 EA', id: 1, occurredAt: '2026-06-05T11:40:00', type: 'SHIPPED' },
+      { actorName: '강주원', actorOrg: '본사 중앙창고', description: '출고 확정 · 3개 라인 76 EA', id: 1, occurredAt: '2026-06-05T11:40:00', type: 'APPROVED' },
       { actorName: '박지훈', actorOrg: '본사 물류팀', description: '승인', id: 2, occurredAt: '2026-06-04T10:10:00', type: 'APPROVED' },
       { actorName: '윤성준', actorOrg: '대구 수성지점', description: '발주 요청 제출', id: 3, occurredAt: '2026-06-04T08:55:00', type: 'REQUESTED' },
     ],
@@ -368,7 +336,7 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     shipWarehouseCode: 'WH-HQ-001',
     shipWarehouseName: '본사 중앙창고',
     shippedAt: '2026-06-05T11:40:00',
-    status: 'SHIPPED',
+    status: 'APPROVED',
     transport: '택배',
   },
   {
@@ -413,7 +381,7 @@ export const SALES_ORDER_FIXTURES: SalesOrder[] = [
     desiredAt: '2026-06-05',
     events: [
       { actorName: '정유진', actorOrg: '강남 1지점', description: '도착 확정 · 88 EA 입고 반영', id: 1, occurredAt: '2026-06-05T09:50:00', type: 'DELIVERED' },
-      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정', id: 2, occurredAt: '2026-06-03T14:25:00', type: 'SHIPPED' },
+      { actorName: '김정수', actorOrg: '본사 중앙창고', description: '출고 확정', id: 2, occurredAt: '2026-06-03T14:25:00', type: 'APPROVED' },
       { actorName: '오세훈', actorOrg: '본사 물류팀', description: '승인', id: 3, occurredAt: '2026-06-02T10:40:00', type: 'APPROVED' },
       { actorName: '정유진', actorOrg: '강남 1지점', description: '발주 요청 제출', id: 4, occurredAt: '2026-06-02T09:10:00', type: 'REQUESTED' },
     ],

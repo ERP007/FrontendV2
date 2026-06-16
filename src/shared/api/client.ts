@@ -134,9 +134,7 @@ function handleGlobalError(error: ErrorResponse, { suppressToast = false }: { su
     return false
   }
 
-  if (error.status !== 400 && error.status !== 409) {
-    toast.error(error.detail || '요청 처리 중 오류가 발생했습니다.')
-  }
+  toast.error(error.detail || '요청 처리 중 오류가 발생했습니다.')
 
   return false
 }

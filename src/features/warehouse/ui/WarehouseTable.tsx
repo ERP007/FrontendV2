@@ -1,22 +1,48 @@
-import { Building2, Eye, Pencil, Power, Warehouse as WarehouseIcon } from 'lucide-react'
+import { Building2, Pencil, Power, Warehouse as WarehouseIcon } from 'lucide-react'
 import { useMemo } from 'react'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, OnChangeFn, SortingState } from '@tanstack/react-table'
 
 import { cn } from '@/shared/lib/cn'
 import { FgDataTable, FgDropdownMenu } from '@/shared/ui'
 
 import { WarehouseActiveBadge, WarehouseTypeBadge } from './WarehouseBadges'
 
-import type { Warehouse } from '../model/types'
+import type { WarehouseListItem, WarehouseSort, WarehouseSortField } from '../model/types'
 
 export interface WarehouseTableProps {
-  onEdit: (warehouse: Warehouse) => void
-  onToggleActive: (warehouse: Warehouse) => void
-  warehouses: Warehouse[]
+  canManage: boolean
+  onEdit: (warehouse: WarehouseListItem) => void
+  onSortChange: (sort: WarehouseSort) => void
+  onToggleActive: (warehouse: WarehouseListItem) => void
+  sort: WarehouseSort
+  total: number
+  warehouses: WarehouseListItem[]
 }
 
-export function WarehouseTable({ onEdit, onToggleActive, warehouses }: WarehouseTableProps) {
-  const columns = useMemo<ColumnDef<Warehouse>[]>(
+export function WarehouseTable({
+  canManage,
+  onEdit,
+  onSortChange,
+  onToggleActive,
+  sort,
+  total,
+  warehouses,
+}: WarehouseTableProps) {
+  const sortingState: SortingState = [{ desc: sort.direction === 'desc', id: sort.field }]
+
+  // tanstack의 정렬 토글 결과(SortingState)를 백엔드 정렬값(WarehouseSort)으로 환산한다.
+  // 정렬을 완전히 해제하면 서버 기본값(code,asc)으로 되돌린다(서버는 항상 정렬값을 요구).
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const next = typeof updater === 'function' ? updater(sortingState) : updater
+    const first = next[0]
+    onSortChange(
+      first
+        ? { direction: first.desc ? 'desc' : 'asc', field: first.id as WarehouseSortField }
+        : { direction: 'asc', field: 'code' },
+    )
+  }
+
+  const columns = useMemo<ColumnDef<WarehouseListItem>[]>(
     () => [
       {
         accessorKey: 'code',
@@ -57,6 +83,7 @@ export function WarehouseTable({ onEdit, onToggleActive, warehouses }: Warehouse
       {
         accessorKey: 'type',
         cell: ({ row }) => <WarehouseTypeBadge type={row.original.type} />,
+        enableSorting: true,
         header: '유형',
         size: 110,
       },
@@ -65,13 +92,19 @@ export function WarehouseTable({ onEdit, onToggleActive, warehouses }: Warehouse
         cell: ({ row }) => (
           <span className="font-medium text-ink-2">{row.original.branchName ?? '—'}</span>
         ),
+        enableSorting: true,
         header: '소속 지점',
+        id: 'branch',
         size: 150,
       },
       {
         accessorKey: 'address',
-        cell: ({ row }) => <span className="font-medium text-muted">{row.original.address}</span>,
+        // 주소는 최대 2줄까지 표시하고 넘치면 말줄임한다(ERP-252).
+        cell: ({ row }) => (
+          <span className="line-clamp-2 font-medium text-muted">{row.original.address || '—'}</span>
+        ),
         header: '주소',
+        size: 240,
       },
       {
         accessorKey: 'active',
@@ -81,26 +114,26 @@ export function WarehouseTable({ onEdit, onToggleActive, warehouses }: Warehouse
       },
       {
         cell: ({ row }) => (
-          <FgDropdownMenu
-            items={[
-              {
-                icon: <Pencil aria-hidden className="h-4 w-4" />,
-                label: '수정',
-                onSelect: () => onEdit(row.original),
-              },
-              {
-                icon: <Eye aria-hidden className="h-4 w-4" />,
-                label: '상세 보기',
-                onSelect: () => onEdit(row.original),
-              },
-              {
-                danger: row.original.active,
-                icon: <Power aria-hidden className="h-4 w-4" />,
-                label: row.original.active ? '비활성 전환' : '활성 전환',
-                onSelect: () => onToggleActive(row.original),
-              },
-            ]}
-          />
+          // 행 클릭(수정)과 분리: 액션 메뉴 클릭이 행 클릭으로 전파되지 않게 막는다.
+          <div onClick={(event) => event.stopPropagation()}>
+            <FgDropdownMenu
+              items={[
+                {
+                  disabled: !canManage,
+                  icon: <Pencil aria-hidden className="h-4 w-4" />,
+                  label: '수정',
+                  onSelect: () => onEdit(row.original),
+                },
+                {
+                  danger: row.original.active,
+                  disabled: !canManage,
+                  icon: <Power aria-hidden className="h-4 w-4" />,
+                  label: row.original.active ? '비활성 전환' : '활성 전환',
+                  onSelect: () => onToggleActive(row.original),
+                },
+              ]}
+            />
+          </div>
         ),
         header: '액션',
         id: 'actions',
@@ -108,7 +141,7 @@ export function WarehouseTable({ onEdit, onToggleActive, warehouses }: Warehouse
         size: 70,
       },
     ],
-    [onEdit, onToggleActive],
+    [canManage, onEdit, onToggleActive],
   )
 
   return (
@@ -117,9 +150,15 @@ export function WarehouseTable({ onEdit, onToggleActive, warehouses }: Warehouse
       data={warehouses}
       header={
         <span>
-          전체 <strong className="text-ink">{warehouses.length}</strong>개
+          전체 <strong className="text-ink">{total}</strong>개
         </span>
       }
+      manualSorting
+      // 주소 2줄·행간격 확보를 위해 행 높이를 키운다(ERP-252).
+      rowClassName={() => '[&>td]:h-16'}
+      sorting={sortingState}
+      onRowClick={canManage ? onEdit : undefined}
+      onSortingChange={handleSortingChange}
     />
   )
 }

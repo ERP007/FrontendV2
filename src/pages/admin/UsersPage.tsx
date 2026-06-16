@@ -1,28 +1,59 @@
-import { CheckCircle2, Copy, Download, KeyRound, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2, Copy, Download, KeyRound, Plus, RefreshCw } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   DEFAULT_USER_FILTER,
-  filterUsers,
   getCreateUserErrorMessage,
-  getUserTenancyLabel,
-  USER_FIXTURES,
+  getResetPasswordErrorMessage,
+  getToggleUserSuspensionErrorMessage,
+  getUsersErrorMessage,
   UserCreateModal,
   UserFilterBar,
+  UserPasswordResetModal,
+  UserSuspendToggleModal,
   UserTable,
   useCreateUserMutation,
+  useResetUserPasswordMutation,
+  useToggleUserSuspensionMutation,
+  useUsersQuery,
+  usersQueryKey,
 } from '@/features/user'
-import type { User, UserFilter, UserFormValues } from '@/features/user'
+import type {
+  FetchUsersParams,
+  UserFilter,
+  UserFormValues,
+  UserListItem,
+  UserSortBy,
+  UserSortDirection,
+} from '@/features/user'
+import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '관리' }, { label: '사용자' }, { label: '사용자 목록' }]
+const SEARCH_DEBOUNCE_MS = 350
 type ToastId = string | number
 
-function nextEmpNo(users: User[]): string {
+interface UserListSortState {
+  direction: UserSortDirection
+  key: UserSortBy
+}
+
+interface TemporaryPasswordToastOptions {
+  message: string
+  temporaryPassword: string
+  title: string
+}
+
+function hasTrailingHangulJamo(value: string) {
+  return /[\u1100-\u11ff\u3131-\u318e]$/.test(value)
+}
+
+function nextEmpNo(users: UserListItem[]): string {
   const max = users.reduce((highest, user) => {
-    const numeric = Number(user.empNo.replace(/\D/g, ''))
+    const numeric = Number(user.employeeNo.replace(/\D/g, ''))
     return Number.isNaN(numeric) ? highest : Math.max(highest, numeric)
   }, 0)
 
@@ -67,7 +98,7 @@ async function copyTemporaryPassword(password: string, toastId: ToastId) {
   }
 }
 
-function showUserCreationResultToast(temporaryPassword: string) {
+function showTemporaryPasswordToast({ message, temporaryPassword, title }: TemporaryPasswordToastOptions) {
   const maskedPassword = maskTemporaryPassword(temporaryPassword)
 
   toast.custom(
@@ -78,8 +109,8 @@ function showUserCreationResultToast(temporaryPassword: string) {
             <CheckCircle2 aria-hidden className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-body font-extrabold text-ink">사용자 등록 완료</p>
-            <p className="mt-1 text-label text-muted">초기 비밀번호를 안전하게 전달해 주세요.</p>
+            <p className="text-body font-extrabold text-ink">{title}</p>
+            <p className="mt-1 text-label text-muted">{message}</p>
           </div>
         </div>
         <div className="mt-4 rounded-control border border-line-soft bg-background px-3.5 py-3">
@@ -108,49 +139,94 @@ function showUserCreationResultToast(temporaryPassword: string) {
   )
 }
 
+function showUserCreationResultToast(temporaryPassword: string) {
+  showTemporaryPasswordToast({
+    message: '초기 비밀번호를 안전하게 전달해 주세요.',
+    temporaryPassword,
+    title: '사용자 등록 완료',
+  })
+}
+
 export function UsersPage() {
-  const [users, setUsers] = useState<User[]>(USER_FIXTURES)
   const [filter, setFilter] = useState<UserFilter>(DEFAULT_USER_FILTER)
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<UserListSortState>({ direction: 'ASC', key: 'employeeNo' })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [createOpen, setCreateOpen] = useState(false)
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
+  const [resetPasswordTarget, setResetPasswordTarget] = useState<UserListItem | null>(null)
+  const [resetPasswordErrorMessage, setResetPasswordErrorMessage] = useState<string | null>(null)
+  const [suspendToggleTarget, setSuspendToggleTarget] = useState<UserListItem | null>(null)
+  const [suspendToggleErrorMessage, setSuspendToggleErrorMessage] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const createUserMutation = useCreateUserMutation()
+  const resetUserPasswordMutation = useResetUserPasswordMutation()
+  const toggleUserSuspensionMutation = useToggleUserSuspensionMutation()
 
-  const filtered = useMemo(() => filterUsers(users, filter), [users, filter])
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
+  useEffect(() => {
+    const nextQuery = filter.keyword.trim()
+
+    if (nextQuery === query || hasTrailingHangulJamo(nextQuery)) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setQuery(nextQuery)
+      setPage(1)
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [filter.keyword, query])
+
+  const usersParams = useMemo<FetchUsersParams>(
+    () => ({
+      keyword: query,
+      page,
+      role: filter.role,
+      size: pageSize,
+      sortBy: sort.key,
+      sortDirection: sort.direction,
+      status: filter.status,
+      tenancyCode: filter.tenancyCode,
+    }),
+    [filter.role, filter.status, filter.tenancyCode, page, pageSize, query, sort.direction, sort.key],
+  )
+  const usersQuery = useUsersQuery(usersParams)
+  const users = usersQuery.data?.content ?? []
+  const totalCount = usersQuery.data?.totalElements ?? 0
+  const totalPages = Math.max(1, usersQuery.data?.totalPages ?? 1)
+  const currentPage = Math.min(page, totalPages)
+  const usersErrorMessage = usersQuery.isError ? getUsersErrorMessage(usersQuery.error) : null
+
+  useEffect(() => {
+    if (page > totalPages) {
+      const timeoutId = window.setTimeout(() => {
+        setPage(totalPages)
+      }, 0)
+
+      return () => window.clearTimeout(timeoutId)
+    }
+  }, [page, totalPages])
 
   function handleFilterChange(next: UserFilter) {
     setFilter(next)
     setPage(1)
   }
 
-  async function handleCreate(values: UserFormValues) {
-    if (users.some((user) => user.empNo === values.empNo)) {
-      setCreateErrorMessage('이미 존재하는 사번입니다.')
-      return
-    }
+  function handleSortChange(sortBy: UserSortBy, sortDirection: UserSortDirection) {
+    setSort({ direction: sortDirection, key: sortBy })
+    setPage(1)
+  }
 
+  async function handleCreate(values: UserFormValues) {
     setCreateErrorMessage(null)
 
     try {
       const response = await createUserMutation.mutateAsync(values)
 
-      setUsers((previous) => [
-        ...previous,
-        {
-          email: values.email,
-          empNo: values.empNo,
-          id: Math.max(0, ...previous.map((user) => user.id)) + 1,
-          joinedAt: new Date().toISOString().slice(0, 10),
-          name: values.name,
-          rank: values.rank || null,
-          role: values.role,
-          status: 'PENDING',
-          warehouseName: getUserTenancyLabel(values.tenancyCode),
-        },
-      ])
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
       setCreateOpen(false)
 
       if (values.passwordMode === 'AUTO' && response.temporaryPassword) {
@@ -164,8 +240,86 @@ export function UsersPage() {
     }
   }
 
-  const rangeStart = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1
-  const rangeEnd = Math.min(page * pageSize, filtered.length)
+  function openResetPasswordModal(user: UserListItem) {
+    setResetPasswordErrorMessage(null)
+    setResetPasswordTarget(user)
+  }
+
+  function closeResetPasswordModal() {
+    if (resetUserPasswordMutation.isPending) {
+      return
+    }
+
+    setResetPasswordErrorMessage(null)
+    setResetPasswordTarget(null)
+  }
+
+  async function handleResetPasswordConfirm() {
+    if (!resetPasswordTarget) {
+      return
+    }
+
+    setResetPasswordErrorMessage(null)
+
+    try {
+      const response = await resetUserPasswordMutation.mutateAsync(resetPasswordTarget.userId)
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setResetPasswordTarget(null)
+
+      if (response.temporaryPassword) {
+        showTemporaryPasswordToast({
+          message: '새 임시 비밀번호를 안전하게 전달해 주세요.',
+          temporaryPassword: response.temporaryPassword,
+          title: '비밀번호 초기화 완료',
+        })
+        return
+      }
+
+      toast.success('비밀번호가 초기화되었습니다.')
+    } catch (error) {
+      setResetPasswordErrorMessage(getResetPasswordErrorMessage(error))
+    }
+  }
+
+  function openSuspendToggleModal(user: UserListItem) {
+    setSuspendToggleErrorMessage(null)
+    setSuspendToggleTarget(user)
+  }
+
+  function closeSuspendToggleModal() {
+    if (toggleUserSuspensionMutation.isPending) {
+      return
+    }
+
+    setSuspendToggleErrorMessage(null)
+    setSuspendToggleTarget(null)
+  }
+
+  async function handleSuspendToggleConfirm() {
+    if (!suspendToggleTarget) {
+      return
+    }
+
+    setSuspendToggleErrorMessage(null)
+
+    try {
+      const response = await toggleUserSuspensionMutation.mutateAsync({
+        suspended: suspendToggleTarget.status !== 'SUSPENDED',
+        userId: suspendToggleTarget.userId,
+      })
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKey })
+      setSuspendToggleTarget(null)
+
+      toast.success(response.status === 'SUSPENDED' ? '사용자가 정지되었습니다.' : '사용자 정지가 해제되었습니다.')
+    } catch (error) {
+      setSuspendToggleErrorMessage(getToggleUserSuspensionErrorMessage(error))
+    }
+  }
+
+  const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const rangeEnd = totalCount === 0 ? 0 : Math.min(rangeStart + users.length - 1, totalCount)
 
   return (
     <div className="fg-content">
@@ -199,18 +353,38 @@ export function UsersPage() {
         onReset={() => handleFilterChange(DEFAULT_USER_FILTER)}
       />
       <UserTable
+        currentEmployeeNo={session?.employeeNo}
+        errorMessage={usersErrorMessage}
         header={
-          <span>
-            전체 <strong className="text-ink">{formatNumber(filtered.length)}</strong>명 중 {rangeStart}–
-            {rangeEnd}
-          </span>
+          <>
+            <span>
+              전체 <strong className="text-ink">{formatNumber(totalCount)}</strong>명 중 {rangeStart}–
+              {rangeEnd}
+            </span>
+            <button
+              className="inline-flex items-center gap-1.5 text-label font-semibold text-muted transition-colors hover:text-primary-strong"
+              type="button"
+              onClick={() => void usersQuery.refetch()}
+            >
+              <RefreshCw aria-hidden className="h-3.5 w-3.5" />
+              새로고침
+            </button>
+          </>
         }
-        users={pageRows}
+        loading={usersQuery.isLoading}
+        sortBy={sort.key}
+        sortDirection={sort.direction}
+        users={users}
+        onResetPassword={openResetPasswordModal}
+        onSortChange={handleSortChange}
+        onToggleSuspension={openSuspendToggleModal}
       />
       <FgPagination
-        page={page}
+        layout="totalLeft"
+        page={currentPage}
         pageSize={pageSize}
-        totalCount={filtered.length}
+        pageSizeOptions={[10, 20, 30, 50]}
+        totalCount={totalCount}
         totalPages={totalPages}
         onPageChange={setPage}
         onPageSizeChange={(size) => {
@@ -228,6 +402,22 @@ export function UsersPage() {
           setCreateOpen(false)
         }}
         onSubmit={handleCreate}
+      />
+      <UserPasswordResetModal
+        errorMessage={resetPasswordErrorMessage}
+        loading={resetUserPasswordMutation.isPending}
+        open={resetPasswordTarget !== null}
+        user={resetPasswordTarget}
+        onClose={closeResetPasswordModal}
+        onConfirm={handleResetPasswordConfirm}
+      />
+      <UserSuspendToggleModal
+        errorMessage={suspendToggleErrorMessage}
+        loading={toggleUserSuspensionMutation.isPending}
+        open={suspendToggleTarget !== null}
+        user={suspendToggleTarget}
+        onClose={closeSuspendToggleModal}
+        onConfirm={handleSuspendToggleConfirm}
       />
     </div>
   )

@@ -1,5 +1,5 @@
 import { forwardRef, useId } from 'react'
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 
@@ -7,6 +7,7 @@ export interface FgTextareaProps extends Omit<ComponentPropsWithoutRef<'textarea
   error?: string
   hint?: string
   label?: string
+  labelTrailing?: ReactNode
   rootClassName?: string
   textareaClassName?: string
 }
@@ -19,6 +20,7 @@ export const FgTextarea = forwardRef<HTMLTextAreaElement, FgTextareaProps>(
       hint,
       id,
       label,
+      labelTrailing,
       required,
       rootClassName,
       textareaClassName,
@@ -34,10 +36,15 @@ export const FgTextarea = forwardRef<HTMLTextAreaElement, FgTextareaProps>(
     return (
       <div className={cn('space-y-2', rootClassName)}>
         {label ? (
-          <label className="block text-label text-ink-2" htmlFor={textareaId}>
-            {label}
-            {required ? <span className="text-danger"> *</span> : null}
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label className="block text-label text-ink-2" htmlFor={textareaId}>
+              {label}
+              {required ? <span className="text-danger"> *</span> : null}
+            </label>
+            {labelTrailing ? (
+              <span className="text-meta font-medium text-faint">{labelTrailing}</span>
+            ) : null}
+          </div>
         ) : null}
         <textarea
           ref={ref}

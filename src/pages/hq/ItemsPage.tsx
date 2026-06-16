@@ -63,9 +63,9 @@ export function ItemsPage() {
     return () => window.clearTimeout(timeoutId)
   }, [filter.keyword])
 
-  const itemListParams = useMemo<ItemListParams>(
-    () => ({ ...filter, keyword: debouncedKeyword, page, size: pageSize }),
-    [debouncedKeyword, filter, page, pageSize],
+  const itemListFilter = useMemo<ItemFilter>(
+    () => ({ ...filter, keyword: debouncedKeyword }),
+    [debouncedKeyword, filter],
   )
   const selectedMajorCategoryCode = filter.majorCategory === 'ALL' ? undefined : filter.majorCategory
   const {

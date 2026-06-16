@@ -6,6 +6,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { PasswordChangePage } from '@/pages/auth/PasswordChangePage'
 import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArrivalPage'
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
+import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
 import { BranchSalesOrdersPage } from '@/pages/branch/BranchSalesOrdersPage'
 import { ItemsRoutePage } from '@/pages/common/ItemsRoutePage'
 import { MyPage } from '@/pages/common/MyPage'
@@ -93,6 +94,10 @@ const stockMovementsRoute = createRoute({
   component: StockMovementsPage,
   getParentRoute: () => shellRoute,
   path: '/stock-movements',
+  // 재고 조회 상세 패널 '전체 이력 보기'에서 sku를 keyword로 넘겨받는다(선택적).
+  validateSearch: (search: Record<string, unknown>): { keyword?: string } => ({
+    keyword: typeof search.keyword === 'string' ? search.keyword : undefined,
+  }),
 })
 
 const itemsRoute = createRoute({
@@ -173,6 +178,12 @@ const branchSalesOrderArrivalRoute = createRoute({
   path: '/branch/sales-orders/$soNo/arrival',
 })
 
+const branchSalesOrderDetailRoute = createRoute({
+  component: BranchSalesOrderDetailPage,
+  getParentRoute: () => shellRoute,
+  path: '/branch/sales-orders/$soNo',
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   passwordChangeRoute,
@@ -194,6 +205,7 @@ const routeTree = rootRoute.addChildren([
     branchSalesOrdersRoute,
     branchSalesOrderCreateRoute,
     branchSalesOrderArrivalRoute,
+    branchSalesOrderDetailRoute,
   ]),
 ])
 

@@ -1,46 +1,54 @@
-import { Calendar, RotateCcw, Search } from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { Calendar, Check, ChevronDown, RotateCcw, Search } from 'lucide-react'
 
-import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
+import { cn } from '@/shared/lib/cn'
+import { FgBadge, FgButton, FgCard, FgInput } from '@/shared/ui'
 
 import { SO_STATUS_LABELS } from '../model/types'
 
-import type { SalesOrderFilter, SalesOrderStatus } from '../model/types'
+import type { SalesOrderStatus } from '../model/types'
 
-const statusOptions = [
-  { label: '상태 : 전체', value: 'ALL' },
-  ...(Object.keys(SO_STATUS_LABELS) as SalesOrderStatus[]).map((status) => ({
-    label: SO_STATUS_LABELS[status],
-    value: status,
-  })),
+import type { HqWarehouseSummary } from '@/features/warehouse'
+
+const HQ_STATUS_OPTIONS: SalesOrderStatus[] = [
+  'REQUESTED',
+  'APPROVED',
+  'REJECTED',
+  'DELIVERED',
+  'CANCELED',
 ]
 
-export interface SoBranchOption {
-  code: string
-  name: string
+export interface SoFilterBarValues {
+  endDate?: string
+  search: string
+  startDate?: string
+  status: SalesOrderStatus[]
+  warehouseCode?: string
 }
 
 export interface SoFilterBarProps {
-  /** 지점 옵션이 있으면 지점 셀렉트 표시 (본사 화면용) */
-  branches?: SoBranchOption[]
-  filter: SalesOrderFilter
-  onChange: (filter: SalesOrderFilter) => void
+  onChange: (next: SoFilterBarValues) => void
   onReset: () => void
   searchPlaceholder?: string
+  values: SoFilterBarValues
+  warehouses?: HqWarehouseSummary[]
 }
 
 export function SoFilterBar({
-  branches,
-  filter,
   onChange,
   onReset,
   searchPlaceholder = '요청번호, 부품명·코드, 지점명 검색',
+  values,
+  warehouses,
 }: SoFilterBarProps) {
-  const branchOptions = branches
-    ? [
-        { label: '지점 : 전체', value: 'ALL' },
-        ...branches.map((branch) => ({ label: branch.name, value: branch.code })),
-      ]
-    : null
+  const statusCount = values.status.length
+
+  function toggleStatus(status: SalesOrderStatus) {
+    const next = values.status.includes(status)
+      ? values.status.filter((item) => item !== status)
+      : [...values.status, status]
+    onChange({ ...values, status: next })
+  }
 
   return (
     <FgCard className="flex items-center gap-3 p-4">
@@ -48,39 +56,137 @@ export function SoFilterBar({
         leftIcon={<Search aria-hidden className="h-4 w-4" />}
         placeholder={searchPlaceholder}
         rootClassName="flex-1"
-        value={filter.keyword}
-        onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
+        value={values.search}
+        onChange={(event) => onChange({ ...values, search: event.target.value })}
       />
-      <FgSelect
-        className="w-40"
-        options={statusOptions}
-        value={filter.status}
-        onValueChange={(value) =>
-          onChange({ ...filter, status: value as SalesOrderFilter['status'] })
-        }
-      />
-      {branchOptions ? (
-        <FgSelect
-          className="w-48"
-          options={branchOptions}
-          value={filter.branchCode}
-          onValueChange={(value) => onChange({ ...filter, branchCode: value })}
-        />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <FgButton
+            className="w-40 justify-between"
+            rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
+          >
+            <span className="flex items-center gap-2 truncate">
+              상태
+              {statusCount > 0 ? (
+                <>
+                  <FgBadge variant="primary">{statusCount}</FgBadge>
+                  <span className="truncate text-meta text-muted">
+                    {values.status.map((status) => SO_STATUS_LABELS[status]).join(', ')}
+                  </span>
+                </>
+              ) : (
+                <span className="text-meta text-faint">전체</span>
+              )}
+            </span>
+          </FgButton>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="start"
+            className="z-50 min-w-48 rounded-control bg-surface/95 p-1 shadow-popover backdrop-blur focus:outline-none"
+            sideOffset={6}
+          >
+            {HQ_STATUS_OPTIONS.map((status) => {
+              const checked = values.status.includes(status)
+              return (
+                <DropdownMenu.CheckboxItem
+                  key={status}
+                  checked={checked}
+                  className={cn(
+                    'flex min-h-10 cursor-pointer select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-label font-semibold text-ink-2 outline-none',
+                    'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
+                  )}
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    toggleStatus(status)
+                  }}
+                >
+                  <span>{SO_STATUS_LABELS[status]}</span>
+                  {checked ? <Check aria-hidden className="h-4 w-4 text-primary" /> : null}
+                </DropdownMenu.CheckboxItem>
+              )
+            })}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      {warehouses ? (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <FgButton
+              className="w-40 justify-between"
+              rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
+            >
+              <span className="flex items-center gap-2 truncate">
+                창고
+                {values.warehouseCode ? (
+                  <span className="truncate text-meta text-muted">{values.warehouseCode}</span>
+                ) : (
+                  <span className="text-meta text-faint">전체</span>
+                )}
+              </span>
+            </FgButton>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="start"
+              className="z-50 min-w-56 rounded-control bg-surface/95 p-1 shadow-popover backdrop-blur focus:outline-none"
+              sideOffset={6}
+            >
+              <DropdownMenu.RadioGroup
+                value={values.warehouseCode ?? ''}
+                onValueChange={(value) =>
+                  onChange({ ...values, warehouseCode: value || undefined })
+                }
+              >
+                <DropdownMenu.RadioItem
+                  className={cn(
+                    'flex min-h-10 cursor-pointer select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-label font-semibold text-ink-2 outline-none',
+                    'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
+                  )}
+                  value=""
+                >
+                  <span>전체</span>
+                  {!values.warehouseCode ? <Check aria-hidden className="h-4 w-4 text-primary" /> : null}
+                </DropdownMenu.RadioItem>
+                {warehouses.map((warehouse) => (
+                  <DropdownMenu.RadioItem
+                    key={warehouse.id}
+                    className={cn(
+                      'flex min-h-10 cursor-pointer select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-label font-semibold text-ink-2 outline-none',
+                      'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
+                    )}
+                    value={warehouse.code}
+                  >
+                    <span className="flex flex-col">
+                      <span>{warehouse.name}</span>
+                      <span className="text-meta font-medium text-faint">{warehouse.code}</span>
+                    </span>
+                    {values.warehouseCode === warehouse.code ? (
+                      <Check aria-hidden className="h-4 w-4 text-primary" />
+                    ) : null}
+                  </DropdownMenu.RadioItem>
+                ))}
+              </DropdownMenu.RadioGroup>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       ) : null}
       <FgInput
         leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
         rootClassName="w-44"
         type="date"
-        value={filter.from}
-        onChange={(event) => onChange({ ...filter, from: event.target.value })}
+        value={values.startDate ?? ''}
+        onChange={(event) =>
+          onChange({ ...values, startDate: event.target.value || undefined })
+        }
       />
       <span className="text-faint">~</span>
       <FgInput
         leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
         rootClassName="w-44"
         type="date"
-        value={filter.to}
-        onChange={(event) => onChange({ ...filter, to: event.target.value })}
+        value={values.endDate ?? ''}
+        onChange={(event) => onChange({ ...values, endDate: event.target.value || undefined })}
       />
       <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
         초기화

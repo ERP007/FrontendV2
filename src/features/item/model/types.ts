@@ -125,25 +125,31 @@ export interface ItemFilter {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE'
 }
 
-export interface ItemListParams extends ItemFilter {
-  page: number
-  size: number
-}
-
-export interface ItemListResponse {
-  content: Item[]
-  page: number
-  size: number
-  totalElements: number
-  totalPages: number
-}
-
 export const DEFAULT_ITEM_FILTER: ItemFilter = {
   keyword: '',
   majorCategory: 'ALL',
   middleCategory: 'ALL',
   sort: 'updatedAt,desc',
   status: 'ALL',
+}
+
+/**
+ * GET /api/items 응답 단건. swagger 미수신 — 백엔드 응답 명세 기준.
+ * 기존 `Item`은 fixture 기반 UI 모델, 점진적으로 본 타입으로 교체.
+ */
+export interface ItemListItem {
+  active: boolean
+  categoryCode: string
+  categoryName: string
+  createdAt: string
+  name: string
+  parentCategoryCode: string
+  parentCategoryName: string
+  safetyStock: number
+  sku: string
+  unit: ItemUnit
+  unitPrice: number
+  updatedAt: string
 }
 
 export interface ItemFormValues {
