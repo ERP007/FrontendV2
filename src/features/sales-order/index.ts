@@ -43,11 +43,6 @@ export type {
   SalesOrderHistoryActor,
   SalesOrderHistoryEntry,
 } from './api/use-sales-order-histories-query'
-export {
-  applyStatusTab,
-  createDefaultSoFilter,
-  filterSalesOrders,
-} from './model/filter-sales-orders'
 export type { SoBranchKpi } from './model/filter-sales-orders'
 export { SALES_ORDER_FIXTURES } from './model/fixtures'
 export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
@@ -67,7 +62,6 @@ export type {
   CarrierType,
   SalesOrder,
   SalesOrderEvent,
-  SalesOrderFilter,
   SalesOrderLine,
   SalesOrderStatus,
   SoLine as SoDraftLine,
@@ -81,7 +75,7 @@ export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
 export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
-export type { SoBranchOption } from './ui/SoFilterBar'
+export type { SoFilterBarValues } from './ui/SoFilterBar'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'
 export { SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
 export { SoBranchTable, SoTable } from './ui/SoTable'

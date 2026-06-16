@@ -8,38 +8,47 @@ import { cn } from '@/shared/lib/cn'
 import { formatDate, formatDateTime, formatDday, formatNumber } from '@/shared/lib/format'
 import { FgButton, FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/shared/ui'
 
-import { IN_PROGRESS_STATUSES, isSoDelayed, soTotalRequested } from '../model/types'
-
-import type { SalesOrder } from '../model/types'
+import { IN_PROGRESS_STATUSES, isSoDelayed } from '../model/types'
 
 import type { BranchSalesOrderListItem } from '../api/use-branch-sales-orders-query'
+import type {
+  HqSalesOrderListItem,
+  HqSalesOrderSortDirection,
+  HqSalesOrderSortField,
+} from '../api/use-hq-sales-orders-query'
 
 export interface SoTableProps {
   header?: ReactNode
-  onOpen: (order: SalesOrder) => void
-  orders: SalesOrder[]
+  onOpen: (order: HqSalesOrderListItem) => void
+  onSortChange?: (field: HqSalesOrderSortField, direction: HqSalesOrderSortDirection) => void
+  orders: HqSalesOrderListItem[]
+  sortDirection?: HqSalesOrderSortDirection
+  sortField?: HqSalesOrderSortField
 }
 
 /** SO-01 본사용 발주 요청 테이블 */
-export function SoTable({ header, onOpen, orders }: SoTableProps) {
+export function SoTable({
+  header,
+  onOpen,
+  onSortChange,
+  orders,
+  sortDirection,
+  sortField,
+}: SoTableProps) {
   const today = dayjs().format('YYYY-MM-DD')
 
-  const columns = useMemo<ColumnDef<SalesOrder>[]>(
+  const columns = useMemo<ColumnDef<HqSalesOrderListItem>[]>(
     () => [
       {
-        accessorKey: 'reqNo',
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.reqNo}</span>,
-        enableSorting: true,
+        accessorKey: 'code',
+        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         header: '요청번호',
         size: 140,
       },
       {
-        accessorKey: 'branchName',
+        accessorKey: 'fromWarehouseCode',
         cell: ({ row }) => (
-          <span className="block">
-            <span className="block truncate font-semibold text-ink">{row.original.branchName}</span>
-            <span className="block text-meta font-medium text-faint">{row.original.branchCode}</span>
-          </span>
+          <span className="block font-semibold text-ink">{row.original.fromWarehouseCode}</span>
         ),
         header: '지점',
         size: 150,
@@ -49,7 +58,9 @@ export function SoTable({ header, onOpen, orders }: SoTableProps) {
         cell: ({ row }) => (
           <span className="block">
             <span className="block font-semibold text-ink-2">{row.original.requesterName}</span>
-            <span className="block text-meta font-medium text-faint">{row.original.requesterRole}</span>
+            <span className="block text-meta font-medium text-faint">
+              {row.original.requesterPosition}
+            </span>
           </span>
         ),
         header: '요청자',
@@ -65,40 +76,52 @@ export function SoTable({ header, onOpen, orders }: SoTableProps) {
         size: 150,
       },
       {
-        accessorKey: 'desiredAt',
+        accessorKey: 'desiredArrivalDate',
         cell: ({ row }) => {
-          const delayed = isSoDelayed(row.original, today)
+          const delayed = isSoDelayed(
+            { desiredAt: row.original.desiredArrivalDate, status: row.original.status },
+            today,
+          )
 
           return (
             <span className={cn('font-semibold', delayed ? 'text-danger' : 'text-ink-2')}>
-              {formatDate(row.original.desiredAt)}
+              {formatDate(row.original.desiredArrivalDate)}
               {delayed ? (
-                <span className="ml-1.5 text-meta font-bold">({formatDday(row.original.desiredAt)})</span>
+                <span className="ml-1.5 text-meta font-bold">
+                  ({formatDday(row.original.desiredArrivalDate)})
+                </span>
               ) : null}
             </span>
           )
         },
+        enableSorting: true,
         header: '도착 희망일',
         size: 135,
       },
       {
-        cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.lines.length}</span>,
+        cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
-        id: 'lineCount',
+        id: 'itemCount',
         meta: { align: 'right' },
         size: 60,
       },
       {
-        cell: ({ row }) => (
-          <span className="font-semibold text-ink">
-            {formatNumber(soTotalRequested(row.original.lines))}
-            <span className="ml-1 text-meta font-medium text-faint">EA</span>
-          </span>
-        ),
+        cell: ({ row }) => {
+          const { totalQuantity, unitSnapshot } = row.original
+          if (unitSnapshot === null) {
+            return <span className="font-semibold text-faint">-</span>
+          }
+          return (
+            <span className="font-semibold text-ink">
+              {formatNumber(totalQuantity)}
+              <span className="ml-1 text-meta font-medium text-faint">{unitSnapshot}</span>
+            </span>
+          )
+        },
         header: '총 수량',
         id: 'totalQuantity',
         meta: { align: 'right' },
-        size: 95,
+        size: 110,
       },
       {
         accessorKey: 'status',
@@ -133,7 +156,28 @@ export function SoTable({ header, onOpen, orders }: SoTableProps) {
     [onOpen, today],
   )
 
-  return <FgDataTable columns={columns} data={orders} header={header} onRowClick={onOpen} />
+  const sorting = useMemo<SortingState>(
+    () => (sortField ? [{ desc: sortDirection !== 'asc', id: sortField }] : []),
+    [sortDirection, sortField],
+  )
+
+  return (
+    <FgDataTable
+      columns={columns}
+      data={orders}
+      header={header}
+      manualSorting
+      sorting={sorting}
+      onRowClick={onOpen}
+      onSortingChange={(next) => {
+        if (!onSortChange) return
+        const head = next[0]
+        if (!head) return
+        if (head.id !== 'requestedAt' && head.id !== 'desiredArrivalDate') return
+        onSortChange(head.id, head.desc ? 'desc' : 'asc')
+      }}
+    />
+  )
 }
 
 export interface SoBranchTableProps {

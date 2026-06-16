@@ -10,15 +10,34 @@ import type { SalesOrderStatus } from '../model/types'
 
 import type { SoBranchKpi } from '../model/filter-sales-orders'
 
-export function SoHqKpiCards({ kpi }: { kpi: SalesOrderHqKpi }) {
+export interface SoHqKpiCardsProps {
+  activeStatus?: SalesOrderStatus
+  kpi: SalesOrderHqKpi
+  onSelect?: (status: SalesOrderStatus | undefined) => void
+}
+
+export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps) {
+  const isTotalActive = activeStatus === undefined
+  const isRequestedActive = activeStatus === 'REQUESTED'
+  const isApprovedActive = activeStatus === 'APPROVED'
+
   return (
     <div className="grid grid-cols-4 gap-5">
       <FgKpiCard
+        className={cn(
+          onSelect && 'cursor-pointer transition-colors',
+          isTotalActive && 'border-primary ring-2 ring-primary',
+        )}
         icon={<ClipboardList aria-hidden className="h-4 w-4" />}
         label="전체 요청"
         metric={formatNumber(kpi.totalCount)}
+        onClick={onSelect ? () => onSelect(undefined) : undefined}
       />
       <FgKpiCard
+        className={cn(
+          onSelect && 'cursor-pointer transition-colors',
+          isRequestedActive && 'border-primary ring-2 ring-primary',
+        )}
         icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
         label="승인 대기"
         metric={
@@ -30,8 +49,13 @@ export function SoHqKpiCards({ kpi }: { kpi: SalesOrderHqKpi }) {
         }
         tag={kpi.requestedCount > 0 ? <FgBadge variant="primary">검토 필요</FgBadge> : undefined}
         tone={kpi.requestedCount > 0 ? 'primary' : undefined}
+        onClick={onSelect ? () => onSelect('REQUESTED') : undefined}
       />
       <FgKpiCard
+        className={cn(
+          onSelect && 'cursor-pointer transition-colors',
+          isApprovedActive && 'border-primary ring-2 ring-primary',
+        )}
         footer="승인 완료 · 배송 중"
         icon={<Truck aria-hidden className="h-4 w-4" />}
         label="배송 중"
@@ -43,6 +67,7 @@ export function SoHqKpiCards({ kpi }: { kpi: SalesOrderHqKpi }) {
           )
         }
         tone={kpi.approvedCount > 0 ? 'primary' : undefined}
+        onClick={onSelect ? () => onSelect('APPROVED') : undefined}
       />
       <FgKpiCard
         icon={<AlertTriangle aria-hidden className="h-4 w-4" />}

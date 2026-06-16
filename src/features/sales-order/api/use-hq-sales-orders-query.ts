@@ -21,7 +21,7 @@ export interface HqSalesOrderListItem {
   requesterPosition: string
   status: SalesOrderStatus
   totalQuantity: number
-  unitSnapshot: string
+  unitSnapshot: string | null
 }
 
 export interface HqSalesOrderListParams {

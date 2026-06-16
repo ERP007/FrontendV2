@@ -5,7 +5,7 @@ import { cn } from '@/shared/lib/cn'
 import { FgButton } from '@/shared/ui'
 
 import {
-  SO_BRANCH_STATUS_LABELS,
+  SO_STATUS_LABELS,
   SO_BRANCH_STATUS_ORDER,
 } from '../model/types'
 
@@ -18,7 +18,7 @@ export interface SoBranchStatusFilterProps {
 
 function triggerLabel(value: SalesOrderStatus[] | undefined): string {
   if (!value || value.length === 0) return '상태 전체'
-  if (value.length === 1) return SO_BRANCH_STATUS_LABELS[value[0]]
+  if (value.length === 1) return SO_STATUS_LABELS[value[0]]
   return `상태 ${value.length}건 선택`
 }
 
@@ -59,7 +59,7 @@ export function SoBranchStatusFilter({ onChange, value }: SoBranchStatusFilterPr
                 onCheckedChange={(next) => toggle(status, next === true)}
                 onSelect={(event) => event.preventDefault()}
               >
-                <span>{SO_BRANCH_STATUS_LABELS[status]}</span>
+                <span>{SO_STATUS_LABELS[status]}</span>
                 {checked ? <Check aria-hidden className="h-4 w-4 text-primary" /> : null}
               </DropdownMenu.CheckboxItem>
             )
