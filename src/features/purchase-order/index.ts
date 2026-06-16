@@ -1,3 +1,5 @@
+export { mapPurchaseOrderDetail } from './model/po-detail'
+export type { PurchaseOrderDetail, PurchaseOrderDetailLineRow } from './model/po-detail'
 export { mapPurchaseOrderSummary } from './model/po-list-row'
 export type { PurchaseOrderRow } from './model/po-list-row'
 export { purchaseOrderDraftFormSchema } from './model/po-schema'
