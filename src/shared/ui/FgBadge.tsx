@@ -95,7 +95,7 @@ export function FgDomainStatusBadge({ className, label, status, ...props }: FgDo
 
   return (
     <FgBadge
-      className={cn(status === 'CANCELED' && 'border-dashed line-through', className)}
+      className={cn(status === 'CANCELED' && 'border-dashed', className)}
       icon={statusInfo.icon}
       variant={statusInfo.variant}
       {...props}

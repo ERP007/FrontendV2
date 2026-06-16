@@ -2,10 +2,22 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { mapPurchaseOrderSummary } from '../model/po-list-row'
+import type { PurchaseOrderRow } from '../model/po-list-row'
 import type {
   PurchaseOrderPageResponse,
   SearchPurchaseOrderRequest,
 } from '../model/types'
+
+export interface PurchaseOrderRowPage {
+  content: PurchaseOrderRow[]
+  hasNext: boolean
+  hasPrevious: boolean
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
 
 const purchaseOrdersQueryKey = (params: SearchPurchaseOrderRequest) =>
   ['purchase-orders', 'list', params] as const
@@ -34,6 +46,10 @@ export function usePurchaseOrdersQuery(params: SearchPurchaseOrderRequest = {}) 
       return response.data
     },
     queryKey: purchaseOrdersQueryKey(params),
+    select: (data): PurchaseOrderRowPage => ({
+      ...data,
+      content: data.content.map(mapPurchaseOrderSummary),
+    }),
     staleTime: 60_000,
   })
 }
