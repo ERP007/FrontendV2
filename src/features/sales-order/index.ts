@@ -33,7 +33,6 @@ export type {
   SalesOrderHistoryActor,
   SalesOrderHistoryEntry,
 } from './api/use-sales-order-histories-query'
-export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   applyStatusTab,
   createDefaultSoFilter,
