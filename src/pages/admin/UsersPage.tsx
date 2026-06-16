@@ -409,6 +409,14 @@ export function UsersPage() {
     setDetailSaveErrorMessage(null)
 
     try {
+      const selectedTenancyName = tenancyOptions.find((option) => option.code === values.tenancyCode)?.label
+      const currentTenancyName =
+        userDetailQuery.data?.tenancyCode === values.tenancyCode ? userDetailQuery.data.tenancyName : ''
+      const tenancyName =
+        selectedTenancyName && selectedTenancyName !== values.tenancyCode
+          ? selectedTenancyName
+          : currentTenancyName || selectedTenancyName || values.tenancyCode
+
       const response = await updateUserMutation.mutateAsync({
         payload: {
           display_name: values.name.trim(),
@@ -416,6 +424,7 @@ export function UsersPage() {
           position: values.position.trim(),
           role: values.role,
           tenancy_code: values.tenancyCode,
+          tenancy_name: tenancyName,
         },
         userId: detailTarget.userId,
       })

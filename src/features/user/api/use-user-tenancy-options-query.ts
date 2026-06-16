@@ -11,20 +11,38 @@ interface WarehouseOptionsResponse {
   content: WarehouseOption[]
 }
 
+const TENANCY_OPTIONS_PATH = '/inventory/warehouses/options'
+
 export const userTenancyOptionsQueryKey = ['user-tenancy-options'] as const
 
-function isWarehouseOption(value: unknown): value is WarehouseOption {
+function toWarehouseOption(value: unknown): WarehouseOption | null {
   if (typeof value !== 'object' || value === null) {
-    return false
+    return null
   }
 
-  const option = value as WarehouseOption
+  const option = value as Record<string, unknown>
+  const code = typeof option.code === 'string'
+    ? option.code
+    : typeof option.tenancyCode === 'string'
+      ? option.tenancyCode
+      : typeof option.warehouseCode === 'string'
+        ? option.warehouseCode
+        : null
+  const name = typeof option.name === 'string'
+    ? option.name
+    : typeof option.tenancyName === 'string'
+      ? option.tenancyName
+      : typeof option.warehouseName === 'string'
+        ? option.warehouseName
+        : null
 
-  return typeof option.code === 'string' && typeof option.name === 'string'
+  return code && name ? { code, name } : null
 }
 
-function unwrapWarehouseOptions(value: WarehouseOptionsResponse): WarehouseOption[] {
-  return Array.isArray(value.content) ? value.content.filter(isWarehouseOption) : []
+function unwrapWarehouseOptions(value: WarehouseOptionsResponse | WarehouseOption[]): WarehouseOption[] {
+  const options = Array.isArray(value) ? value : value.content
+
+  return Array.isArray(options) ? options.map(toWarehouseOption).filter((option) => option !== null) : []
 }
 
 function uniqueTenancyOptions(options: UserTenancyOption[]) {
@@ -63,7 +81,7 @@ export function useUserTenancyOptionsQuery() {
   return useQuery({
     queryKey: userTenancyOptionsQueryKey,
     queryFn: async () => {
-      const response = await api.get<WarehouseOptionsResponse>('/inventory/warehouses/options')
+      const response = await api.get<WarehouseOptionsResponse | WarehouseOption[]>(TENANCY_OPTIONS_PATH)
       const warehouseOptions = unwrapWarehouseOptions(response.data).map(toUserTenancyOption)
 
       return uniqueTenancyOptions([ADMIN_TENANCY_OPTION, ...warehouseOptions])
