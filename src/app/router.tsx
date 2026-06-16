@@ -8,9 +8,9 @@ import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArri
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
 import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
 import { BranchSalesOrdersPage } from '@/pages/branch/BranchSalesOrdersPage'
+import { ItemsRoutePage } from '@/pages/common/ItemsRoutePage'
 import { MyPage } from '@/pages/common/MyPage'
 import { DashboardPage } from '@/pages/hq/DashboardPage'
-import { ItemsPage } from '@/pages/hq/ItemsPage'
 import { PurchaseOrderCreatePage } from '@/pages/hq/PurchaseOrderCreatePage'
 import { PurchaseOrderDetailPage } from '@/pages/hq/PurchaseOrderDetailPage'
 import { PurchaseOrdersPage } from '@/pages/hq/PurchaseOrdersPage'
@@ -101,7 +101,7 @@ const stockMovementsRoute = createRoute({
 })
 
 const itemsRoute = createRoute({
-  component: ItemsPage,
+  component: ItemsRoutePage,
   getParentRoute: () => shellRoute,
   path: '/items',
 })
