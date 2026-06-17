@@ -15,7 +15,7 @@ import {
   useCreateSalesOrderMutation,
 } from '@/features/sales-order'
 import type {
-  CreateSalesOrderDraftRequest,
+  CreateDraftSalesOrderRequest,
   CreateSalesOrderRequest,
   SoDraftFormValues,
   SoDraftLine,
@@ -211,7 +211,7 @@ export function BranchSalesOrderCreatePage() {
         priority: line.priority,
         quantity: line.quantity,
       })),
-      memo: values.memo,
+      memo: values.memo ?? null,
       warehouseCode: values.warehouseCode,
     }
 
@@ -239,10 +239,10 @@ export function BranchSalesOrderCreatePage() {
     }
 
     setLinesError(null)
-    const payload: CreateSalesOrderDraftRequest = {
+    const payload: CreateDraftSalesOrderRequest = {
       desiredArrivalDate: values.desiredArrivalDate,
       lines: payloadLines,
-      memo: values.memo,
+      memo: values.memo ?? null,
       warehouseCode: values.warehouseCode,
     }
 

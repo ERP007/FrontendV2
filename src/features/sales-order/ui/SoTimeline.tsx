@@ -3,7 +3,7 @@ import { Clock, User as UserIcon } from 'lucide-react'
 import { formatDateTime } from '@/shared/lib/format'
 import { FgCard, FgCardHeader, FgDomainStatusBadge } from '@/shared/ui'
 
-import type { SalesOrderEvent } from '../model/types'
+import type { SalesOrderEvent } from '../model/so-ui-model'
 
 export function SoTimeline({ events }: { events: SalesOrderEvent[] }) {
   return (

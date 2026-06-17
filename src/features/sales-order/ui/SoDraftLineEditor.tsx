@@ -6,9 +6,9 @@ import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgCard, FgSelect } from '@/shared/ui'
 
-import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/types'
+import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/so-ui-model'
 
-import type { SoLine, SoPriority } from '../model/types'
+import type { SoLine, SoPriority } from '../model/so-ui-model'
 
 const MAX_LINES = 50
 

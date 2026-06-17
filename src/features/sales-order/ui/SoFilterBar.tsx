@@ -4,9 +4,9 @@ import { Calendar, Check, ChevronDown, RotateCcw, Search } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { FgBadge, FgButton, FgCard, FgInput } from '@/shared/ui'
 
-import { SO_STATUS_LABELS } from '../model/types'
+import { SO_STATUS_LABELS } from '../model/so-ui-model'
 
-import type { SalesOrderStatus } from '../model/types'
+import type { SalesOrderStatus } from '../model/so-ui-model'
 
 import type { HqWarehouseSummary } from '@/features/warehouse'
 

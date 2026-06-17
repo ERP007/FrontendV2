@@ -12,6 +12,7 @@ import {
 } from '@/features/sales-order'
 import type {
   BranchSalesOrderListParams,
+  PageSize,
   SalesOrderStatus,
   SoStatusTab,
 } from '@/features/sales-order'
@@ -178,7 +179,7 @@ export function BranchSalesOrdersPage() {
         totalCount={totalElements}
         totalPages={totalPages}
         onPageChange={(nextPage) => patchParams({ page: nextPage })}
-        onPageSizeChange={(size) => patchParams({ page: 1, size })}
+        onPageSizeChange={(size) => patchParams({ page: 1, size: size as PageSize })}
       />
     </div>
   )

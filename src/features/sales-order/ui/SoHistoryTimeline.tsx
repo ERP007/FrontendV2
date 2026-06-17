@@ -32,8 +32,10 @@ export function SoHistoryTimeline({ code }: SoHistoryTimelineProps) {
               </div>
               <p className="mt-2 flex items-center gap-1.5 text-label font-semibold text-ink-2">
                 <UserIcon aria-hidden className="h-3.5 w-3.5 text-faint" />
-                {entry.changedBy.name}
-                <span className="font-medium text-faint">· {entry.changedBy.position}</span>
+                {entry.changedBy?.name ?? '시스템'}
+                {entry.changedBy ? (
+                  <span className="font-medium text-faint">· {entry.changedBy.position}</span>
+                ) : null}
               </p>
             </li>
           ))}

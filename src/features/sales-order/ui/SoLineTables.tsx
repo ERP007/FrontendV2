@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgStepper } from '@/shared/ui'
 
-import type { SalesOrderLine } from '../model/types'
+import type { SalesOrderLine } from '../model/so-ui-model'
 
 function LineName({ line }: { line: SalesOrderLine }) {
   return (

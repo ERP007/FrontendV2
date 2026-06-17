@@ -8,7 +8,7 @@ import { cn } from '@/shared/lib/cn'
 import { formatDate, formatDateTime, formatDday, formatNumber } from '@/shared/lib/format'
 import { FgButton, FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/shared/ui'
 
-import { IN_PROGRESS_STATUSES, isSoDelayed } from '../model/types'
+import { IN_PROGRESS_STATUSES, isSoDelayed } from '../model/so-ui-model'
 
 import type { BranchSalesOrderListItem } from '../api/use-branch-sales-orders-query'
 import type {

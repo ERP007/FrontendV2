@@ -5,9 +5,9 @@ import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgModal, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
 import { SO_HQ_WAREHOUSE_OPTIONS } from '../model/fixtures'
-import { REJECT_REASON_OPTIONS, soShortageCount, soShortageTotal, soTotalApproved } from '../model/types'
+import { REJECT_REASON_OPTIONS, soShortageCount, soShortageTotal, soTotalApproved } from '../model/so-ui-model'
 
-import type { SalesOrder } from '../model/types'
+import type { SalesOrder } from '../model/so-ui-model'
 
 export interface SoApproveModalProps {
   /** 검토 화면에서 조정된 승인 수량 맵 (lineNo → 수량) */
