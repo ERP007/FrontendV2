@@ -8,7 +8,10 @@ export { useStockListQuery } from './api/use-stock-list-query'
 export { useStockSkuDetailQuery } from './api/use-stock-sku-detail-query'
 export { stockDetailQueryOptions, useStockDetailQuery } from './api/use-stock-detail-query'
 export type { StockDetail, UseStockDetailQueryParams } from './api/use-stock-detail-query'
-export { useStockQuantitiesQuery } from './api/use-stock-quantities-query'
+export {
+  stockQuantitiesQueryOptions,
+  useStockQuantitiesQuery,
+} from './api/use-stock-quantities-query'
 export type { StockQuantity } from './api/use-stock-quantities-query'
 export { adjustmentFormSchema } from './model/adjustment-schema'
 export { createDefaultMovementFilter, filterMovements, groupMovementsByDate } from './model/filter-movements'

@@ -16,8 +16,10 @@ import {
   useSubmitSalesOrderMutation,
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
+import { stockQuantitiesQueryOptions } from '@/features/stock'
 import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { queryClient } from '@/shared/api'
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgCard, FgNotice, FgPageHeader } from '@/shared/ui'
 
@@ -45,10 +47,31 @@ function enrichDraftLines(lines: SoDraftLine[], batch: ItemBatchResponse): Enric
       removedSkus.push(line.itemCode ?? '(미지정)')
       continue
     }
-    kept.push({ ...line, itemName: item.name, safetyStock: item.safetyStock, unit: item.unit })
+    kept.push({ ...line, itemName: item.name, unit: item.unit })
   }
 
   return { lines: kept, removedSkus }
+}
+
+/** 지점 창고 현재고·안전재고를 라인에 채운다(생성 화면과 동일 소스). */
+async function fillBranchStock(lines: SoDraftLine[], warehouseCode: string): Promise<SoDraftLine[]> {
+  const skus = lines
+    .map((line) => line.itemCode)
+    .filter((sku): sku is string => Boolean(sku))
+  if (!skus.length) return lines
+  try {
+    const { stocks } = await queryClient.fetchQuery(
+      stockQuantitiesQueryOptions(warehouseCode, skus),
+    )
+    const stockMap = new Map(stocks.map((stock) => [stock.sku, stock]))
+    return lines.map((line) => {
+      const stock = line.itemCode ? stockMap.get(line.itemCode) : undefined
+      return stock ? { ...line, branchStock: stock.quantity, safetyStock: stock.safetyStock } : line
+    })
+  } catch {
+    // 재고 조회 실패 시 라인 유지 (전역 인터셉터가 toast 처리)
+    return lines
+  }
 }
 
 export function BranchSalesOrderEditPage() {
@@ -79,10 +102,13 @@ export function BranchSalesOrderEditPage() {
     resolver: zodResolver(soDraftFormSchema),
   })
 
+  const branchWarehouseCode = me?.tenancyCode
+
   // 최초 1회만 서버 값으로 폼/라인을 채운다. (refetch가 사용자 편집을 덮지 않도록)
-  // DRAFT 라인은 itemName·unit 이 null 이라 batch 로 채우고, 비활성/없는 품목 라인은 제거한다.
+  // DRAFT 라인은 itemName·unit 이 null 이라 batch 로 채우고(비활성/없는 품목 라인 제거),
+  // 현재고·안전재고는 지점 창고 재고에서 채운다(생성 화면과 동일 소스).
   useEffect(() => {
-    if (!data || hydratedRef.current) return
+    if (!data || !branchWarehouseCode || hydratedRef.current) return
     hydratedRef.current = true
     reset(data.values)
 
@@ -104,8 +130,11 @@ export function BranchSalesOrderEditPage() {
       : Promise.resolve(detailLines)
 
     // batch 실패 시 원본 라인 유지 (전역 인터셉터가 toast 처리)
-    void hydrateLines.catch(() => detailLines).then(setLines)
-  }, [data, itemsBatchMutation, reset])
+    void hydrateLines
+      .catch(() => detailLines)
+      .then((nextLines) => fillBranchStock(nextLines, branchWarehouseCode))
+      .then(setLines)
+  }, [branchWarehouseCode, data, itemsBatchMutation, reset])
 
   const breadcrumbs = [
     { label: '발주' },

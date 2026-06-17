@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
@@ -13,13 +13,9 @@ interface StockQuantitiesResponse {
   warehouseCode: string
 }
 
-/**
- * 특정 창고의 여러 SKU 현재고를 일괄 조회한다(GET /inventory/stocks/quantities).
- * select 로 sku → 재고 Map 으로 변환해 라인 매칭을 쉽게 한다.
- */
-export function useStockQuantitiesQuery(warehouseCode: string | undefined, skus: string[]) {
-  return useQuery({
-    enabled: Boolean(warehouseCode) && skus.length > 0,
+/** 특정 창고의 여러 SKU 현재고 일괄 조회(GET /inventory/stocks/quantities). */
+export function stockQuantitiesQueryOptions(warehouseCode: string, skus: string[]) {
+  return queryOptions({
     queryFn: async () => {
       const response = await api.get<StockQuantitiesResponse>('/inventory/stocks/quantities', {
         params: { skus, warehouseCode },
@@ -27,7 +23,15 @@ export function useStockQuantitiesQuery(warehouseCode: string | undefined, skus:
       return response.data
     },
     queryKey: ['stocks', 'quantities', warehouseCode, [...skus].sort()] as const,
-    select: (data) => new Map(data.stocks.map((stock) => [stock.sku, stock])),
     staleTime: 60_000,
+  })
+}
+
+/** sku → 재고 Map 으로 변환해 라인 매칭을 쉽게 한다. */
+export function useStockQuantitiesQuery(warehouseCode: string | undefined, skus: string[]) {
+  return useQuery({
+    ...stockQuantitiesQueryOptions(warehouseCode ?? '', skus),
+    enabled: Boolean(warehouseCode) && skus.length > 0,
+    select: (data) => new Map(data.stocks.map((stock) => [stock.sku, stock])),
   })
 }
