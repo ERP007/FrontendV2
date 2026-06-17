@@ -2,22 +2,17 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
-export interface SalesOrderHqKpi {
-  approvedCount: number
-  delayedCount: number
-  requestedCount: number
-  totalCount: number
-}
+import { salesOrderKeys } from '../model/so-query-keys'
+import type { HqSalesOrderKpiResponse } from '../model/types'
 
-const salesOrderHqKpiQueryKey = ['sales-orders', 'kpi', 'hq'] as const
-
+/** SO #14 본사 KPI — GET /sales-orders/kpi/hq */
 export function useSalesOrderHqKpiQuery() {
   return useQuery({
     queryFn: async () => {
-      const response = await api.get<SalesOrderHqKpi>('/sales-orders/kpi/hq')
+      const response = await api.get<HqSalesOrderKpiResponse>('/sales-orders/kpi/hq')
       return response.data
     },
-    queryKey: salesOrderHqKpiQueryKey,
+    queryKey: salesOrderKeys.hqKpi(),
     staleTime: 60_000,
   })
 }

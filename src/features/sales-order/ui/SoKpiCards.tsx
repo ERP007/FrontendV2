@@ -5,14 +5,13 @@ import { FgBadge, FgKpiCard } from '@/shared/ui'
 
 import { cn } from '@/shared/lib/cn'
 
-import type { SalesOrderHqKpi } from '../api/use-sales-order-hq-kpi-query'
-import type { SalesOrderStatus } from '../model/types'
+import type { SalesOrderStatus } from '../model/ui-types'
 
-import type { SoBranchKpi } from '../model/filter-sales-orders'
+import type { BranchSalesOrderKpiResponse, HqSalesOrderKpiResponse } from '../model/types'
 
 export interface SoHqKpiCardsProps {
   activeStatus?: SalesOrderStatus
-  kpi: SalesOrderHqKpi
+  kpi: HqSalesOrderKpiResponse
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 
@@ -88,7 +87,7 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
 
 export interface SoBranchKpiCardsProps {
   activeStatus?: SalesOrderStatus
-  kpi: SoBranchKpi
+  kpi: BranchSalesOrderKpiResponse
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 

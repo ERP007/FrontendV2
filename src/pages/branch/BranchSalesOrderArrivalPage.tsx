@@ -7,10 +7,9 @@ import type { ReactNode } from 'react'
 
 import {
   CARRIER_TYPE_LABELS,
-  MOCK_BRANCH_SALES_ORDER_DETAIL,
+  useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
-import type { BranchSalesOrderDetail } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
 import {
@@ -38,26 +37,23 @@ export function BranchSalesOrderArrivalPage() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const router = useRouter()
+  const code = params.soNo ?? ''
 
-  const so: BranchSalesOrderDetail = {
-    ...MOCK_BRANCH_SALES_ORDER_DETAIL,
-    code: params.soNo ?? MOCK_BRANCH_SALES_ORDER_DETAIL.code,
-  }
+  const { data: so } = useBranchSalesOrderQuery(code)
   const { data: me } = useMeQuery()
+  const deliverMutation = useSalesOrderDeliverMutation(code)
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
 
-  const deliverMutation = useSalesOrderDeliverMutation(so.code)
+  if (!so) return null
 
   const totalQuantity = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
 
   async function handleConfirm() {
     try {
       const result = await deliverMutation.mutateAsync({ deliveredDate: arrivalDate })
-      toast.success(
-        `${result.code} 도착이 확정되었습니다.`,
-      )
-      void navigate({ to: '/branch/sales-orders' })
+      toast.success(`${result.code} 도착이 확정되었습니다.`)
+      void navigate({ replace: true, to: '/branch/sales-orders' })
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -69,7 +65,7 @@ export function BranchSalesOrderArrivalPage() {
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">도착 입고 확인</span>
-            <FgDomainStatusBadge status={so.status} />
+            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
           </span>
         }
         breadcrumbs={[

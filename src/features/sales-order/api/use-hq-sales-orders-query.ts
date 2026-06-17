@@ -4,43 +4,33 @@ import { api } from '@/shared/api'
 
 import type { PageResponse } from '@/shared/api'
 
-import type { SalesOrderStatus } from '../model/types'
+import { mapHqSalesOrderRow } from '../model/so-list-row'
+import type { HqSalesOrderRow } from '../model/so-list-row'
+import { salesOrderKeys } from '../model/so-query-keys'
+import type {
+  HqSalesOrderQuery,
+  HqSalesOrderSummary,
+  PageSize,
+  SalesOrderSortField,
+  SalesOrderStatus,
+  SortDirection,
+} from '../model/types'
 
-export type HqSalesOrderSortField = 'requestedAt' | 'desiredArrivalDate'
-export type HqSalesOrderSortDirection = 'asc' | 'desc'
-export type HqSalesOrderPageSize = 10 | 20 | 50
-
-export interface HqSalesOrderListItem {
-  code: string
-  desiredArrivalDate: string
-  fromWarehouseCode: string
-  itemCount: number
-  requestedAt: string
-  requestedBy: string
-  requesterName: string
-  requesterPosition: string
-  status: SalesOrderStatus
-  totalQuantity: number
-  unitSnapshot: string | null
-}
-
+// UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface HqSalesOrderListParams {
   endDate?: string
   page?: number
   search?: string
-  size?: HqSalesOrderPageSize
-  sortDirection?: HqSalesOrderSortDirection
-  sortField?: HqSalesOrderSortField
+  size?: PageSize
+  sortDirection?: SortDirection
+  sortField?: SalesOrderSortField
   startDate?: string
   status?: SalesOrderStatus[]
   warehouseCode?: string
 }
 
-const hqSalesOrdersQueryKey = (params: HqSalesOrderListParams) =>
-  ['sales-orders', 'hq', params] as const
-
-function buildHqSalesOrderQueryParams(params: HqSalesOrderListParams) {
-  const queryParams: Record<string, number | string> = {}
+function buildHqSalesOrderQueryParams(params: HqSalesOrderListParams): HqSalesOrderQuery {
+  const queryParams: HqSalesOrderQuery = {}
 
   if (params.search) queryParams.search = params.search
   if (params.status && params.status.length > 0) queryParams.status = params.status.join(',')
@@ -55,16 +45,21 @@ function buildHqSalesOrderQueryParams(params: HqSalesOrderListParams) {
   return queryParams
 }
 
+/** SO #12 본사 발주 목록 — GET /sales-orders/hq */
 export function useHqSalesOrdersQuery(params: HqSalesOrderListParams = {}) {
   return useQuery({
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const response = await api.get<PageResponse<HqSalesOrderListItem>>('/sales-orders/hq', {
+      const response = await api.get<PageResponse<HqSalesOrderSummary>>('/sales-orders/hq', {
         params: buildHqSalesOrderQueryParams(params),
       })
       return response.data
     },
-    queryKey: hqSalesOrdersQueryKey(params),
+    queryKey: salesOrderKeys.hqList(params),
+    select: (data): PageResponse<HqSalesOrderRow> => ({
+      ...data,
+      content: data.content.map(mapHqSalesOrderRow),
+    }),
     staleTime: 60_000,
   })
 }

@@ -6,4 +6,4 @@ export const soDraftFormSchema = z.object({
   warehouseCode: z.string().min(1, '수신 창고를 선택하세요.'),
 })
 
-export type SoDraftFormValues = z.infer<typeof soDraftFormSchema>
+export type SoFormValues = z.infer<typeof soDraftFormSchema>

@@ -4,37 +4,32 @@ import { api } from '@/shared/api'
 
 import type { PageResponse } from '@/shared/api'
 
-import type { SalesOrderStatus } from '../model/types'
+import { mapBranchSalesOrderRow } from '../model/so-list-row'
+import type { BranchSalesOrderRow } from '../model/so-list-row'
+import { salesOrderKeys } from '../model/so-query-keys'
+import type {
+  BranchSalesOrderQuery,
+  BranchSalesOrderSummary,
+  PageSize,
+  SalesOrderSortField,
+  SalesOrderStatus,
+  SortDirection,
+} from '../model/types'
 
-export type BranchSalesOrderSortField = 'requestedAt' | 'desiredArrivalDate'
-export type BranchSalesOrderSortDirection = 'asc' | 'desc'
-
-export interface BranchSalesOrderListItem {
-  code: string
-  desiredArrivalDate: string
-  itemCount: number
-  requestedAt: string | null
-  status: SalesOrderStatus
-  totalQuantity: number | null
-  unitSnapshot: string | null
-}
-
+// UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface BranchSalesOrderListParams {
   endDate?: string
   page?: number
   search?: string
-  size?: number
-  sortDirection?: BranchSalesOrderSortDirection
-  sortField?: BranchSalesOrderSortField
+  size?: PageSize
+  sortDirection?: SortDirection
+  sortField?: SalesOrderSortField
   startDate?: string
   status?: SalesOrderStatus[]
 }
 
-const branchSalesOrdersQueryKey = (params: BranchSalesOrderListParams) =>
-  ['sales-orders', 'branch', params] as const
-
-function buildBranchSalesOrderQueryParams(params: BranchSalesOrderListParams) {
-  const queryParams: Record<string, number | string> = {}
+function buildBranchSalesOrderQueryParams(params: BranchSalesOrderListParams): BranchSalesOrderQuery {
+  const queryParams: BranchSalesOrderQuery = {}
 
   if (params.search) queryParams.search = params.search
   if (params.status && params.status.length > 0) queryParams.status = params.status.join(',')
@@ -48,17 +43,22 @@ function buildBranchSalesOrderQueryParams(params: BranchSalesOrderListParams) {
   return queryParams
 }
 
+/** SO #9 지점 발주 목록 — GET /sales-orders/branch */
 export function useBranchSalesOrdersQuery(params: BranchSalesOrderListParams = {}) {
   return useQuery({
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const response = await api.get<PageResponse<BranchSalesOrderListItem>>(
+      const response = await api.get<PageResponse<BranchSalesOrderSummary>>(
         '/sales-orders/branch',
         { params: buildBranchSalesOrderQueryParams(params) },
       )
       return response.data
     },
-    queryKey: branchSalesOrdersQueryKey(params),
+    queryKey: salesOrderKeys.branchList(params),
+    select: (data): PageResponse<BranchSalesOrderRow> => ({
+      ...data,
+      content: data.content.map(mapBranchSalesOrderRow),
+    }),
     staleTime: 60_000,
   })
 }
