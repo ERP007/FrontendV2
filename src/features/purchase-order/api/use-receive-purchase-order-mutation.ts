@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
@@ -13,6 +13,7 @@ export interface ReceivePurchaseOrderVariables {
 }
 
 export function useReceivePurchaseOrderMutation() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ code, payload }: ReceivePurchaseOrderVariables) => {
       const response = await api.patch<ReceivePurchaseOrderResponse>(
@@ -20,6 +21,16 @@ export function useReceivePurchaseOrderMutation() {
         payload,
       )
       return response.data
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['purchase-orders', 'detail', variables.code],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['purchase-orders', 'histories', variables.code],
+      })
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'kpi'] })
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'list'] })
     },
   })
 }

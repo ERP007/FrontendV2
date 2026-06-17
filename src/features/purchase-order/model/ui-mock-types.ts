@@ -8,12 +8,6 @@
 export type PoUiStatus = 'DRAFT' | 'APPROVED' | 'SHIPPED' | 'RECEIVED' | 'CANCELED'
 export type PurchaseOrderEventType = PoUiStatus | 'EDITED'
 
-export interface Supplier {
-  code: string
-  id: number
-  name: string
-}
-
 export interface PurchaseOrderLine {
   amount: number
   itemName: string
@@ -52,39 +46,10 @@ export interface PurchaseOrder {
   warehouseName: string
 }
 
-export interface PurchaseOrderFilter {
-  from: string
-  keyword: string
-  status: 'ALL' | PoUiStatus
-  supplierCode: 'ALL' | string
-  to: string
-}
-
-export const PO_STATUS_LABELS: Record<PoUiStatus, string> = {
-  APPROVED: 'APPROVED',
-  CANCELED: 'CANCELED',
-  DRAFT: 'DRAFT',
-  RECEIVED: 'RECEIVED',
-  SHIPPED: 'SHIPPED',
-}
-
 export function poTotalQuantity(lines: Pick<PurchaseOrderLine, 'quantity'>[]): number {
   return lines.reduce((sum, line) => sum + line.quantity, 0)
 }
 
 export function poTotalAmount(lines: Pick<PurchaseOrderLine, 'amount'>[]): number {
   return lines.reduce((sum, line) => sum + line.amount, 0)
-}
-
-export function poDominantUnit(lines: PurchaseOrderLine[]): string {
-  return lines[0]?.unit ?? 'EA'
-}
-
-export function isPoDelayed(
-  po: Pick<PurchaseOrder, 'expectedAt' | 'status'>,
-  today: string,
-): boolean {
-  if (!po.expectedAt) return false
-  if (po.status === 'RECEIVED' || po.status === 'CANCELED') return false
-  return po.expectedAt < today
 }
