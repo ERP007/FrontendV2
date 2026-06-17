@@ -5,9 +5,6 @@ import { api } from '@/shared/api'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type { HqSalesOrderKpiResponse } from '../model/types'
 
-// 화면 호환용 별칭
-export type SalesOrderHqKpi = HqSalesOrderKpiResponse
-
 /** SO #14 본사 KPI — GET /sales-orders/kpi/hq */
 export function useSalesOrderHqKpiQuery() {
   return useQuery({

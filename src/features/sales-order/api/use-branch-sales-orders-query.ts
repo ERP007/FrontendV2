@@ -8,26 +8,13 @@ import { mapBranchSalesOrderRow } from '../model/so-list-row'
 import type { BranchSalesOrderRow } from '../model/so-list-row'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type {
+  BranchSalesOrderQuery,
   BranchSalesOrderSummary,
   PageSize,
   SalesOrderSortField,
   SalesOrderStatus,
   SortDirection,
 } from '../model/types'
-
-// 서버 응답 라인 아이템 (SO #9)
-export type BranchSalesOrderListItem = BranchSalesOrderSummary
-
-// 화면 소비용 행으로 변환된 페이지
-export interface BranchSalesOrderRowPage {
-  content: BranchSalesOrderRow[]
-  hasNext: boolean
-  hasPrevious: boolean
-  page: number
-  size: number
-  totalElements: number
-  totalPages: number
-}
 
 // UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface BranchSalesOrderListParams {
@@ -41,8 +28,8 @@ export interface BranchSalesOrderListParams {
   status?: SalesOrderStatus[]
 }
 
-function buildBranchSalesOrderQueryParams(params: BranchSalesOrderListParams) {
-  const queryParams: Record<string, number | string> = {}
+function buildBranchSalesOrderQueryParams(params: BranchSalesOrderListParams): BranchSalesOrderQuery {
+  const queryParams: BranchSalesOrderQuery = {}
 
   if (params.search) queryParams.search = params.search
   if (params.status && params.status.length > 0) queryParams.status = params.status.join(',')
@@ -61,14 +48,14 @@ export function useBranchSalesOrdersQuery(params: BranchSalesOrderListParams = {
   return useQuery({
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const response = await api.get<PageResponse<BranchSalesOrderListItem>>(
+      const response = await api.get<PageResponse<BranchSalesOrderSummary>>(
         '/sales-orders/branch',
         { params: buildBranchSalesOrderQueryParams(params) },
       )
       return response.data
     },
     queryKey: salesOrderKeys.branchList(params),
-    select: (data): BranchSalesOrderRowPage => ({
+    select: (data): PageResponse<BranchSalesOrderRow> => ({
       ...data,
       content: data.content.map(mapBranchSalesOrderRow),
     }),

@@ -7,19 +7,16 @@ import { cn } from '@/shared/lib/cn'
 import { formatDate, formatDateTime } from '@/shared/lib/format'
 import { FgButton, FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/shared/ui'
 
-import type {
-  HqSalesOrderSortDirection,
-  HqSalesOrderSortField,
-} from '../api/use-hq-sales-orders-query'
 import type { BranchSalesOrderRow, HqSalesOrderRow } from '../model/so-list-row'
+import type { SalesOrderSortField, SortDirection } from '../model/types'
 
 export interface SoTableProps {
   header?: ReactNode
   onOpen: (row: HqSalesOrderRow) => void
-  onSortChange?: (field: HqSalesOrderSortField, direction: HqSalesOrderSortDirection) => void
+  onSortChange?: (field: SalesOrderSortField, direction: SortDirection) => void
   rows: HqSalesOrderRow[]
-  sortDirection?: HqSalesOrderSortDirection
-  sortField?: HqSalesOrderSortField
+  sortDirection?: SortDirection
+  sortField?: SalesOrderSortField
 }
 
 /** SO-01 본사용 발주 요청 테이블 */

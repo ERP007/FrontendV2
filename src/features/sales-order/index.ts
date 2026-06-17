@@ -58,26 +58,16 @@ export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-muta
 
 // ----- queries -----
 export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
-export type {
-  BranchSalesOrderListItem,
-  BranchSalesOrderListParams,
-} from './api/use-branch-sales-orders-query'
+export type { BranchSalesOrderListParams } from './api/use-branch-sales-orders-query'
 export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
 export type { BranchSalesOrderDetail } from './model/so-detail'
 export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
-export type {
-  HqSalesOrderListItem,
-  HqSalesOrderListParams,
-  HqSalesOrderPageSize,
-  HqSalesOrderSortDirection,
-  HqSalesOrderSortField,
-} from './api/use-hq-sales-orders-query'
+export type { HqSalesOrderListParams } from './api/use-hq-sales-orders-query'
 export { useHqSalesOrderQuery } from './api/use-hq-sales-order-query'
 export { useSalesOrderFormQuery } from './api/use-sales-order-form-query'
 export type { SalesOrderFormData } from './api/use-sales-order-form-query'
 export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
-export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
 export type { SalesOrderHistoryRow } from './model/so-history'
 

@@ -5,14 +5,13 @@ import { FgBadge, FgKpiCard } from '@/shared/ui'
 
 import { cn } from '@/shared/lib/cn'
 
-import type { SalesOrderHqKpi } from '../api/use-sales-order-hq-kpi-query'
 import type { SalesOrderStatus } from '../model/so-ui-model'
 
-import type { BranchSalesOrderKpiResponse } from '../model/types'
+import type { BranchSalesOrderKpiResponse, HqSalesOrderKpiResponse } from '../model/types'
 
 export interface SoHqKpiCardsProps {
   activeStatus?: SalesOrderStatus
-  kpi: SalesOrderHqKpi
+  kpi: HqSalesOrderKpiResponse
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 

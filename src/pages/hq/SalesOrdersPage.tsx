@@ -9,11 +9,11 @@ import {
   useSalesOrderHqKpiQuery,
 } from '@/features/sales-order'
 import type {
-  HqSalesOrderPageSize,
-  HqSalesOrderSortDirection,
-  HqSalesOrderSortField,
+  PageSize,
+  SalesOrderSortField,
   SalesOrderStatus,
   SoFilterBarValues,
+  SortDirection,
 } from '@/features/sales-order'
 import { useHqWarehousesQuery } from '@/features/warehouse'
 import { formatNumber } from '@/shared/lib/format'
@@ -26,9 +26,9 @@ interface SoHqQueryState {
   endDate?: string
   page: number
   search: string
-  size: HqSalesOrderPageSize
-  sortDirection: HqSalesOrderSortDirection
-  sortField: HqSalesOrderSortField
+  size: PageSize
+  sortDirection: SortDirection
+  sortField: SalesOrderSortField
   startDate?: string
   status: SalesOrderStatus[]
   warehouseCode?: string
@@ -103,7 +103,7 @@ export function SalesOrdersPage() {
     }))
   }
 
-  function handleSortChange(field: HqSalesOrderSortField, direction: HqSalesOrderSortDirection) {
+  function handleSortChange(field: SalesOrderSortField, direction: SortDirection) {
     setState((prev) => ({ ...prev, page: 1, sortDirection: direction, sortField: field }))
   }
 
@@ -151,7 +151,7 @@ export function SalesOrdersPage() {
         totalPages={totalPages}
         onPageChange={(next) => setState((prev) => ({ ...prev, page: next }))}
         onPageSizeChange={(size) =>
-          setState((prev) => ({ ...prev, page: 1, size: size as HqSalesOrderPageSize }))
+          setState((prev) => ({ ...prev, page: 1, size: size as PageSize }))
         }
       />
     </div>
