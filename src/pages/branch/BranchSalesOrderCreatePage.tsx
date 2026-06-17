@@ -9,7 +9,7 @@ import { useItemsInfiniteQuery } from '@/features/item'
 import type { ItemListItem } from '@/features/item'
 import {
   emptySoDraftLine,
-  SoDraftLineEditor,
+  SoLineEditor,
   soDraftFormSchema,
   useCreateSalesOrderDraftMutation,
   useCreateSalesOrderMutation,
@@ -17,7 +17,7 @@ import {
 import type {
   CreateDraftSalesOrderRequest,
   CreateSalesOrderRequest,
-  SoDraftFormValues,
+  SoFormValues,
   SoDraftLine,
 } from '@/features/sales-order'
 import { stockDetailQueryOptions } from '@/features/stock'
@@ -39,7 +39,7 @@ import {
 
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
 
-const emptyDraftValues: SoDraftFormValues = {
+const emptyDraftValues: SoFormValues = {
   desiredArrivalDate: '',
   memo: '',
   warehouseCode: '',
@@ -165,7 +165,7 @@ export function BranchSalesOrderCreatePage() {
     handleSubmit,
     register,
     watch,
-  } = useForm<SoDraftFormValues>({
+  } = useForm<SoFormValues>({
     defaultValues: emptyDraftValues,
     resolver: zodResolver(soDraftFormSchema),
   })
@@ -249,6 +249,7 @@ export function BranchSalesOrderCreatePage() {
     try {
       const draft = await createDraftMutation.mutateAsync(payload)
       toast.success(`${draft.code} 임시저장되었습니다.`)
+      void navigate({ to: '/branch/sales-orders' })
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -352,7 +353,7 @@ export function BranchSalesOrderCreatePage() {
           </div>
         </FgCard>
 
-        <SoDraftLineEditor
+        <SoLineEditor
           lines={lines}
           renderSearchPanel={(props) => (
             <ItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
