@@ -1,6 +1,6 @@
-import type { BranchSalesOrderDetail } from '../api/use-branch-sales-order-query'
+import type { BranchSalesOrderDetailResponse } from './types'
 
-export const MOCK_BRANCH_SALES_ORDER_DETAIL: BranchSalesOrderDetail = {
+export const MOCK_BRANCH_SALES_ORDER_DETAIL: BranchSalesOrderDetailResponse = {
   approvedAt: '2026-06-12T09:25:00.000Z',
   carrierType: 'VEHICLE',
   code: 'SO-2026-0001',

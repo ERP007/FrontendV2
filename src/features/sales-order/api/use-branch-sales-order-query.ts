@@ -2,11 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { mapBranchSalesOrderDetail } from '../model/so-detail'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type { BranchSalesOrderDetailResponse } from '../model/types'
-
-// 화면 호환용 별칭
-export type BranchSalesOrderDetail = BranchSalesOrderDetailResponse
 
 /** SO #10 지점 발주 상세 — GET /sales-orders/branch/{code} */
 export function useBranchSalesOrderQuery(code: string | undefined) {
@@ -19,5 +17,6 @@ export function useBranchSalesOrderQuery(code: string | undefined) {
       return response.data
     },
     queryKey: salesOrderKeys.branchDetail(code ?? ''),
+    select: mapBranchSalesOrderDetail,
   })
 }

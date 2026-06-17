@@ -1,6 +1,5 @@
 import { Clock, User as UserIcon } from 'lucide-react'
 
-import { formatDateTime } from '@/shared/lib/format'
 import { FgCard, FgCardHeader, FgDomainStatusBadge } from '@/shared/ui'
 
 import { useSalesOrderHistoriesQuery } from '../api/use-sales-order-histories-query'
@@ -25,17 +24,12 @@ export function SoHistoryTimeline({ code }: SoHistoryTimelineProps) {
             <li key={`${entry.changedAt}-${index}`} className="relative">
               <span className="absolute -left-6 top-1 h-2.5 w-2.5 rounded-pill border-2 border-surface bg-primary" />
               <div className="flex items-center gap-2.5">
-                <FgDomainStatusBadge status={entry.status} />
-                <span className="text-meta font-medium text-faint">
-                  {formatDateTime(entry.changedAt)}
-                </span>
+                <FgDomainStatusBadge label={entry.statusLabel} status={entry.status} />
+                <span className="text-meta font-medium text-faint">{entry.changedAtLabel}</span>
               </div>
               <p className="mt-2 flex items-center gap-1.5 text-label font-semibold text-ink-2">
                 <UserIcon aria-hidden className="h-3.5 w-3.5 text-faint" />
-                {entry.changedBy?.name ?? '시스템'}
-                {entry.changedBy ? (
-                  <span className="font-medium text-faint">· {entry.changedBy.position}</span>
-                ) : null}
+                {entry.changedByLabel}
               </p>
             </li>
           ))}

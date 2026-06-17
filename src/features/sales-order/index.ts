@@ -63,7 +63,7 @@ export type {
   BranchSalesOrderListParams,
 } from './api/use-branch-sales-orders-query'
 export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
-export type { BranchSalesOrderDetail } from './api/use-branch-sales-order-query'
+export type { BranchSalesOrderDetail } from './model/so-detail'
 export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
 export type {
   HqSalesOrderListItem,
@@ -77,7 +77,7 @@ export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-qu
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
-export type { SalesOrderHistoryEntry } from './api/use-sales-order-histories-query'
+export type { SalesOrderHistoryRow } from './model/so-history'
 
 // ----- 화면 모델 / 라벨 / 헬퍼 (model/so-ui-model) -----
 export {

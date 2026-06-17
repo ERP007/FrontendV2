@@ -5,8 +5,8 @@ import type { ReactNode } from 'react'
 
 import {
   CARRIER_TYPE_LABELS,
-  MOCK_BRANCH_SALES_ORDER_DETAIL,
   SoHistoryTimeline,
+  useBranchSalesOrderQuery,
 } from '@/features/sales-order'
 import type { BranchSalesOrderDetail } from '@/features/sales-order'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
@@ -27,12 +27,12 @@ function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; valu
 export function BranchSalesOrderDetailPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false })
-  const so: BranchSalesOrderDetail = {
-    ...MOCK_BRANCH_SALES_ORDER_DETAIL,
-    code: params.soNo ?? MOCK_BRANCH_SALES_ORDER_DETAIL.code,
-  }
+  const code = params.soNo ?? ''
+  const { data: so } = useBranchSalesOrderQuery(code)
 
-  function renderActions() {
+  if (!so) return null
+
+  function renderActions(so: BranchSalesOrderDetail) {
     if (so.status === 'DRAFT') {
       return (
         <>
@@ -85,8 +85,8 @@ export function BranchSalesOrderDetailPage() {
   return (
     <div className="fg-content">
       <FgPageHeader
-        actions={renderActions()}
-        badge={<FgDomainStatusBadge status={so.status} />}
+        actions={renderActions(so)}
+        badge={<FgDomainStatusBadge label={so.statusLabel} status={so.status} />}
         breadcrumbs={[
           { label: '발주' },
           { label: '내 지점 발주 요청' },
@@ -170,7 +170,6 @@ export function BranchSalesOrderDetailPage() {
                       <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
                       <td className="px-4 py-3 text-right font-bold text-ink">
                         {formatNumber(line.requestQuantity)}
-                        <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
                       </td>
                     </tr>
                   ))}

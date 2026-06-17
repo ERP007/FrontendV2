@@ -10,7 +10,7 @@ import {
   MOCK_BRANCH_SALES_ORDER_DETAIL,
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
-import type { BranchSalesOrderDetail } from '@/features/sales-order'
+import type { BranchSalesOrderDetailResponse } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
 import {
@@ -39,7 +39,7 @@ export function BranchSalesOrderArrivalPage() {
   const navigate = useNavigate()
   const router = useRouter()
 
-  const so: BranchSalesOrderDetail = {
+  const so: BranchSalesOrderDetailResponse = {
     ...MOCK_BRANCH_SALES_ORDER_DETAIL,
     code: params.soNo ?? MOCK_BRANCH_SALES_ORDER_DETAIL.code,
   }
