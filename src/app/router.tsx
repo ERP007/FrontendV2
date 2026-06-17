@@ -12,6 +12,7 @@ import { MyPage } from '@/pages/common/MyPage'
 import { DashboardPage } from '@/pages/hq/DashboardPage'
 import { PurchaseOrderCreatePage } from '@/pages/hq/PurchaseOrderCreatePage'
 import { PurchaseOrderDetailPage } from '@/pages/hq/PurchaseOrderDetailPage'
+import { PurchaseOrderEditPage } from '@/pages/hq/PurchaseOrderEditPage'
 import { PurchaseOrdersPage } from '@/pages/hq/PurchaseOrdersPage'
 import { SalesOrderDetailPage } from '@/pages/hq/SalesOrderDetailPage'
 import { SalesOrderShipPage } from '@/pages/hq/SalesOrderShipPage'
@@ -143,6 +144,12 @@ const purchaseOrderDetailRoute = createRoute({
   path: '/purchase-orders/$poNo',
 })
 
+const purchaseOrderEditRoute = createRoute({
+  component: PurchaseOrderEditPage,
+  getParentRoute: () => shellRoute,
+  path: '/purchase-orders/$poNo/edit',
+})
+
 const salesOrdersRoute = createRoute({
   component: SalesOrdersPage,
   getParentRoute: () => shellRoute,
@@ -200,6 +207,7 @@ const routeTree = rootRoute.addChildren([
     purchaseOrdersRoute,
     purchaseOrderCreateRoute,
     purchaseOrderDetailRoute,
+    purchaseOrderEditRoute,
     salesOrdersRoute,
     salesOrderDetailRoute,
     salesOrderShipRoute,

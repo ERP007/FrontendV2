@@ -6,6 +6,7 @@ import type {
   CancelPurchaseOrderRequest,
   CancelPurchaseOrderResponse,
 } from '../model/types'
+import { invalidatePurchaseOrder } from './po-cache'
 
 export interface CancelPurchaseOrderVariables {
   code: string
@@ -23,14 +24,7 @@ export function useCancelPurchaseOrderMutation() {
       return response.data
     },
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: ['purchase-orders', 'detail', variables.code],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['purchase-orders', 'histories', variables.code],
-      })
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'kpi'] })
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'list'] })
+      invalidatePurchaseOrder(queryClient, variables.code)
     },
   })
 }

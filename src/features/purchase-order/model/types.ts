@@ -64,8 +64,9 @@ export interface PurchaseOrderPageResponse {
 export interface PurchaseOrderDetailLine {
   id: number
   sku: string
-  name: string
-  unit: string
+  // DRAFT 상태에서는 백엔드가 name·unit 을 null 로 내려줄 수 있다.
+  name: string | null
+  unit: string | null
   quantity: number
   unitPrice: number
 }
@@ -80,6 +81,7 @@ export interface PurchaseOrderDetailResponse {
   status: PurchaseOrderStatus
   totalAmount: number
   currency: string
+  memo: string | null
   lines: PurchaseOrderDetailLine[]
 }
 

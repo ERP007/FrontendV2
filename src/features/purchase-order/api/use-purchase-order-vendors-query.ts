@@ -2,10 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { purchaseOrderKeys } from '../model/po-query-keys'
 import type { VendorResponse } from '../model/types'
-
-const purchaseOrderVendorsQueryKey = (search: string) =>
-  ['purchase-orders', 'vendors', search] as const
 
 export function usePurchaseOrderVendorsQuery(search = '') {
   return useQuery({
@@ -15,7 +13,7 @@ export function usePurchaseOrderVendorsQuery(search = '') {
       })
       return response.data
     },
-    queryKey: purchaseOrderVendorsQueryKey(search),
+    queryKey: purchaseOrderKeys.vendors(search),
     staleTime: 60_000,
   })
 }

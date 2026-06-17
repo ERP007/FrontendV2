@@ -4,6 +4,7 @@ import { api } from '@/shared/api'
 
 import { mapPurchaseOrderSummary } from '../model/po-list-row'
 import type { PurchaseOrderRow } from '../model/po-list-row'
+import { purchaseOrderKeys } from '../model/po-query-keys'
 import type {
   PurchaseOrderPageResponse,
   SearchPurchaseOrderRequest,
@@ -18,9 +19,6 @@ export interface PurchaseOrderRowPage {
   totalElements: number
   totalPages: number
 }
-
-const purchaseOrdersQueryKey = (params: SearchPurchaseOrderRequest) =>
-  ['purchase-orders', 'list', params] as const
 
 function buildParams(params: SearchPurchaseOrderRequest) {
   const queryParams: Record<string, number | string> = {}
@@ -45,7 +43,7 @@ export function usePurchaseOrdersQuery(params: SearchPurchaseOrderRequest = {}) 
       })
       return response.data
     },
-    queryKey: purchaseOrdersQueryKey(params),
+    queryKey: purchaseOrderKeys.list(params),
     select: (data): PurchaseOrderRowPage => ({
       ...data,
       content: data.content.map(mapPurchaseOrderSummary),
