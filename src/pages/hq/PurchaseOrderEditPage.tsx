@@ -105,10 +105,6 @@ export function PurchaseOrderEditPage() {
 
   const handleSave = handleSubmit(async (values) => {
     const payloadLines = linesToRequest(lines)
-    if (payloadLines.length === 0) {
-      setLineError('주문 품목을 1개 이상 추가하세요.')
-      return
-    }
     const lineErrorMessage = validateLineValues(payloadLines)
     if (lineErrorMessage) {
       setLineError(lineErrorMessage)
@@ -117,7 +113,7 @@ export function PurchaseOrderEditPage() {
     setLineError(null)
     const payload: DraftPurchaseOrderRequest = {
       desiredArrivalDate: values.desiredArrivalDate,
-      lines: payloadLines,
+      lines: payloadLines.length > 0 ? payloadLines : undefined,
       memo: values.memo || undefined,
       vendorCode: values.vendorCode,
       warehouseCode: values.warehouseCode,

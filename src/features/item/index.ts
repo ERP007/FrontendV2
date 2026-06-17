@@ -5,6 +5,7 @@ export {
 export {
   useCreateItemMutation,
 } from './api/use-create-item-mutation'
+export { useItemsBatchMutation } from './api/use-items-batch-mutation'
 export {
   useItemSkuCheckMutation,
 } from './api/use-item-sku-check-mutation'
@@ -46,6 +47,9 @@ export type {
   CreateItemRequest,
   CreateItemResponse,
   Item,
+  ItemBatchItem,
+  ItemBatchRequest,
+  ItemBatchResponse,
   ItemCategory,
   ItemDetail,
   ItemDetailFormValues,

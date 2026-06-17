@@ -152,6 +152,22 @@ export interface ItemListItem {
   updatedAt: string
 }
 
+/** POST /items/batch — sku 목록으로 품목을 일괄 조회 */
+export interface ItemBatchRequest {
+  skus: string[]
+}
+
+/** batch 응답 단건. ItemListItem 의 부분집합을 재사용 */
+export type ItemBatchItem = Pick<
+  ItemListItem,
+  'active' | 'categoryCode' | 'name' | 'safetyStock' | 'sku' | 'unit' | 'unitPrice'
+>
+
+export interface ItemBatchResponse {
+  items: ItemBatchItem[]
+  notFoundSkus: string[]
+}
+
 export interface ItemFormValues {
   categoryCode: string
   majorCategory: string
