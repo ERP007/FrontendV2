@@ -1,11 +1,10 @@
-import { Eye, FileText } from 'lucide-react'
 import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatDate, formatDateTime } from '@/shared/lib/format'
-import { FgButton, FgDataTable, FgDomainStatusBadge, FgDropdownMenu } from '@/shared/ui'
+import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { BranchSalesOrderRow, HqSalesOrderRow } from '../model/so-list-row'
 import type { SalesOrderSortField, SortDirection } from '../model/types'
@@ -35,7 +34,7 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
           <span className="block font-semibold text-ink">{row.original.fromWarehouseCode}</span>
         ),
         header: '지점',
-        size: 150,
+        size: 200,
       },
       {
         accessorKey: 'requesterName',
@@ -96,31 +95,8 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
         header: '상태',
         size: 130,
       },
-      {
-        cell: ({ row }) =>
-          row.original.status === 'REQUESTED' ? (
-            <FgButton size="sm" variant="soft" onClick={() => onOpen(row.original)}>
-              검토
-            </FgButton>
-          ) : (
-            <FgDropdownMenu
-              items={[
-                {
-                  icon: <Eye aria-hidden className="h-4 w-4" />,
-                  label: '상세 보기',
-                  onSelect: () => onOpen(row.original),
-                },
-                { icon: <FileText aria-hidden className="h-4 w-4" />, label: '요청서 인쇄' },
-              ]}
-            />
-          ),
-        header: '액션',
-        id: 'actions',
-        meta: { align: 'center' },
-        size: 85,
-      },
     ],
-    [onOpen],
+    [],
   )
 
   const sorting = useMemo<SortingState>(
