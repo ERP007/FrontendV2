@@ -16,6 +16,18 @@ export function roleLabel(role?: string | null) {
   return ROLE_LABELS[role as UserRole] ?? role
 }
 
+export function canAccessUserManagement(role?: string | null) {
+  return role === 'ADMIN'
+}
+
+export function canAccessHqScope(role?: string | null) {
+  return role === 'ADMIN' || role === 'HQ_MANAGER' || role === 'HQ_STAFF'
+}
+
+export function canAccessBranchScope(role?: string | null) {
+  return role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF'
+}
+
 export interface SessionUser {
   branchName: string
   email: string

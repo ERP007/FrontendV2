@@ -26,16 +26,43 @@ import {
   waitForAuthRedirect,
 } from '@/shared/api'
 import { ensureSession } from '@/shared/auth/session'
+import {
+  canAccessBranchScope,
+  canAccessHqScope,
+  canAccessUserManagement,
+} from '@/shared/config/session'
 
 const rootRoute = createRootRoute()
 
 function getInitialHomePath(userRole?: string | null) {
-  return userRole === 'ADMIN' ? '/users' : '/dashboard'
+  if (canAccessUserManagement(userRole)) {
+    return '/users'
+  }
+
+  if (canAccessHqScope(userRole)) {
+    return '/dashboard'
+  }
+
+  return '/stocks'
 }
 
 function shouldWaitForAuthRedirect(error: unknown) {
   return isAuthRedirectInProgress() || (isErrorResponse(error) && error.status === 401)
 }
+
+function createRoleGuard(canAccess: (role?: string | null) => boolean) {
+  return async () => {
+    const session = await ensureSession()
+
+    if (!canAccess(session.userRole)) {
+      throw redirect({ to: getInitialHomePath(session.userRole) })
+    }
+  }
+}
+
+const requireUserManagementAccess = createRoleGuard(canAccessUserManagement)
+const requireHqScopeAccess = createRoleGuard(canAccessHqScope)
+const requireBranchScopeAccess = createRoleGuard(canAccessBranchScope)
 
 const loginRoute = createRoute({
   component: LoginPage,
@@ -72,6 +99,7 @@ const indexRoute = createRoute({
 })
 
 const dashboardRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: DashboardPage,
   getParentRoute: () => shellRoute,
   path: '/dashboard',
@@ -106,6 +134,7 @@ const warehousesRoute = createRoute({
 })
 
 const usersRoute = createRoute({
+  beforeLoad: requireUserManagementAccess,
   component: UsersPage,
   getParentRoute: () => shellRoute,
   path: '/users',
@@ -126,60 +155,70 @@ const myPageLegacyRoute = createRoute({
 })
 
 const purchaseOrdersRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: PurchaseOrdersPage,
   getParentRoute: () => shellRoute,
   path: '/purchase-orders',
 })
 
 const purchaseOrderCreateRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: PurchaseOrderCreatePage,
   getParentRoute: () => shellRoute,
   path: '/purchase-orders/new',
 })
 
 const purchaseOrderDetailRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: PurchaseOrderDetailPage,
   getParentRoute: () => shellRoute,
   path: '/purchase-orders/$poNo',
 })
 
 const salesOrdersRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: SalesOrdersPage,
   getParentRoute: () => shellRoute,
   path: '/sales-orders',
 })
 
 const salesOrderDetailRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: SalesOrderDetailPage,
   getParentRoute: () => shellRoute,
   path: '/sales-orders/$soNo',
 })
 
 const salesOrderShipRoute = createRoute({
+  beforeLoad: requireHqScopeAccess,
   component: SalesOrderShipPage,
   getParentRoute: () => shellRoute,
   path: '/sales-orders/$soNo/ship',
 })
 
 const branchSalesOrdersRoute = createRoute({
+  beforeLoad: requireBranchScopeAccess,
   component: BranchSalesOrdersPage,
   getParentRoute: () => shellRoute,
   path: '/branch/sales-orders',
 })
 
 const branchSalesOrderCreateRoute = createRoute({
+  beforeLoad: requireBranchScopeAccess,
   component: BranchSalesOrderCreatePage,
   getParentRoute: () => shellRoute,
   path: '/branch/sales-orders/new',
 })
 
 const branchSalesOrderArrivalRoute = createRoute({
+  beforeLoad: requireBranchScopeAccess,
   component: BranchSalesOrderArrivalPage,
   getParentRoute: () => shellRoute,
   path: '/branch/sales-orders/$soNo/arrival',
 })
 
 const branchSalesOrderDetailRoute = createRoute({
+  beforeLoad: requireBranchScopeAccess,
   component: BranchSalesOrderDetailPage,
   getParentRoute: () => shellRoute,
   path: '/branch/sales-orders/$soNo',
