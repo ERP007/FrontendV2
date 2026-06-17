@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/shared/api'
 
 import type { ApprovePurchaseOrderResponse } from '../model/types'
+import { invalidatePurchaseOrder } from './po-cache'
 
 export function useApprovePurchaseOrderMutation() {
   const queryClient = useQueryClient()
@@ -14,10 +15,7 @@ export function useApprovePurchaseOrderMutation() {
       return response.data
     },
     onSuccess: (_data, code) => {
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'detail', code] })
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'histories', code] })
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'kpi'] })
-      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'list'] })
+      invalidatePurchaseOrder(queryClient, code)
     },
   })
 }

@@ -3,10 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/shared/api'
 
 import { mapPurchaseOrderHistory } from '../model/po-history'
+import { purchaseOrderKeys } from '../model/po-query-keys'
 import type { PurchaseOrderHistoryResponse } from '../model/types'
-
-const purchaseOrderHistoriesQueryKey = (code: string) =>
-  ['purchase-orders', 'histories', code] as const
 
 export function usePurchaseOrderHistoriesQuery(code: string) {
   return useQuery({
@@ -17,7 +15,7 @@ export function usePurchaseOrderHistoriesQuery(code: string) {
       )
       return response.data
     },
-    queryKey: purchaseOrderHistoriesQueryKey(code),
+    queryKey: purchaseOrderKeys.histories(code),
     select: (data) => data.map(mapPurchaseOrderHistory),
     staleTime: 60_000,
   })
