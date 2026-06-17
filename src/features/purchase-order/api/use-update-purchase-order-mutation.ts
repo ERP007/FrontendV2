@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
@@ -13,6 +13,8 @@ export interface UpdatePurchaseOrderVariables {
 }
 
 export function useUpdatePurchaseOrderMutation() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async ({ code, payload }: UpdatePurchaseOrderVariables) => {
       const response = await api.put<CreatePurchaseOrderResponse>(
@@ -20,6 +22,16 @@ export function useUpdatePurchaseOrderMutation() {
         payload,
       )
       return response.data
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['purchase-orders', 'detail', variables.code],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['purchase-orders', 'histories', variables.code],
+      })
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'kpi'] })
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', 'list'] })
     },
   })
 }

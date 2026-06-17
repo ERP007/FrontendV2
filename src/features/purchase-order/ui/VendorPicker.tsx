@@ -8,14 +8,16 @@ import { usePurchaseOrderVendorsQuery } from '../api/use-purchase-order-vendors-
 
 export interface VendorPickerProps {
   error?: string
+  /** 수정 prefill: value(코드)에 해당하는 공급사명 초기 표시 */
+  initialName?: string
   onChange: (code: string) => void
   value: string
 }
 
-export function VendorPicker({ error, onChange, value }: VendorPickerProps) {
+export function VendorPicker({ error, initialName, onChange, value }: VendorPickerProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const [selectedName, setSelectedName] = useState<string | null>(null)
+  const [selectedName, setSelectedName] = useState<string | null>(initialName ?? null)
   const debouncedQuery = useDebouncedValue(query, 300)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
