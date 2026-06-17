@@ -19,11 +19,41 @@ import type {
   PoDraftLine,
   PurchaseOrderDraftFormValues,
 } from '@/features/purchase-order'
+import { useItemsBatchMutation } from '@/features/item'
+import type { ItemBatchResponse } from '@/features/item'
 import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
 import { FgButton, FgCard, FgNotice, FgPageHeader } from '@/shared/ui'
 
 import { PoItemSearchPanel } from './PoItemSearchPanel'
+
+interface EnrichResult {
+  lines: PoDraftLine[]
+  removedSkus: string[]
+}
+
+/**
+ * DRAFT 라인의 null 인 name·unit 을 batch 응답으로 채운다.
+ * 비활성(active:false)이거나 조회되지 않은(notFoundSkus) 품목 라인은 제거한다.
+ */
+function enrichDraftLines(lines: PoDraftLine[], batch: ItemBatchResponse): EnrichResult {
+  const activeItems = new Map(
+    batch.items.filter((item) => item.active).map((item) => [item.sku, item]),
+  )
+  const kept: PoDraftLine[] = []
+  const removedSkus: string[] = []
+
+  for (const line of lines) {
+    const item = line.sku ? activeItems.get(line.sku) : undefined
+    if (!item) {
+      removedSkus.push(line.sku ?? '(미지정)')
+      continue
+    }
+    kept.push({ ...line, itemName: item.name, unit: item.unit })
+  }
+
+  return { lines: kept, removedSkus }
+}
 
 export function PurchaseOrderEditPage() {
   const navigate = useNavigate()
@@ -35,6 +65,7 @@ export function PurchaseOrderEditPage() {
   const { data: hqWarehouses } = useHqWarehousesQuery()
   const { data: me } = useMeQuery()
   const updateMutation = useUpdatePurchaseOrderMutation()
+  const itemsBatchMutation = useItemsBatchMutation()
 
   const [lines, setLines] = useState<PoDraftLine[]>([])
   const [lineError, setLineError] = useState<string | null>(null)
@@ -53,13 +84,32 @@ export function PurchaseOrderEditPage() {
   })
 
   // 최초 1회만 서버 값으로 폼/라인을 채운다. (refetch가 사용자 편집을 덮지 않도록)
+  // DRAFT 라인은 name·unit 이 null 이라 batch 로 채우고, 비활성/없는 품목 라인은 제거한다.
   useEffect(() => {
-    if (data && !hydratedRef.current) {
-      reset(data.values)
-      setLines(data.lines)
-      hydratedRef.current = true
-    }
-  }, [data, reset])
+    if (!data || hydratedRef.current) return
+    hydratedRef.current = true
+    reset(data.values)
+
+    const detailLines = data.lines
+    const skus = detailLines
+      .map((line) => line.sku)
+      .filter((sku): sku is string => Boolean(sku))
+
+    const hydrateLines = skus.length
+      ? itemsBatchMutation.mutateAsync(skus).then((batch) => {
+          const { lines: enriched, removedSkus } = enrichDraftLines(detailLines, batch)
+          if (removedSkus.length > 0) {
+            toast.warning(
+              `사용 불가 품목 ${removedSkus.length}건이 주문에서 제거되었습니다. (${removedSkus.join(', ')})`,
+            )
+          }
+          return enriched
+        })
+      : Promise.resolve(detailLines)
+
+    // batch 실패 시 원본 라인 유지 (전역 인터셉터가 toast 처리)
+    void hydrateLines.catch(() => detailLines).then(setLines)
+  }, [data, itemsBatchMutation, reset])
 
   const breadcrumbs = [
     { label: '구매' },
