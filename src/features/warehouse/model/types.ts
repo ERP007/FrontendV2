@@ -57,6 +57,12 @@ export interface WarehouseFormValues {
   type: WarehouseType
 }
 
+/** GET /inventory/warehouses/code-check 응답 (창고 코드 중복 확인). available=false면 이미 사용 중. */
+export interface WarehouseCodeCheckResult {
+  available: boolean
+  code: string
+}
+
 /** 헤더 클릭 정렬 대상. 백엔드 WarehouseSort 지원 컬럼(code/name/type/branch)으로 한정한다. */
 export type WarehouseSortField = 'code' | 'name' | 'type' | 'branch'
 export type WarehouseSortDirection = 'asc' | 'desc'

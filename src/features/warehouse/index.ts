@@ -11,6 +11,7 @@ export type {
 } from './api/use-scoped-warehouse-options'
 export { useWarehouseDetailQuery } from './api/use-warehouse-detail-query'
 export { useWarehouseListQuery, warehouseListQueryKey } from './api/use-warehouse-list-query'
+export { useWarehouseCodeCheckMutation } from './api/use-warehouse-code-check-mutation'
 export {
   useWarehouseActiveMutation,
   useWarehouseCreateMutation,
@@ -23,6 +24,7 @@ export type {
   BranchLocation,
   HqWarehouseSummary,
   Warehouse,
+  WarehouseCodeCheckResult,
   WarehouseFilter,
   WarehouseFormValues,
   WarehouseListItem,
