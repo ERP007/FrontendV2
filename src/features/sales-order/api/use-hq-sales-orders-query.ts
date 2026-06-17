@@ -4,26 +4,24 @@ import { api } from '@/shared/api'
 
 import type { PageResponse } from '@/shared/api'
 
-import type { SalesOrderStatus } from '../model/types'
+import { salesOrderKeys } from '../model/so-query-keys'
+import type {
+  HqSalesOrderSummary,
+  PageSize,
+  SalesOrderSortField,
+  SalesOrderStatus,
+  SortDirection,
+} from '../model/types'
 
-export type HqSalesOrderSortField = 'requestedAt' | 'desiredArrivalDate'
-export type HqSalesOrderSortDirection = 'asc' | 'desc'
-export type HqSalesOrderPageSize = 10 | 20 | 50
+// 화면 호환용 별칭
+export type HqSalesOrderSortField = SalesOrderSortField
+export type HqSalesOrderSortDirection = SortDirection
+export type HqSalesOrderPageSize = PageSize
 
-export interface HqSalesOrderListItem {
-  code: string
-  desiredArrivalDate: string
-  fromWarehouseCode: string
-  itemCount: number
-  requestedAt: string
-  requestedBy: string
-  requesterName: string
-  requesterPosition: string
-  status: SalesOrderStatus
-  totalQuantity: number
-  unitSnapshot: string | null
-}
+// 서버 응답 라인 아이템 (SO #12)
+export type HqSalesOrderListItem = HqSalesOrderSummary
 
+// UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface HqSalesOrderListParams {
   endDate?: string
   page?: number
@@ -35,9 +33,6 @@ export interface HqSalesOrderListParams {
   status?: SalesOrderStatus[]
   warehouseCode?: string
 }
-
-const hqSalesOrdersQueryKey = (params: HqSalesOrderListParams) =>
-  ['sales-orders', 'hq', params] as const
 
 function buildHqSalesOrderQueryParams(params: HqSalesOrderListParams) {
   const queryParams: Record<string, number | string> = {}
@@ -55,6 +50,7 @@ function buildHqSalesOrderQueryParams(params: HqSalesOrderListParams) {
   return queryParams
 }
 
+/** SO #12 본사 발주 목록 — GET /sales-orders/hq */
 export function useHqSalesOrdersQuery(params: HqSalesOrderListParams = {}) {
   return useQuery({
     placeholderData: keepPreviousData,
@@ -64,7 +60,7 @@ export function useHqSalesOrdersQuery(params: HqSalesOrderListParams = {}) {
       })
       return response.data
     },
-    queryKey: hqSalesOrdersQueryKey(params),
+    queryKey: salesOrderKeys.hqList(params),
     staleTime: 60_000,
   })
 }

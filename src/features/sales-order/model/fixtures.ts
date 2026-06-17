@@ -1,4 +1,4 @@
-import type { SalesOrder, SalesOrderLine, SoItemUnit } from './types'
+import type { SalesOrder, SalesOrderLine, SoItemUnit } from './so-ui-model'
 
 /** 본사 출고 창고 옵션 — GET /inventory/warehouses/hq 응답에 해당 */
 export const SO_HQ_WAREHOUSE_OPTIONS = [{ code: 'WH-HQ-001', name: '본사 중앙창고' }] as const
