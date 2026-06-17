@@ -64,15 +64,14 @@ export type UserPosition = 'MANAGER' | 'STAFF'
 
 /** GET /api/users/me 응답 */
 export interface Me {
-  createdAt: string
   email: string
   employeeNo: string
   joinedAt: string
-  lastChangedPassAt: string
-  lastLoginAt: string
+  lastChangedPassAt: string | null
+  lastLoginAt: string | null
   name: string
-  position: UserPosition
-  role: UserRole
+  position: string | null
+  role: UserApiRole
   status: UserStatus
   tenancyCode: string
   tenancyName: string
@@ -157,7 +156,7 @@ export interface UserDetailResponse {
   userId: string
 }
 
-export type MyPageResponse = Omit<UserDetailResponse, 'createdAt'>
+export type MyPageResponse = Me
 
 export interface UserDetailFormValues {
   email: string
@@ -173,6 +172,7 @@ export interface UpdateUserRequest {
   position: string
   role: UserApiRole
   tenancy_code: string
+  tenancy_name: string
 }
 
 export interface SuspendToggleResponse {

@@ -60,7 +60,7 @@ const defaultRoleOptions: UserApiRole[] = [
 function toTenancySelectOption(option: UserTenancyOption) {
   return {
     label: option.label,
-    supportingText: option.code,
+    supportingText: option.label === option.code ? undefined : option.code,
     value: option.code,
   }
 }
@@ -70,6 +70,26 @@ function toRoleOption(role: UserApiRole) {
     label: `${role} · ${roleLabel(role)}`,
     value: role,
   }
+}
+
+function getTenancyDisplayLabel({
+  fallbackLabel,
+  tenancyCode,
+  tenancyName,
+}: {
+  fallbackLabel?: string
+  tenancyCode: string
+  tenancyName?: string
+}) {
+  if (fallbackLabel && fallbackLabel !== tenancyCode) {
+    return fallbackLabel
+  }
+
+  if (tenancyName && tenancyName !== tenancyCode) {
+    return tenancyName
+  }
+
+  return fallbackLabel || tenancyName || tenancyCode
 }
 
 function toDateTime(value: string | null) {
@@ -125,37 +145,41 @@ export function UserDetailModal({
     formState: { errors },
     handleSubmit,
     register,
-    reset,
     setValue,
   } = useForm<UserDetailFormInput, unknown, UserDetailFormValues>({
     defaultValues: DEFAULT_FORM_VALUES,
     resolver: zodResolver(userDetailFormSchema),
+    values: formValues,
   })
-
-  useEffect(() => {
-    reset(formValues)
-  }, [formValues, reset])
 
   const role = useWatch({ control, name: 'role' })
   const tenancyCode = useWatch({ control, name: 'tenancyCode' })
   const normalizedRole = normalizeUserApiRole(role ?? '')
+  const detailRole = detail ? normalizeUserApiRole(detail.role) ?? detail.role : null
 
   const defaultTenancyOptions = useMemo(
     () => userTenancyOptions.map(toTenancySelectOption),
     [userTenancyOptions],
   )
   const tenancyOptions = useMemo(() => {
-    if (!detail?.tenancyCode || defaultTenancyOptions.some((option) => option.value === detail.tenancyCode)) {
+    if (!detail?.tenancyCode) {
       return defaultTenancyOptions
     }
 
+    const defaultOption = defaultTenancyOptions.find((option) => option.value === detail.tenancyCode)
+    const detailLabel = getTenancyDisplayLabel({
+      fallbackLabel: defaultOption?.label,
+      tenancyCode: detail.tenancyCode,
+      tenancyName: detail.tenancyName,
+    })
+
     return [
       {
-        label: detail.tenancyName || detail.tenancyCode,
-        supportingText: detail.tenancyCode,
+        label: detailLabel,
+        supportingText: detailLabel === detail.tenancyCode ? undefined : detail.tenancyCode,
         value: detail.tenancyCode,
       },
-      ...defaultTenancyOptions,
+      ...defaultTenancyOptions.filter((option) => option.value !== detail.tenancyCode),
     ]
   }, [defaultTenancyOptions, detail])
 
@@ -164,16 +188,24 @@ export function UserDetailModal({
       ? new Set<UserApiRole>(getUserTenancyRoles(tenancyCode))
       : new Set<UserApiRole>(defaultRoleOptions)
 
+    if (detailRole && tenancyCode === detail?.tenancyCode) {
+      allowedRoles.add(detailRole)
+    }
+
     return defaultRoleOptions.filter((nextRole) => allowedRoles.has(nextRole)).map(toRoleOption)
-  }, [tenancyCode])
+  }, [detail?.tenancyCode, detailRole, tenancyCode])
 
   useEffect(() => {
+    if (!tenancyCode) {
+      return
+    }
+
     if (normalizedRole && roleOptions.some((option) => option.value === normalizedRole)) {
       return
     }
 
     setValue('role', roleOptions[0]?.value ?? '')
-  }, [normalizedRole, roleOptions, setValue])
+  }, [normalizedRole, roleOptions, setValue, tenancyCode])
 
   const positionOptions = useMemo(() => {
     const options = RANK_OPTIONS.map((position) => ({ label: position, value: position }))

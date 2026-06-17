@@ -2,7 +2,7 @@ export {
   getCreateUserErrorMessage,
   useCreateUserMutation,
 } from './api/use-create-user-mutation'
-export { meQueryKey, useMeQuery } from './api/use-me-query'
+export { getMeErrorMessage, meQueryKey, useMeQuery } from './api/use-me-query'
 export {
   getResetPasswordErrorMessage,
   useResetUserPasswordMutation,

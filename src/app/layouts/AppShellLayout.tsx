@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { LOGOUT_URL, queryClient } from '@/shared/api'
+import { LOGOUT_URL, PASSWORD_CHANGE_URL, queryClient } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgAppShell } from '@/shared/ui'
@@ -96,7 +96,7 @@ export function AppShellLayout() {
     {
       icon: <KeyRound aria-hidden className={iconClassName} />,
       label: '비밀번호 변경',
-      onSelect: () => void navigate({ to: '/password-change' }),
+      onSelect: () => window.location.assign(PASSWORD_CHANGE_URL),
     },
     {
       danger: true,
