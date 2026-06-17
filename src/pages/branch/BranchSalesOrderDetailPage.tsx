@@ -1,12 +1,16 @@
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { Ban, Calendar, Edit3, FileText, PackageCheck, Send, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
   CARRIER_TYPE_LABELS,
+  SoCancelModal,
   SoHistoryTimeline,
   useBranchSalesOrderQuery,
+  useCancelSalesOrderMutation,
+  useRequestSalesOrderMutation,
 } from '@/features/sales-order'
 import type { BranchSalesOrderDetail } from '@/features/sales-order'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
@@ -29,8 +33,30 @@ export function BranchSalesOrderDetailPage() {
   const params = useParams({ strict: false })
   const code = params.soNo ?? ''
   const { data: so } = useBranchSalesOrderQuery(code)
+  const requestMutation = useRequestSalesOrderMutation(code)
+  const cancelMutation = useCancelSalesOrderMutation(code)
+  const [cancelOpen, setCancelOpen] = useState(false)
 
   if (!so) return null
+
+  async function handleSubmitRequest() {
+    try {
+      const result = await requestMutation.mutateAsync()
+      toast.success(`${result.code} 발주 요청이 제출되었습니다.`)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  }
+
+  async function handleCancel(reason: string) {
+    try {
+      const result = await cancelMutation.mutateAsync({ reason })
+      toast.success(`${result.code} 발주 요청이 취소되었습니다.`)
+      setCancelOpen(false)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
+  }
 
   function renderActions(so: BranchSalesOrderDetail) {
     if (so.status === 'DRAFT') {
@@ -43,9 +69,10 @@ export function BranchSalesOrderDetailPage() {
             수정하기
           </FgButton>
           <FgButton
+            disabled={requestMutation.isPending}
             leftIcon={<Send aria-hidden className="h-4 w-4" />}
             variant="primary"
-            onClick={() => toast.info('제출 API 연결 예정입니다.')}
+            onClick={() => void handleSubmitRequest()}
           >
             제출하기
           </FgButton>
@@ -55,9 +82,10 @@ export function BranchSalesOrderDetailPage() {
     if (so.status === 'REQUESTED') {
       return (
         <FgButton
+          disabled={cancelMutation.isPending}
           leftIcon={<Ban aria-hidden className="h-4 w-4" />}
           variant="danger"
-          onClick={() => toast.info('취소 API 연결 예정입니다.')}
+          onClick={() => setCancelOpen(true)}
         >
           취소하기
         </FgButton>
@@ -183,6 +211,16 @@ export function BranchSalesOrderDetailPage() {
           <SoHistoryTimeline code={so.code} />
         </div>
       </div>
+
+      {cancelOpen ? (
+        <SoCancelModal
+          isSubmitting={cancelMutation.isPending}
+          open
+          so={so}
+          onClose={() => setCancelOpen(false)}
+          onConfirm={(reason) => void handleCancel(reason)}
+        />
+      ) : null}
     </div>
   )
 }

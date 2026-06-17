@@ -108,6 +108,7 @@ export type { SoFormValues } from './model/so-draft-schema'
 // ----- UI -----
 export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
 export { SoHistoryTimeline } from './ui/SoHistoryTimeline'
+export { SoCancelModal } from './ui/SoCancelModal'
 export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
 export { SoLineEditor } from './ui/SoLineEditor'
 export type { SoLineSearchPanelProps } from './ui/SoLineEditor'
