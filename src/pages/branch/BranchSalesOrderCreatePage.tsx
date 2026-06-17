@@ -1,156 +1,28 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useRouter } from '@tanstack/react-router'
-import { AlertTriangle, Box, Calendar, Lock, Send } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Box, Send } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { useItemsInfiniteQuery } from '@/features/item'
-import type { ItemListItem } from '@/features/item'
 import {
+  defaultSoFormValues,
   emptySoDraftLine,
-  SoLineEditor,
+  linesToRequest,
   soDraftFormSchema,
+  SoForm,
   useCreateSalesOrderDraftMutation,
   useCreateSalesOrderMutation,
 } from '@/features/sales-order'
-import type {
-  CreateDraftSalesOrderRequest,
-  CreateSalesOrderRequest,
-  SoFormValues,
-  SoDraftLine,
-} from '@/features/sales-order'
-import { stockDetailQueryOptions } from '@/features/stock'
+import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
-import { queryClient } from '@/shared/api'
 import { roleLabel } from '@/shared/config/session'
-import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { formatNumber } from '@/shared/lib/format'
-import {
-  FgButton,
-  FgCard,
-  FgInput,
-  FgNotice,
-  FgPageHeader,
-  FgSelect,
-  FgTextarea,
-} from '@/shared/ui'
+import { FgButton, FgPageHeader } from '@/shared/ui'
+
+import { SoItemSearchPanel } from './SoItemSearchPanel'
 
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
-
-const emptyDraftValues: SoFormValues = {
-  desiredArrivalDate: '',
-  memo: '',
-  warehouseCode: '',
-}
-
-function itemToLinePatch(item: ItemListItem): Partial<SoDraftLine> {
-  return {
-    branchStock: null,
-    itemCode: item.sku,
-    itemName: item.name,
-    safetyStock: null,
-    unit: item.unit,
-  }
-}
-
-interface ItemSearchPanelProps {
-  onSelect: (patch: Partial<SoDraftLine>) => void
-  query: string
-  warehouseCode: string | undefined
-}
-
-async function buildLinePatch(
-  item: ItemListItem,
-  warehouseCode: string | undefined,
-): Promise<Partial<SoDraftLine>> {
-  const base = itemToLinePatch(item)
-  if (!warehouseCode) return base
-  try {
-    const stock = await queryClient.fetchQuery(
-      stockDetailQueryOptions({ sku: item.sku, warehouseCode }),
-    )
-    return {
-      ...base,
-      branchStock: stock.quantity,
-      safetyStock: stock.safetyStock,
-    }
-  } catch {
-    return base
-  }
-}
-
-function ItemSearchPanel({ onSelect, query, warehouseCode }: ItemSearchPanelProps) {
-  const debouncedQuery = useDebouncedValue(query, 300)
-  const search = debouncedQuery.trim()
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetching,
-    isFetchingNextPage,
-  } = useItemsInfiniteQuery({ search: search || undefined })
-
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const node = sentinelRef.current
-    if (!node) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          void fetchNextPage()
-        }
-      },
-      { rootMargin: '40px' },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
-
-  const items = data?.pages.flatMap((page) => page.content) ?? []
-  const totalElements = data?.pages[0]?.totalElements ?? 0
-  const isInitialLoading = isFetching && !data
-
-  return (
-    <div className="max-h-72 overflow-y-auto">
-      <p className="border-b border-line-soft px-3.5 py-2 text-meta font-semibold text-faint">
-        검색 결과 {formatNumber(totalElements)}건
-      </p>
-      {items.map((item) => (
-        <button
-          key={item.sku}
-          className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
-          type="button"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            void buildLinePatch(item, warehouseCode).then(onSelect)
-          }}
-        >
-          <span className="min-w-0">
-            <span className="block truncate text-label font-semibold text-ink">{item.name}</span>
-            <span className="block text-meta font-medium text-faint">{item.sku}</span>
-          </span>
-          <span className="shrink-0 text-meta font-semibold text-muted">
-            안전재고 {formatNumber(item.safetyStock)} {item.unit}
-          </span>
-        </button>
-      ))}
-      {isInitialLoading ? (
-        <p className="px-3.5 py-3 text-meta text-faint">불러오는 중…</p>
-      ) : items.length === 0 ? (
-        <p className="px-3.5 py-3 text-meta text-faint">일치하는 부품이 없습니다</p>
-      ) : null}
-      <div ref={sentinelRef} className="h-px" />
-      {isFetchingNextPage ? (
-        <p className="px-3.5 py-2 text-meta text-faint">더 불러오는 중…</p>
-      ) : null}
-    </div>
-  )
-}
 
 export function BranchSalesOrderCreatePage() {
   const navigate = useNavigate()
@@ -166,7 +38,7 @@ export function BranchSalesOrderCreatePage() {
     register,
     watch,
   } = useForm<SoFormValues>({
-    defaultValues: emptyDraftValues,
+    defaultValues: defaultSoFormValues,
     resolver: zodResolver(soDraftFormSchema),
   })
 
@@ -177,46 +49,31 @@ export function BranchSalesOrderCreatePage() {
   const createSalesOrderMutation = useCreateSalesOrderMutation()
   const isSubmitting = createDraftMutation.isPending || createSalesOrderMutation.isPending
 
-  const urgentCount = lines.filter((line) => line.itemCode !== null && line.priority === 'URGENT').length
-  const totalQuantity = lines.reduce((sum, line) => sum + (line.itemCode ? line.quantity : 0), 0)
-  const filledUnits = Array.from(
-    new Set(lines.filter((line) => line.itemCode !== null && line.unit).map((line) => line.unit as string)),
-  )
-  const totalUnitLabel = filledUnits.length === 1 ? filledUnits[0] : '(복합)'
-
   const notifyInvalid = () => {
     toast.error('필수 입력값을 확인해주세요.')
   }
 
   const submit = handleSubmit(async (values) => {
-    const completed = lines.filter(
-      (line): line is SoDraftLine & { itemCode: string } => line.itemCode !== null,
-    )
+    const payloadLines = linesToRequest(lines)
 
-    if (completed.length === 0) {
+    if (payloadLines.length === 0) {
       setLinesError('요청 품목을 1개 이상 추가하세요.')
       return
     }
-    if (completed.some((line) => line.quantity <= 0)) {
+    if (payloadLines.some((line) => line.quantity <= 0)) {
       setLinesError('모든 품목의 요청 수량을 1 이상으로 입력하세요.')
       return
     }
 
     setLinesError(null)
 
-    const payload: CreateSalesOrderRequest = {
-      desiredArrivalDate: values.desiredArrivalDate,
-      lines: completed.map((line) => ({
-        itemCode: line.itemCode,
-        priority: line.priority,
-        quantity: line.quantity,
-      })),
-      memo: values.memo ?? null,
-      warehouseCode: values.warehouseCode,
-    }
-
     try {
-      const order = await createSalesOrderMutation.mutateAsync(payload)
+      const order = await createSalesOrderMutation.mutateAsync({
+        desiredArrivalDate: values.desiredArrivalDate,
+        lines: payloadLines,
+        memo: values.memo ?? null,
+        warehouseCode: values.warehouseCode,
+      })
       toast.success(`${order.code} 발주 요청이 제출되었습니다.`)
       void navigate({ to: '/branch/sales-orders' })
     } catch {
@@ -225,13 +82,7 @@ export function BranchSalesOrderCreatePage() {
   }, notifyInvalid)
 
   const handleDraftSave = handleSubmit(async (values) => {
-    const payloadLines = lines
-      .filter((line): line is SoDraftLine & { itemCode: string } => line.itemCode !== null)
-      .map((line) => ({
-        itemCode: line.itemCode,
-        priority: line.priority,
-        quantity: line.quantity,
-      }))
+    const payloadLines = linesToRequest(lines)
 
     if (payloadLines.some((line) => line.quantity <= 0)) {
       setLinesError('모든 품목의 요청 수량을 1 이상으로 입력하세요.')
@@ -239,15 +90,14 @@ export function BranchSalesOrderCreatePage() {
     }
 
     setLinesError(null)
-    const payload: CreateDraftSalesOrderRequest = {
-      desiredArrivalDate: values.desiredArrivalDate,
-      lines: payloadLines,
-      memo: values.memo ?? null,
-      warehouseCode: values.warehouseCode,
-    }
 
     try {
-      const draft = await createDraftMutation.mutateAsync(payload)
+      const draft = await createDraftMutation.mutateAsync({
+        desiredArrivalDate: values.desiredArrivalDate,
+        lines: payloadLines,
+        memo: values.memo ?? null,
+        warehouseCode: values.warehouseCode,
+      })
       toast.success(`${draft.code} 임시저장되었습니다.`)
       void navigate({ to: '/branch/sales-orders' })
     } catch {
@@ -282,101 +132,22 @@ export function BranchSalesOrderCreatePage() {
       />
 
       <form className="fg-content" onSubmit={submit}>
-        <FgCard>
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-section text-ink">요청 정보</h2>
-            </div>
-            <span className="text-meta font-medium text-faint">
-              요청자 · {me?.name ?? '—'} / {me?.tenancyName ?? '—'} · {roleLabel(me?.role)}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <div className="space-y-2">
-              <span className="block text-label text-ink-2">요청 지점</span>
-              <div className="flex h-11 items-center justify-between gap-3 rounded-control border border-line bg-background px-3.5 text-body">
-                <span className="font-semibold text-ink">
-                  {me?.tenancyName ?? '—'}
-                  <span className="ml-1.5 text-meta font-medium text-faint">
-                    {me?.tenancyCode ?? '—'}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1 text-meta font-semibold text-faint">
-                  <Lock aria-hidden className="h-3 w-3" />
-                  자동
-                </span>
-              </div>
-            </div>
-            <FgInput
-              error={errors.desiredArrivalDate?.message}
-              inputClassName="appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0"
-              label="도착 희망일"
-              leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
-              required
-              type="date"
-              {...register('desiredArrivalDate')}
-              onClick={(event) => {
-                const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void }
-                input.showPicker?.()
-              }}
-            />
-            <Controller
-              control={control}
-              name="warehouseCode"
-              render={({ field }) => (
-                <FgSelect
-                  error={errors.warehouseCode?.message}
-                  label="수신 창고"
-                  options={
-                    hqWarehouses?.map((warehouse) => ({
-                      label: warehouse.name,
-                      supportingText: warehouse.code,
-                      value: warehouse.code,
-                    })) ?? []
-                  }
-                  placeholder="수신 창고를 선택하세요"
-                  required
-                  value={field.value}
-                  onValueChange={field.onChange}
-                />
-              )}
-            />
-            <FgTextarea
-              error={errors.memo?.message}
-              label="메모"
-              labelTrailing={`${(watch('memo') ?? '').length} / 500`}
-              maxLength={500}
-              placeholder="요청 사유, 우선 출고 사항 등을 본사에 전달"
-              rows={3}
-              {...register('memo')}
-            />
-          </div>
-        </FgCard>
-
-        <SoLineEditor
+        <SoForm
+          assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
+          branchCode={me?.tenancyCode ?? '—'}
+          branchName={me?.tenancyName ?? '—'}
+          control={control}
+          errors={errors}
+          lineError={linesError}
           lines={lines}
+          register={register}
           renderSearchPanel={(props) => (
-            <ItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+            <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
           )}
-          onChange={setLines}
+          warehouses={hqWarehouses}
+          watch={watch}
+          onLinesChange={setLines}
         />
-        {linesError ? <FgNotice tone="danger">{linesError}</FgNotice> : null}
-
-        <FgCard className="flex items-center justify-between gap-4" compact>
-          <span className="text-label font-medium text-muted">
-            총 {formatNumber(totalQuantity)} {totalUnitLabel}
-          </span>
-          <span
-            className={
-              urgentCount > 0
-                ? 'flex items-center gap-2 rounded-control border border-danger-bg bg-danger-bg px-3.5 py-2 text-label font-bold text-danger'
-                : 'text-label font-medium text-faint'
-            }
-          >
-            {urgentCount > 0 ? <AlertTriangle aria-hidden className="h-4 w-4" /> : null}
-            긴급 품목 수 {urgentCount}건
-          </span>
-        </FgCard>
 
         <div className="flex items-center justify-end gap-2.5">
           <FgButton type="button" variant="ghost" onClick={() => router.history.back()}>

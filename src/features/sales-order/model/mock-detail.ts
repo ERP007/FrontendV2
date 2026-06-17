@@ -4,8 +4,10 @@ export const MOCK_BRANCH_SALES_ORDER_DETAIL: BranchSalesOrderDetailResponse = {
   approvedAt: '2026-06-12T09:25:00.000Z',
   carrierType: 'VEHICLE',
   code: 'SO-2026-0001',
+  desiredArrivalDate: '2026-06-14',
   fromWarehouse: { code: 'WH-HQ-001', name: '본사 중앙창고' },
   invoiceNumber: 'HMC-44219-026',
+  memo: '정기 점검 시즌 대비 보충 요청.',
   lines: [
     { id: 1, itemCode: 'HMC-EN-00214', itemName: '엔진오일 필터 (2.0L gasoline)', requestQuantity: 80, unit: 'EA' },
     { id: 2, itemCode: 'HMC-BR-01102', itemName: '브레이크 패드 세트 (전륜)', requestQuantity: 40, unit: 'SET' },

@@ -64,7 +64,9 @@ export function BranchSalesOrderDetailPage() {
         <>
           <FgButton
             leftIcon={<Edit3 aria-hidden className="h-4 w-4" />}
-            onClick={() => toast.info('수정 화면은 준비 중입니다.')}
+            onClick={() =>
+              void navigate({ params: { soNo: so.code }, to: '/branch/sales-orders/$soNo/edit' })
+            }
           >
             수정하기
           </FgButton>

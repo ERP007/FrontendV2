@@ -73,6 +73,8 @@ export type {
   HqSalesOrderSortField,
 } from './api/use-hq-sales-orders-query'
 export { useHqSalesOrderQuery } from './api/use-hq-sales-order-query'
+export { useSalesOrderFormQuery } from './api/use-sales-order-form-query'
+export type { SalesOrderFormData } from './api/use-sales-order-form-query'
 export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
@@ -104,6 +106,12 @@ export { SALES_ORDER_FIXTURES } from './model/fixtures'
 export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
 export { soDraftFormSchema } from './model/so-draft-schema'
 export type { SoFormValues } from './model/so-draft-schema'
+export {
+  defaultSoFormValues,
+  detailToDraftLines,
+  detailToFormValues,
+  linesToRequest,
+} from './model/so-form'
 
 // ----- UI -----
 export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
@@ -114,6 +122,8 @@ export { SoLineEditor } from './ui/SoLineEditor'
 export type { SoLineSearchPanelProps } from './ui/SoLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
 export type { SoFilterBarValues } from './ui/SoFilterBar'
+export { SoForm } from './ui/SoForm'
+export type { SoFormProps, SoFormWarehouseOption } from './ui/SoForm'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'
 export { SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
 export { SoBranchTable, SoTable } from './ui/SoTable'

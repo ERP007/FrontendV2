@@ -189,6 +189,8 @@ export interface BranchSalesOrderDetailResponse {
   status: SalesOrderStatus
   fromWarehouse: WarehouseInfo
   toWarehouse: WarehouseInfo
+  desiredArrivalDate: string // ISODate
+  memo: string | null // <= 500
   approvedAt: string | null // 승인 전 null
   invoiceNumber: string | null
   carrierType: CarrierType | null
