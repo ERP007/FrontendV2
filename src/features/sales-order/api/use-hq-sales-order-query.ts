@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { mapHqSalesOrderDetail } from '../model/so-detail'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type { HqSalesOrderDetailResponse } from '../model/types'
 
@@ -14,5 +15,6 @@ export function useHqSalesOrderQuery(code: string | undefined) {
       return response.data
     },
     queryKey: salesOrderKeys.hqDetail(code ?? ''),
+    select: mapHqSalesOrderDetail,
   })
 }

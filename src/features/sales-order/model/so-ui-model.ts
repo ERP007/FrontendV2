@@ -5,9 +5,16 @@
 // DTO 정합은 ./types 에 있다. enum 은 ./types 에서 재노출한다.
 // =============================================================================
 
-import type { CarrierType, SalesOrderStatus } from './types'
+import type { CarrierType, RejectReasonCategory, SalesOrderStatus } from './types'
 
 export type { CarrierType, SalesOrderStatus } from './types'
+
+export const REJECT_REASON_CATEGORY_LABELS: Record<RejectReasonCategory, string> = {
+  OUT_OF_STOCK: '재고 부족',
+  DUPLICATE: '중복 요청',
+  POLICY: '정책 위반',
+  OTHER: '기타',
+}
 
 export type SoEventType = SalesOrderStatus | 'EDITED' | 'DRAFT'
 export type SoItemUnit = string
