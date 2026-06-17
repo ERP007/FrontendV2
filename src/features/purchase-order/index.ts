@@ -14,8 +14,6 @@ export {
   linesToRequest,
   validateLineValues,
 } from './model/po-form'
-export { poTotalAmount, poTotalQuantity } from './model/ui-mock-types'
-export type { PurchaseOrder } from './model/ui-mock-types'
 export { draftLineAmount, emptyDraftLine } from './model/ui-types'
 export type { PoDraftLine } from './model/ui-types'
 export { PoFilterBar } from './ui/PoFilterBar'
