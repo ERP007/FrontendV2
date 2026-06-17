@@ -1,5 +1,5 @@
 import { Building2, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -9,6 +9,7 @@ import {
   useBranchLocationCreateMutation,
   useUnassignedBranchLocationsQuery,
   useWarehouseActiveMutation,
+  useWarehouseCodeCheckMutation,
   useWarehouseCreateMutation,
   useWarehouseDetailQuery,
   useWarehouseListQuery,
@@ -62,6 +63,7 @@ export function WarehousesPage() {
   const updateMutation = useWarehouseUpdateMutation()
   const activeMutation = useWarehouseActiveMutation()
   const branchCreateMutation = useBranchLocationCreateMutation()
+  const codeCheckMutation = useWarehouseCodeCheckMutation()
 
   const warehouses = listQuery.data?.content ?? []
   const totalElements = listQuery.data?.totalElements ?? warehouses.length
@@ -78,6 +80,12 @@ export function WarehousesPage() {
       ? unassignedBranches
       : [current, ...unassignedBranches]
   }, [editInitial, unassignedBranches])
+
+  // 등록 모달의 "중복 확인" 버튼 콜백. 등록 시에만 사용한다(수정은 code 불변).
+  const handleCodeCheck = useCallback(
+    (value: string) => codeCheckMutation.mutateAsync(value),
+    [codeCheckMutation],
+  )
 
   function handleCreate(values: WarehouseFormValues) {
     createMutation.mutate(values, {
@@ -178,9 +186,11 @@ export function WarehousesPage() {
       )}
       <WarehouseFormModal
         branches={unassignedBranches}
+        isCodeChecking={codeCheckMutation.isPending}
         open={createOpen}
         submitting={createMutation.isPending}
         onClose={() => setCreateOpen(false)}
+        onCodeCheck={handleCodeCheck}
         onSubmit={handleCreate}
       />
       <WarehouseFormModal

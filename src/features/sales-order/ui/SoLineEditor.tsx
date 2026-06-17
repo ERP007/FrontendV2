@@ -1,18 +1,20 @@
 import { Plus, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgCard, FgSelect } from '@/shared/ui'
 
-import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/types'
+import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/ui-types'
 
-import type { SoLine, SoPriority } from '../model/types'
+import type { Priority } from '../model/types'
+import type { SoLine } from '../model/ui-types'
 
 const MAX_LINES = 50
 
-export interface SoDraftLineSearchPanelProps {
+export interface SoLineSearchPanelProps {
   onSelect: (patch: Partial<SoLine>) => void
   query: string
 }
@@ -23,18 +25,18 @@ function stockTone(stock: number, safety: number): { className: string; label: s
   return { className: 'text-danger', label: '부족' }
 }
 
-const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as SoPriority[]).map((priority) => ({
+const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as Priority[]).map((priority) => ({
   label: SO_PRIORITY_LABELS[priority],
   value: priority,
 }))
 
-export interface SoDraftLineEditorProps {
+export interface SoLineEditorProps {
   lines: SoLine[]
   onChange: (lines: SoLine[]) => void
-  renderSearchPanel: (props: SoDraftLineSearchPanelProps) => ReactNode
+  renderSearchPanel: (props: SoLineSearchPanelProps) => ReactNode
 }
 
-export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraftLineEditorProps) {
+export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEditorProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
   function updateLine(index: number, patch: Partial<SoLine>) {
@@ -51,6 +53,13 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
   }
 
   function handleSelect(index: number, patch: Partial<SoLine>) {
+    const duplicate =
+      patch.itemCode != null &&
+      lines.some((line, lineIndex) => lineIndex !== index && line.itemCode === patch.itemCode)
+    if (duplicate) {
+      toast.error('이미 추가된 부품입니다.')
+      return
+    }
     updateLine(index, patch)
     setActiveIndex(null)
   }
@@ -177,7 +186,7 @@ export function SoDraftLineEditor({ lines, onChange, renderSearchPanel }: SoDraf
                   className={cn(line.priority === 'URGENT' && '[&_button]:border-danger-bg [&_button]:bg-danger-bg [&_button]:text-danger')}
                   options={priorityOptions}
                   value={line.priority}
-                  onValueChange={(value) => updateLine(index, { priority: value as SoPriority })}
+                  onValueChange={(value) => updateLine(index, { priority: value as Priority })}
                 />
               </span>
               <button

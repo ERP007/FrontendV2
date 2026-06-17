@@ -54,10 +54,10 @@ function mapLine(line: PurchaseOrderDetailLine, currency: string): PurchaseOrder
   return {
     amount: formatAmount(line.quantity * line.unitPrice, currency),
     id: line.id,
-    name: line.name,
+    name: line.name ?? '—',
     quantity: line.quantity.toLocaleString('ko-KR'),
     sku: line.sku,
-    unit: line.unit,
+    unit: line.unit ?? '—',
     unitPrice: line.unitPrice.toLocaleString('ko-KR'),
   }
 }

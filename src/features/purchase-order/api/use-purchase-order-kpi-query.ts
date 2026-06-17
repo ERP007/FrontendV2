@@ -2,9 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { purchaseOrderKeys } from '../model/po-query-keys'
 import type { PurchaseOrderKpiResponse } from '../model/types'
-
-const purchaseOrderKpiQueryKey = ['purchase-orders', 'kpi'] as const
 
 export function usePurchaseOrderKpiQuery() {
   return useQuery({
@@ -12,7 +11,7 @@ export function usePurchaseOrderKpiQuery() {
       const response = await api.get<PurchaseOrderKpiResponse>('/procurement-orders/kpi')
       return response.data
     },
-    queryKey: purchaseOrderKpiQueryKey,
+    queryKey: purchaseOrderKeys.kpi(),
     staleTime: 60_000,
   })
 }

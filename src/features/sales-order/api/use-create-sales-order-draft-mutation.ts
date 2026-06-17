@@ -1,37 +1,20 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
-import type { SalesOrderStatus, SoPriority } from '../model/types'
+import type { CreateDraftSalesOrderRequest, CreateSalesOrderResponse } from '../model/types'
+import { invalidateSalesOrderCollections } from './so-cache'
 
-export interface SalesOrderDraftLinePayload {
-  itemCode: string
-  priority: SoPriority
-  quantity: number
-}
-
-export interface CreateSalesOrderDraftRequest {
-  desiredArrivalDate: string
-  lines: SalesOrderDraftLinePayload[]
-  memo?: string
-  warehouseCode: string
-}
-
-export interface SalesOrderDraftResponse {
-  code: string
-  createdAt: string
-  desiredArrivalDate: string
-  fromWarehouseCode: string
-  status: SalesOrderStatus
-  toWarehouseCode: string
-  totalQuantity: number
-}
-
+/** SO #2 임시저장 — POST /sales-orders/drafts */
 export function useCreateSalesOrderDraftMutation() {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: CreateSalesOrderDraftRequest) => {
-      const response = await api.post<SalesOrderDraftResponse>('/sales-orders/drafts', payload)
+    mutationFn: async (payload: CreateDraftSalesOrderRequest) => {
+      const response = await api.post<CreateSalesOrderResponse>('/sales-orders/drafts', payload)
       return response.data
+    },
+    onSuccess: () => {
+      invalidateSalesOrderCollections(queryClient)
     },
   })
 }

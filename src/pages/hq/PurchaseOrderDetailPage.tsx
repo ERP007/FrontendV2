@@ -1,4 +1,4 @@
-import { useParams } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   Ban,
   Building2,
@@ -6,6 +6,7 @@ import {
   Check,
   CircleDollarSign,
   Package,
+  Pencil,
   User as UserIcon,
   Warehouse as WarehouseIcon,
 } from 'lucide-react'
@@ -41,6 +42,7 @@ function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; valu
 }
 
 export function PurchaseOrderDetailPage() {
+  const navigate = useNavigate()
   const params = useParams({ strict: false })
   const code = params.poNo ?? ''
   const { data: po } = usePurchaseOrderQuery(code)
@@ -55,6 +57,7 @@ export function PurchaseOrderDetailPage() {
 
   const canCancel = po.status === 'DRAFT' || po.status === 'APPROVED'
   const canApprove = po.status === 'DRAFT'
+  const canEdit = po.status === 'DRAFT'
   const canReceive = po.status === 'APPROVED'
   const isSubmitting =
     approveMutation.isPending || receiveMutation.isPending || cancelMutation.isPending
@@ -104,6 +107,17 @@ export function PurchaseOrderDetailPage() {
                 onClick={() => setCancelOpen(true)}
               >
                 취소
+              </FgButton>
+            ) : null}
+            {canEdit ? (
+              <FgButton
+                disabled={isSubmitting}
+                leftIcon={<Pencil aria-hidden className="h-4 w-4" />}
+                onClick={() =>
+                  void navigate({ params: { poNo: code }, to: '/purchase-orders/$poNo/edit' })
+                }
+              >
+                수정
               </FgButton>
             ) : null}
             {canApprove ? (

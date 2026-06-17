@@ -6,12 +6,14 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArrivalPage'
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
 import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
+import { BranchSalesOrderEditPage } from '@/pages/branch/BranchSalesOrderEditPage'
 import { BranchSalesOrdersPage } from '@/pages/branch/BranchSalesOrdersPage'
 import { ItemsRoutePage } from '@/pages/common/ItemsRoutePage'
 import { MyPage } from '@/pages/common/MyPage'
 import { DashboardPage } from '@/pages/hq/DashboardPage'
 import { PurchaseOrderCreatePage } from '@/pages/hq/PurchaseOrderCreatePage'
 import { PurchaseOrderDetailPage } from '@/pages/hq/PurchaseOrderDetailPage'
+import { PurchaseOrderEditPage } from '@/pages/hq/PurchaseOrderEditPage'
 import { PurchaseOrdersPage } from '@/pages/hq/PurchaseOrdersPage'
 import { SalesOrderDetailPage } from '@/pages/hq/SalesOrderDetailPage'
 import { SalesOrderShipPage } from '@/pages/hq/SalesOrderShipPage'
@@ -175,6 +177,12 @@ const purchaseOrderDetailRoute = createRoute({
   path: '/purchase-orders/$poNo',
 })
 
+const purchaseOrderEditRoute = createRoute({
+  component: PurchaseOrderEditPage,
+  getParentRoute: () => shellRoute,
+  path: '/purchase-orders/$poNo/edit',
+})
+
 const salesOrdersRoute = createRoute({
   beforeLoad: requireHqScopeAccess,
   component: SalesOrdersPage,
@@ -224,6 +232,12 @@ const branchSalesOrderDetailRoute = createRoute({
   path: '/branch/sales-orders/$soNo',
 })
 
+const branchSalesOrderEditRoute = createRoute({
+  component: BranchSalesOrderEditPage,
+  getParentRoute: () => shellRoute,
+  path: '/branch/sales-orders/$soNo/edit',
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   shellRoute.addChildren([
@@ -239,6 +253,7 @@ const routeTree = rootRoute.addChildren([
     purchaseOrdersRoute,
     purchaseOrderCreateRoute,
     purchaseOrderDetailRoute,
+    purchaseOrderEditRoute,
     salesOrdersRoute,
     salesOrderDetailRoute,
     salesOrderShipRoute,
@@ -246,6 +261,7 @@ const routeTree = rootRoute.addChildren([
     branchSalesOrderCreateRoute,
     branchSalesOrderArrivalRoute,
     branchSalesOrderDetailRoute,
+    branchSalesOrderEditRoute,
   ]),
 ])
 
