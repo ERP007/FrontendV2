@@ -1,6 +1,6 @@
 import { formatDateTime } from '@/shared/lib/format'
 
-import { SO_STATUS_LABELS } from './so-ui-model'
+import { SO_STATUS_LABELS } from './ui-types'
 import type { PersonInfo, SalesOrderHistoryResponse, SalesOrderStatus } from './types'
 
 // 변경 이력 화면 행 (SO #15). 라벨을 미리 계산해 둔다.

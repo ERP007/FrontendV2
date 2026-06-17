@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 import { formatNumber } from '@/shared/lib/format'
 import { FgCard, FgInput, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
-import type { SoLine } from '../model/so-ui-model'
+import type { SoLine } from '../model/ui-types'
 import type { SoFormValues } from '../model/so-draft-schema'
 import { SoLineEditor } from './SoLineEditor'
 import type { SoLineSearchPanelProps } from './SoLineEditor'

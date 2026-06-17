@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 
 import { formatDday, formatNumber } from '@/shared/lib/format'
 
-import { IN_PROGRESS_STATUSES, isSoDelayed, SO_STATUS_LABELS } from './so-ui-model'
+import { IN_PROGRESS_STATUSES, isSoDelayed, SO_STATUS_LABELS } from './ui-types'
 import type { BranchSalesOrderSummary, HqSalesOrderSummary, SalesOrderStatus } from './types'
 
 // 단위 미확정(DRAFT 등)이면 '—', 아니면 "1,234 EA" 형태로 합쳐 표시한다.

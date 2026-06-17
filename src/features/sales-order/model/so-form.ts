@@ -4,7 +4,7 @@
 // 생성 페이지와 수정 페이지가 동일한 폼 본문(SoForm)·변환 로직을 공유한다.
 // =============================================================================
 
-import type { SoLine } from './so-ui-model'
+import type { SoLine } from './ui-types'
 import type { SoFormValues } from './so-draft-schema'
 import type { BranchSalesOrderDetailResponse, SalesOrderLineRequest } from './types'
 

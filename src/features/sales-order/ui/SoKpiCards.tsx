@@ -5,7 +5,7 @@ import { FgBadge, FgKpiCard } from '@/shared/ui'
 
 import { cn } from '@/shared/lib/cn'
 
-import type { SalesOrderStatus } from '../model/so-ui-model'
+import type { SalesOrderStatus } from '../model/ui-types'
 
 import type { BranchSalesOrderKpiResponse, HqSalesOrderKpiResponse } from '../model/types'
 

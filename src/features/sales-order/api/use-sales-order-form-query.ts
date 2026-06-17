@@ -4,7 +4,7 @@ import { api } from '@/shared/api'
 
 import { detailToDraftLines, detailToFormValues } from '../model/so-form'
 import { salesOrderKeys } from '../model/so-query-keys'
-import type { SoLine } from '../model/so-ui-model'
+import type { SoLine } from '../model/ui-types'
 import type { SoFormValues } from '../model/so-draft-schema'
 import type { BranchSalesOrderDetailResponse, SalesOrderStatus } from '../model/types'
 

@@ -7,9 +7,10 @@ import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgCard, FgSelect } from '@/shared/ui'
 
-import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/so-ui-model'
+import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/ui-types'
 
-import type { SoLine, SoPriority } from '../model/so-ui-model'
+import type { Priority } from '../model/types'
+import type { SoLine } from '../model/ui-types'
 
 const MAX_LINES = 50
 
@@ -24,7 +25,7 @@ function stockTone(stock: number, safety: number): { className: string; label: s
   return { className: 'text-danger', label: '부족' }
 }
 
-const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as SoPriority[]).map((priority) => ({
+const priorityOptions = (Object.keys(SO_PRIORITY_LABELS) as Priority[]).map((priority) => ({
   label: SO_PRIORITY_LABELS[priority],
   value: priority,
 }))
@@ -185,7 +186,7 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
                   className={cn(line.priority === 'URGENT' && '[&_button]:border-danger-bg [&_button]:bg-danger-bg [&_button]:text-danger')}
                   options={priorityOptions}
                   value={line.priority}
-                  onValueChange={(value) => updateLine(index, { priority: value as SoPriority })}
+                  onValueChange={(value) => updateLine(index, { priority: value as Priority })}
                 />
               </span>
               <button

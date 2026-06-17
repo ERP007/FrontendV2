@@ -1,6 +1,6 @@
 import { formatDate, formatDateTime, formatDday } from '@/shared/lib/format'
 
-import { SO_STATUS_LABELS } from './so-ui-model'
+import { SO_STATUS_LABELS } from './ui-types'
 import type {
   BranchSalesOrderDetailResponse,
   HqSalesOrderDetailResponse,

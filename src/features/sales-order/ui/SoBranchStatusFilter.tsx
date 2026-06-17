@@ -7,9 +7,9 @@ import { FgButton } from '@/shared/ui'
 import {
   SO_STATUS_LABELS,
   SO_BRANCH_STATUS_ORDER,
-} from '../model/so-ui-model'
+} from '../model/ui-types'
 
-import type { SalesOrderStatus } from '../model/so-ui-model'
+import type { SalesOrderStatus } from '../model/ui-types'
 
 export interface SoBranchStatusFilterProps {
   onChange: (next: SalesOrderStatus[] | undefined) => void

@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { FgBadge, FgButton, FgModal, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
-import { REJECT_REASON_CATEGORY_LABELS } from '../model/so-ui-model'
+import { REJECT_REASON_CATEGORY_LABELS } from '../model/ui-types'
 import type { HqSalesOrderDetail } from '../model/so-detail'
 import type { RejectReasonCategory } from '../model/types'
 
