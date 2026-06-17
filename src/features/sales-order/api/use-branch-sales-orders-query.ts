@@ -4,6 +4,8 @@ import { api } from '@/shared/api'
 
 import type { PageResponse } from '@/shared/api'
 
+import { mapBranchSalesOrderRow } from '../model/so-list-row'
+import type { BranchSalesOrderRow } from '../model/so-list-row'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type {
   BranchSalesOrderSummary,
@@ -15,6 +17,17 @@ import type {
 
 // 서버 응답 라인 아이템 (SO #9)
 export type BranchSalesOrderListItem = BranchSalesOrderSummary
+
+// 화면 소비용 행으로 변환된 페이지
+export interface BranchSalesOrderRowPage {
+  content: BranchSalesOrderRow[]
+  hasNext: boolean
+  hasPrevious: boolean
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
 
 // UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface BranchSalesOrderListParams {
@@ -55,6 +68,10 @@ export function useBranchSalesOrdersQuery(params: BranchSalesOrderListParams = {
       return response.data
     },
     queryKey: salesOrderKeys.branchList(params),
+    select: (data): BranchSalesOrderRowPage => ({
+      ...data,
+      content: data.content.map(mapBranchSalesOrderRow),
+    }),
     staleTime: 60_000,
   })
 }

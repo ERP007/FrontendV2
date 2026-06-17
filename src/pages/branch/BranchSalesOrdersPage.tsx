@@ -159,12 +159,9 @@ export function BranchSalesOrdersPage() {
         </span>
       </div>
       <SoBranchTable
-        orders={orders}
+        rows={orders}
         sortDirection={params.sortDirection}
         sortField={params.sortField}
-        onArrival={(order) =>
-          void navigate({ params: { soNo: order.code }, to: '/branch/sales-orders/$soNo/arrival' })
-        }
         onOpen={(order) =>
           void navigate({ params: { soNo: order.code }, to: '/branch/sales-orders/$soNo' })
         }

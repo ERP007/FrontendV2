@@ -8,7 +8,7 @@ import { cn } from '@/shared/lib/cn'
 import type { SalesOrderHqKpi } from '../api/use-sales-order-hq-kpi-query'
 import type { SalesOrderStatus } from '../model/so-ui-model'
 
-import type { SoBranchKpi } from '../model/filter-sales-orders'
+import type { BranchSalesOrderKpiResponse } from '../model/types'
 
 export interface SoHqKpiCardsProps {
   activeStatus?: SalesOrderStatus
@@ -88,7 +88,7 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
 
 export interface SoBranchKpiCardsProps {
   activeStatus?: SalesOrderStatus
-  kpi: SoBranchKpi
+  kpi: BranchSalesOrderKpiResponse
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 

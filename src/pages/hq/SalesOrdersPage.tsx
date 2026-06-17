@@ -136,7 +136,7 @@ export function SalesOrdersPage() {
             {rangeEnd}
           </span>
         }
-        orders={orders}
+        rows={orders}
         sortDirection={state.sortDirection}
         sortField={state.sortField}
         onOpen={(order) =>

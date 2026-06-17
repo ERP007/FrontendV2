@@ -99,7 +99,7 @@ export type {
   SoPriority,
   SoStatusTab,
 } from './model/so-ui-model'
-export type { SoBranchKpi } from './model/filter-sales-orders'
+export type { BranchSalesOrderRow, HqSalesOrderRow } from './model/so-list-row'
 export { SALES_ORDER_FIXTURES } from './model/fixtures'
 export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
 export { soDraftFormSchema } from './model/so-draft-schema'

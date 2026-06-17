@@ -4,6 +4,8 @@ import { api } from '@/shared/api'
 
 import type { PageResponse } from '@/shared/api'
 
+import { mapHqSalesOrderRow } from '../model/so-list-row'
+import type { HqSalesOrderRow } from '../model/so-list-row'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type {
   HqSalesOrderSummary,
@@ -20,6 +22,17 @@ export type HqSalesOrderPageSize = PageSize
 
 // 서버 응답 라인 아이템 (SO #12)
 export type HqSalesOrderListItem = HqSalesOrderSummary
+
+// 화면 소비용 행으로 변환된 페이지
+export interface HqSalesOrderRowPage {
+  content: HqSalesOrderRow[]
+  hasNext: boolean
+  hasPrevious: boolean
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
 
 // UI 가 다루는 목록 파라미터. status 는 배열로 받아 CSV 로 직렬화한다.
 export interface HqSalesOrderListParams {
@@ -61,6 +74,10 @@ export function useHqSalesOrdersQuery(params: HqSalesOrderListParams = {}) {
       return response.data
     },
     queryKey: salesOrderKeys.hqList(params),
+    select: (data): HqSalesOrderRowPage => ({
+      ...data,
+      content: data.content.map(mapHqSalesOrderRow),
+    }),
     staleTime: 60_000,
   })
 }
