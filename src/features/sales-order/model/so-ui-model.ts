@@ -21,9 +21,9 @@ export type SoItemUnit = string
 export type SoPriority = 'NORMAL' | 'URGENT'
 
 export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
+    VEHICLE: '차량',
   DELIVERY_SERVICE: '택배',
   OTHER: '기타',
-  VEHICLE: '차량',
 }
 
 export interface SalesOrderLine {

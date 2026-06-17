@@ -1,0 +1,33 @@
+import { useQuery } from '@tanstack/react-query'
+
+import { api } from '@/shared/api'
+
+export interface StockQuantity {
+  quantity: number
+  safetyStock: number
+  sku: string
+}
+
+interface StockQuantitiesResponse {
+  stocks: StockQuantity[]
+  warehouseCode: string
+}
+
+/**
+ * 특정 창고의 여러 SKU 현재고를 일괄 조회한다(GET /inventory/stocks/quantities).
+ * select 로 sku → 재고 Map 으로 변환해 라인 매칭을 쉽게 한다.
+ */
+export function useStockQuantitiesQuery(warehouseCode: string | undefined, skus: string[]) {
+  return useQuery({
+    enabled: Boolean(warehouseCode) && skus.length > 0,
+    queryFn: async () => {
+      const response = await api.get<StockQuantitiesResponse>('/inventory/stocks/quantities', {
+        params: { skus, warehouseCode },
+      })
+      return response.data
+    },
+    queryKey: ['stocks', 'quantities', warehouseCode, [...skus].sort()] as const,
+    select: (data) => new Map(data.stocks.map((stock) => [stock.sku, stock])),
+    staleTime: 60_000,
+  })
+}

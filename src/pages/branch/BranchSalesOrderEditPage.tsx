@@ -173,7 +173,7 @@ export function BranchSalesOrderEditPage() {
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${updated.code} 발주 요청이 제출되었습니다.`)
-      void navigate({ params: { soNo: code }, to: '/branch/sales-orders/$soNo' })
+      void navigate({ params: { soNo: code }, replace: true, to: '/branch/sales-orders/$soNo' })
     } catch {
       // 전역 인터셉터가 toast 처리
     }
