@@ -49,6 +49,7 @@ export { invalidateSalesOrder, invalidateSalesOrderCollections } from './api/so-
 // ----- mutations -----
 export { useCreateSalesOrderMutation } from './api/use-create-sales-order-mutation'
 export { useCreateSalesOrderDraftMutation } from './api/use-create-sales-order-draft-mutation'
+export { useUpdateSalesOrderDraftMutation } from './api/use-update-sales-order-draft-mutation'
 export { useSubmitSalesOrderMutation } from './api/use-submit-sales-order-mutation'
 export { useRequestSalesOrderMutation } from './api/use-request-sales-order-mutation'
 export { useApproveSalesOrderMutation } from './api/use-approve-sales-order-mutation'

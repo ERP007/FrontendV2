@@ -96,9 +96,9 @@ export function SalesOrderDetailPage() {
                 label="요청 지점"
                 value={
                   <span>
-                    {so.toWarehouse.name}
+                    {so.fromWarehouse.name}
                     <span className="ml-1.5 text-meta font-medium text-faint">
-                      {so.toWarehouse.code}
+                      {so.fromWarehouse.code}
                     </span>
                   </span>
                 }
@@ -108,9 +108,9 @@ export function SalesOrderDetailPage() {
                 label="출고 창고"
                 value={
                   <span>
-                    {so.fromWarehouse.name}
+                    {so.toWarehouse.name}
                     <span className="ml-1.5 text-meta font-medium text-faint">
-                      {so.fromWarehouse.code}
+                      {so.toWarehouse.code}
                     </span>
                   </span>
                 }

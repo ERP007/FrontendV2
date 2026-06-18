@@ -6,11 +6,16 @@ import { detailToDraftLines, detailToFormValues } from '../model/so-form'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type { SoLine } from '../model/ui-types'
 import type { SoFormValues } from '../model/so-draft-schema'
-import type { BranchSalesOrderDetailResponse, SalesOrderStatus } from '../model/types'
+import type {
+  BranchSalesOrderDetailResponse,
+  SalesOrderStatus,
+  WarehouseInfo,
+} from '../model/types'
 
 export interface SalesOrderFormData {
   lines: SoLine[]
   status: SalesOrderStatus
+  toWarehouse: WarehouseInfo // 수신 창고 select 옵션 fallback (hq 목록에 없을 수 있음)
   values: SoFormValues
 }
 
@@ -28,6 +33,7 @@ export function useSalesOrderFormQuery(code: string) {
     select: (detail): SalesOrderFormData => ({
       lines: detailToDraftLines(detail),
       status: detail.status,
+      toWarehouse: detail.toWarehouse,
       values: detailToFormValues(detail),
     }),
   })
