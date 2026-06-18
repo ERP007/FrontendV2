@@ -178,6 +178,13 @@ export function BranchSalesOrderEditPage() {
 
   const isSubmitting = submitMutation.isPending || updateDraftMutation.isPending
 
+  // 수신 창고 옵션: 전체 hq 목록 + (목록에 없으면) 현재 발주의 수신 창고를 합쳐 라벨 표시·변경 모두 지원.
+  const toWh = data.toWarehouse
+  const warehouseOptions =
+    hqWarehouses?.some((w) => w.code === toWh.code) ?? false
+      ? hqWarehouses
+      : [...(hqWarehouses ?? []), { code: toWh.code, name: toWh.name ?? toWh.code }]
+
   const handleSaveDraft = async () => {
     const values = watch()
     try {
@@ -260,7 +267,7 @@ export function BranchSalesOrderEditPage() {
           renderSearchPanel={(props) => (
             <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
           )}
-          warehouses={hqWarehouses}
+          warehouses={warehouseOptions}
           watch={watch}
           onLinesChange={setLines}
         />

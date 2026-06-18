@@ -30,8 +30,8 @@ export function detailToFormValues(detail: BranchSalesOrderDetailResponse): SoFo
   return {
     desiredArrivalDate: detail.desiredArrivalDate.slice(0, 10),
     memo: detail.memo ?? '',
-    // 수신 창고(요청 시 warehouseCode) = 출고 본사 창고(fromWarehouse)
-    warehouseCode: detail.fromWarehouse.code,
+    // 수신 창고(요청 시 warehouseCode) = 수신 본사 창고(toWarehouse)
+    warehouseCode: detail.toWarehouse.code,
   }
 }
 
