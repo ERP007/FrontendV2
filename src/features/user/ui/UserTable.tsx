@@ -122,15 +122,12 @@ export function UserTable({
             currentEmployeeNo &&
             normalizeEmployeeNo(user.employeeNo) === normalizeEmployeeNo(currentEmployeeNo)
           const isSuspended = user.status === 'SUSPENDED'
-          const isAdmin = user.role === 'ADMIN'
           const resetPasswordBlockMessage = isSelf
             ? '본인 계정의 비밀번호를 초기화할 수 없습니다.'
             : null
           const suspendBlockMessage = isSelf
             ? '본인 계정의 정지 상태를 변경할 수 없습니다.'
-            : isAdmin && !isSuspended
-              ? '관리자 계정을 정지할 수 없습니다.'
-              : null
+            : null
           const suspensionLabel = isSuspended ? '정지 해제' : '계정 정지'
           const handleResetPasswordSelect = () => {
             if (resetPasswordBlockMessage) {
