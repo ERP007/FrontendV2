@@ -50,6 +50,7 @@ export interface SalesOrderLineResponse {
   itemName: string | null // 스냅샷
   unit: string | null // 스냅샷
   requestQuantity: number
+  priority: Priority
 }
 
 // ----- 1~3. 생성 / 임시저장 / 제출(PUT) -----

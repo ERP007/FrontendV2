@@ -28,7 +28,7 @@ export function linesToRequest(lines: SoLine[]): SalesOrderLineRequest[] {
 /** 지점 상세 응답 → 폼 기본값 (수정 prefill 용) */
 export function detailToFormValues(detail: BranchSalesOrderDetailResponse): SoFormValues {
   return {
-    desiredArrivalDate: detail.desiredArrivalDate?.slice(0, 10) ?? '',
+    desiredArrivalDate: detail.desiredArrivalDate.slice(0, 10),
     memo: detail.memo ?? '',
     // 수신 창고(요청 시 warehouseCode) = 출고 본사 창고(fromWarehouse)
     warehouseCode: detail.fromWarehouse.code,
@@ -37,7 +37,6 @@ export function detailToFormValues(detail: BranchSalesOrderDetailResponse): SoFo
 
 /**
  * 지점 상세 응답 → 폼 입력 라인 (수정 prefill 용).
- * 상세 응답엔 priority 가 없어 NORMAL 로 채운다.
  * DRAFT 라인은 itemName·unit 이 null 일 수 있어 수정 페이지에서 batch 로 보강한다.
  */
 export function detailToDraftLines(detail: BranchSalesOrderDetailResponse): SoLine[] {
@@ -45,7 +44,7 @@ export function detailToDraftLines(detail: BranchSalesOrderDetailResponse): SoLi
     branchStock: null,
     itemCode: line.itemCode,
     itemName: line.itemName ?? '',
-    priority: 'NORMAL',
+    priority: line.priority,
     quantity: line.requestQuantity,
     safetyStock: null,
     unit: line.unit,
