@@ -14,6 +14,7 @@ import {
   SoForm,
   useSalesOrderFormQuery,
   useSubmitSalesOrderMutation,
+  useUpdateSalesOrderDraftMutation,
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
 import { stockQuantitiesQueryOptions } from '@/features/stock'
@@ -84,6 +85,7 @@ export function BranchSalesOrderEditPage() {
   const { data: hqWarehouses } = useHqWarehousesQuery()
   const { data: me } = useMeQuery()
   const submitMutation = useSubmitSalesOrderMutation(code)
+  const updateDraftMutation = useUpdateSalesOrderDraftMutation(code)
   const itemsBatchMutation = useItemsBatchMutation()
 
   const [lines, setLines] = useState<SoDraftLine[]>([])
@@ -174,10 +176,21 @@ export function BranchSalesOrderEditPage() {
     )
   }
 
-  const isSubmitting = submitMutation.isPending
+  const isSubmitting = submitMutation.isPending || updateDraftMutation.isPending
 
-  const handleSaveDraft = () => {
-    toast.info('임시저장은 추후 연결 예정입니다.')
+  const handleSaveDraft = async () => {
+    const values = watch()
+    try {
+      const updated = await updateDraftMutation.mutateAsync({
+        desiredArrivalDate: values.desiredArrivalDate,
+        lines: linesToRequest(lines),
+        memo: values.memo ?? null,
+        warehouseCode: values.warehouseCode,
+      })
+      toast.success(`${updated.code} 발주 요청이 임시저장되었습니다.`)
+    } catch {
+      // 전역 인터셉터가 toast 처리
+    }
   }
 
   const submitOrder = handleSubmit(async (values) => {
@@ -216,7 +229,7 @@ export function BranchSalesOrderEditPage() {
             <FgButton
               disabled={isSubmitting}
               leftIcon={<Box aria-hidden className="h-4 w-4" />}
-              onClick={handleSaveDraft}
+              onClick={() => void handleSaveDraft()}
             >
               저장
             </FgButton>
@@ -260,7 +273,7 @@ export function BranchSalesOrderEditPage() {
             disabled={isSubmitting}
             leftIcon={<Box aria-hidden className="h-4 w-4" />}
             type="button"
-            onClick={handleSaveDraft}
+            onClick={() => void handleSaveDraft()}
           >
             저장
           </FgButton>
