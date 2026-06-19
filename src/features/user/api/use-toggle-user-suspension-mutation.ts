@@ -92,6 +92,7 @@ export function useToggleUserSuspensionMutation() {
       const response = await api.patch<SuspendToggleResponse | ApiContentResponse<SuspendToggleResponse>>(
         `/users/${encodeURIComponent(userId)}/suspension`,
         { suspended },
+        { suppressGlobalErrorToast: true },
       )
 
       return unwrapSuspendToggleResponse(response.data)

@@ -1,82 +1,101 @@
-export { useCreateSalesOrderDraftMutation } from './api/use-create-sales-order-draft-mutation'
+// =============================================================================
+// sales-order feature public API
+// =============================================================================
+
+// ----- 백엔드 DTO (model/types) -----
 export type {
-  CreateSalesOrderDraftRequest,
-  SalesOrderDraftLinePayload,
-  SalesOrderDraftResponse,
-} from './api/use-create-sales-order-draft-mutation'
-export { useCreateSalesOrderMutation } from './api/use-create-sales-order-mutation'
-export type {
+  ApproveSalesOrderRequest,
+  ApproveSalesOrderResponse,
+  BranchSalesOrderDetailResponse,
+  BranchSalesOrderKpiResponse,
+  BranchSalesOrderPageResponse,
+  BranchSalesOrderQuery,
+  BranchSalesOrderSummary,
+  CancelSalesOrderRequest,
+  CancelSalesOrderResponse,
+  CarrierType,
+  CreateDraftSalesOrderRequest,
   CreateSalesOrderRequest,
-  SalesOrderResponse,
-} from './api/use-create-sales-order-mutation'
-export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
-export type {
-  BranchSalesOrderDetail,
-  BranchSalesOrderDetailLine,
-  BranchSalesOrderWarehouseRef,
-} from './api/use-branch-sales-order-query'
-export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
-export type {
-  BranchSalesOrderListItem,
-  BranchSalesOrderListParams,
-  BranchSalesOrderSortDirection,
-  BranchSalesOrderSortField,
-} from './api/use-branch-sales-orders-query'
-export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
-export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-mutation'
-export type {
+  CreateSalesOrderResponse,
   DeliverSalesOrderRequest,
   DeliverSalesOrderResponse,
-} from './api/use-sales-order-deliver-mutation'
-export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
-export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
-export type {
-  HqSalesOrderListItem,
-  HqSalesOrderListParams,
-  HqSalesOrderPageSize,
-  HqSalesOrderSortDirection,
-  HqSalesOrderSortField,
-} from './api/use-hq-sales-orders-query'
-export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
-export type { SalesOrderHqKpi } from './api/use-sales-order-hq-kpi-query'
-export type {
-  SalesOrderHistoryActor,
-  SalesOrderHistoryEntry,
-} from './api/use-sales-order-histories-query'
-export type { SoBranchKpi } from './model/filter-sales-orders'
-export { SALES_ORDER_FIXTURES } from './model/fixtures'
-export { MOCK_BRANCH_SALES_ORDER_DETAIL } from './model/mock-detail'
-export { soDraftFormSchema } from './model/so-draft-schema'
-export type { SoDraftFormValues } from './model/so-draft-schema'
-export {
-  CARRIER_TYPE_LABELS,
-  emptySoDraftLine,
-  SO_TAB_STATUS_MAP,
-  soShortageCount,
-  soShortageTotal,
-  soTotalApproved,
-  soTotalRequested,
-  TRANSPORT_OPTIONS,
-} from './model/types'
-export type {
-  CarrierType,
-  SalesOrder,
-  SalesOrderEvent,
-  SalesOrderLine,
+  HqSalesOrderDetailResponse,
+  HqSalesOrderKpiResponse,
+  HqSalesOrderPageResponse,
+  HqSalesOrderQuery,
+  HqSalesOrderSummary,
+  PageSize,
+  PersonInfo,
+  Priority,
+  RejectReasonCategory,
+  RejectSalesOrderRequest,
+  RejectSalesOrderResponse,
+  RequestSalesOrderResponse,
+  SalesOrderHistoryListResponse,
+  SalesOrderHistoryResponse,
+  SalesOrderLineRequest,
+  SalesOrderLineResponse,
+  SalesOrderSortField,
   SalesOrderStatus,
-  SoLine as SoDraftLine,
-  SoItemUnit,
-  SoPriority,
-  SoStatusTab,
+  SortDirection,
+  SubmitSalesOrderRequest,
+  WarehouseInfo,
 } from './model/types'
+
+// ----- 쿼리 키 / 캐시 무효화 -----
+export { salesOrderKeys } from './model/so-query-keys'
+export { invalidateSalesOrder, invalidateSalesOrderCollections } from './api/so-cache'
+
+// ----- mutations -----
+export { useCreateSalesOrderMutation } from './api/use-create-sales-order-mutation'
+export { useCreateSalesOrderDraftMutation } from './api/use-create-sales-order-draft-mutation'
+export { useUpdateSalesOrderDraftMutation } from './api/use-update-sales-order-draft-mutation'
+export { useSubmitSalesOrderMutation } from './api/use-submit-sales-order-mutation'
+export { useRequestSalesOrderMutation } from './api/use-request-sales-order-mutation'
+export { useApproveSalesOrderMutation } from './api/use-approve-sales-order-mutation'
+export { useRejectSalesOrderMutation } from './api/use-reject-sales-order-mutation'
+export { useCancelSalesOrderMutation } from './api/use-cancel-sales-order-mutation'
+export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-mutation'
+
+// ----- queries -----
+export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
+export type { BranchSalesOrderListParams } from './api/use-branch-sales-orders-query'
+export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
+export type { BranchSalesOrderDetail, HqSalesOrderDetail } from './model/so-detail'
+export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
+export type { HqSalesOrderListParams } from './api/use-hq-sales-orders-query'
+export { useHqSalesOrderQuery } from './api/use-hq-sales-order-query'
+export { useSalesOrderFormQuery } from './api/use-sales-order-form-query'
+export type { SalesOrderFormData } from './api/use-sales-order-form-query'
+export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
+export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
+export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
+export type { SalesOrderHistoryRow } from './model/so-history'
+
+// ----- 화면 모델 / 라벨 / 헬퍼 (model/ui-types) -----
+export { CARRIER_TYPE_LABELS, emptySoDraftLine, SO_TAB_STATUS_MAP } from './model/ui-types'
+export type { SoLine as SoDraftLine, SoStatusTab } from './model/ui-types'
+export type { BranchSalesOrderRow, HqSalesOrderRow } from './model/so-list-row'
+export { soDraftFormSchema } from './model/so-draft-schema'
+export type { SoFormValues } from './model/so-draft-schema'
+export {
+  defaultSoFormValues,
+  detailToDraftLines,
+  detailToFormValues,
+  linesToRequest,
+} from './model/so-form'
+
+// ----- UI -----
 export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
 export { SoHistoryTimeline } from './ui/SoHistoryTimeline'
-export { SoApproveModal, SoRejectModal } from './ui/SoDecisionModals'
-export { SoDraftLineEditor } from './ui/SoDraftLineEditor'
-export type { SoDraftLineSearchPanelProps } from './ui/SoDraftLineEditor'
+export { SoCancelModal } from './ui/SoCancelModal'
+export { SoRejectModal } from './ui/SoRejectModal'
+export { SoLineEditor } from './ui/SoLineEditor'
+export type { SoLineSearchPanelProps } from './ui/SoLineEditor'
 export { SoFilterBar } from './ui/SoFilterBar'
 export type { SoFilterBarValues } from './ui/SoFilterBar'
+export { SoForm } from './ui/SoForm'
+export type { SoFormProps, SoFormWarehouseOption } from './ui/SoForm'
 export { SoBranchKpiCards, SoHqKpiCards } from './ui/SoKpiCards'
-export { SoNoteBox, SoReviewLines, SoShipLines } from './ui/SoLineTables'
+export { SoNoteBox } from './ui/SoLineTables'
 export { SoBranchTable, SoTable } from './ui/SoTable'
-export { SoTimeline } from './ui/SoTimeline'

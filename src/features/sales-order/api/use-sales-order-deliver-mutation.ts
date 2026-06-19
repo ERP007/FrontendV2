@@ -1,24 +1,13 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
-import type { SalesOrderStatus } from '../model/types'
+import type { DeliverSalesOrderRequest, DeliverSalesOrderResponse } from '../model/types'
+import { invalidateSalesOrder } from './so-cache'
 
-export interface DeliverSalesOrderRequest {
-  deliveredDate: string
-}
-
-export interface DeliverSalesOrderResponse {
-  code: string
-  deliveredAt: string
-  deliveredDate: string
-  fromWarehouseCode: string
-  status: SalesOrderStatus
-  toWarehouseCode: string
-  totalQuantity: number
-}
-
+/** SO #8 도착 확정(BRANCH) — PATCH /sales-orders/{code}/deliver */
 export function useSalesOrderDeliverMutation(code: string) {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (payload: DeliverSalesOrderRequest) => {
       const response = await api.patch<DeliverSalesOrderResponse>(
@@ -26,6 +15,9 @@ export function useSalesOrderDeliverMutation(code: string) {
         payload,
       )
       return response.data
+    },
+    onSuccess: () => {
+      invalidateSalesOrder(queryClient, code)
     },
   })
 }

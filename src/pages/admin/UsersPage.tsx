@@ -383,7 +383,10 @@ export function UsersPage() {
 
       toast.success(response.status === 'SUSPENDED' ? '사용자가 정지되었습니다.' : '사용자 정지가 해제되었습니다.')
     } catch (error) {
-      setSuspendToggleErrorMessage(getToggleUserSuspensionErrorMessage(error))
+      const errorMessage = getToggleUserSuspensionErrorMessage(error)
+
+      setSuspendToggleErrorMessage(errorMessage)
+      toast.error(errorMessage)
     }
   }
 
