@@ -3,22 +3,29 @@ import 'dayjs/locale/ko'
 
 dayjs.locale('ko')
 
-type DateInput = string | number | Date
+type DateInput = string | number | Date | null | undefined
+
+function safeFormat(value: DateInput, template: string): string {
+  if (value === null || value === undefined || value === '') return '-'
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return '-'
+  return parsed.format(template)
+}
 
 export function formatDate(value: DateInput): string {
-  return dayjs(value).format('YYYY-MM-DD')
+  return safeFormat(value, 'YYYY-MM-DD')
 }
 
 export function formatDateWithDay(value: DateInput): string {
-  return dayjs(value).format('YYYY-MM-DD (dd)')
+  return safeFormat(value, 'YYYY-MM-DD (dd)')
 }
 
 export function formatDateTime(value: DateInput): string {
-  return dayjs(value).format('YYYY-MM-DD HH:mm')
+  return safeFormat(value, 'YYYY-MM-DD HH:mm')
 }
 
 export function formatTime(value: DateInput): string {
-  return dayjs(value).format('HH:mm')
+  return safeFormat(value, 'HH:mm')
 }
 
 export function formatNumber(value: number): string {
@@ -34,11 +41,17 @@ export function formatDelta(value: number): string {
 }
 
 export function formatDday(value: DateInput): string {
-  const diff = dayjs(value).startOf('day').diff(dayjs().startOf('day'), 'day')
+  if (value === null || value === undefined || value === '') return '-'
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return '-'
+  const diff = parsed.startOf('day').diff(dayjs().startOf('day'), 'day')
   if (diff === 0) return 'D-Day'
   return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`
 }
 
 export function isOverdue(value: DateInput): boolean {
-  return dayjs(value).startOf('day').isBefore(dayjs().startOf('day'))
+  if (value === null || value === undefined || value === '') return false
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return false
+  return parsed.startOf('day').isBefore(dayjs().startOf('day'))
 }

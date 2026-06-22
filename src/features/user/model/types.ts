@@ -5,6 +5,14 @@ import type { UserRole } from '@/shared/config/session'
  * swagger 수신 시 필드명을 응답 스키마와 정합시킨다.
  */
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'SUSPENDED'
+export type UserApiRole = UserRole | 'WAREHOUSE_STAFF' | 'WAREHOUSE_MANAGER'
+export type UserRoleFilter = 'ALL' | UserApiRole
+export type UserTenancyCodeFilter = 'ALL' | string
+export type UserStatusFilter = 'ALL' | UserStatus
+export type UserSortBy = 'employeeNo' | 'name' | 'joinedAt'
+export type UserSortDirection = 'ASC' | 'DESC'
+export type CreateUserPasswordIssueMode = 'AUTO' | 'MANUAL'
+export type CreateUserTenancy = 'ADMIN' | 'HQ' | 'BRANCH' | 'WAREHOUSE'
 
 export interface User {
   email: string
@@ -13,7 +21,7 @@ export interface User {
   joinedAt: string
   name: string
   rank: string | null
-  role: UserRole
+  role: UserApiRole
   status: UserStatus
   warehouseName: string
 }
@@ -40,16 +48,34 @@ export const RANK_OPTIONS = ['사원', '주임', '대리', '과장', '차장', '
 
 export interface UserFilter {
   keyword: string
-  role: 'ALL' | UserRole
-  status: 'ALL' | UserStatus
-  warehouseName: 'ALL' | string
+  role: UserRoleFilter
+  status: UserStatusFilter
+  tenancyCode: UserTenancyCodeFilter
 }
 
 export const DEFAULT_USER_FILTER: UserFilter = {
   keyword: '',
   role: 'ALL',
   status: 'ALL',
-  warehouseName: 'ALL',
+  tenancyCode: 'ALL',
+}
+
+export type UserPosition = 'MANAGER' | 'STAFF'
+
+/** GET /api/users/me 응답 */
+export interface Me {
+  email: string
+  employeeNo: string
+  joinedAt: string
+  lastChangedPassAt: string | null
+  lastLoginAt: string | null
+  name: string
+  position: string | null
+  role: UserApiRole
+  status: UserStatus
+  tenancyCode: string
+  tenancyName: string
+  userId: string
 }
 
 export type PasswordIssueMode = 'AUTO' | 'MANUAL'
@@ -62,5 +88,101 @@ export interface UserFormValues {
   passwordMode: PasswordIssueMode
   rank: string
   role: UserRole
-  warehouseName: string
+  tenancyCode: string
+}
+
+export interface FetchUsersParams {
+  keyword?: string
+  page: number
+  role: UserRoleFilter
+  size: number
+  sortBy: UserSortBy
+  sortDirection: UserSortDirection
+  status: UserStatusFilter
+  tenancyCode: UserTenancyCodeFilter
+}
+
+export interface UserListItem {
+  department: string
+  email: string
+  employeeNo: string
+  joinedAt: string
+  name: string
+  role: UserApiRole
+  status: UserStatus
+  userId: string
+}
+
+export interface UserListResponse {
+  content: UserListItem[]
+  hasNext: boolean
+  hasPrevious: boolean
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+export interface CreateUserRequest {
+  display_name: string
+  email: string
+  employee_no: string
+  initial_password: string
+  password_issue_mode: CreateUserPasswordIssueMode
+  position: string
+  role: UserApiRole
+  tenancy: CreateUserTenancy
+  tenancy_code: string
+}
+
+export interface CreateUserResponse {
+  temporaryPassword: string | null
+  user: unknown
+}
+
+export interface UserDetailResponse {
+  createdAt: string | null
+  email: string
+  employeeNo: string
+  joinedAt: string
+  lastChangedPassAt: string | null
+  lastLoginAt: string | null
+  name: string
+  position: string | null
+  role: UserApiRole
+  status: UserStatus
+  tenancyCode: string
+  tenancyName: string
+  userId: string
+}
+
+export type MyPageResponse = Me
+
+export interface UserDetailFormValues {
+  email: string
+  name: string
+  position: string
+  role: UserApiRole
+  tenancyCode: string
+}
+
+export interface UpdateUserRequest {
+  display_name: string
+  email: string
+  position: string
+  role: UserApiRole
+  tenancy_code: string
+  tenancy_name: string
+}
+
+export interface SuspendToggleResponse {
+  email: string
+  employeeNo: string
+  name: string
+  status: UserStatus
+  userId: string
+}
+
+export interface UserSuspensionRequest {
+  suspended: boolean
 }

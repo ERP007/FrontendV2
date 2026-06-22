@@ -5,9 +5,9 @@ import { LoginForm } from '@/features/auth'
 import { clearAuthRedirectAttempt, redirectToAuthLogin } from '@/shared/api'
 
 export function LoginPage() {
-  const hasSessionError =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('auth_error') === 'session'
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const hasSessionError = searchParams?.get('auth_error') === 'session'
+  const hasLogoutError = searchParams?.get('logout_error') === '1'
 
   useEffect(() => {
     clearAuthRedirectAttempt()
@@ -29,7 +29,11 @@ export function LoginPage() {
       </div>
       <LoginForm
         errorMessage={
-          hasSessionError ? '로그인 세션을 확인하지 못했습니다. 다시 로그인해 주세요.' : undefined
+          hasLogoutError
+            ? '로그아웃을 완료하지 못했습니다. 다시 로그인해 주세요.'
+            : hasSessionError
+              ? '로그인 세션을 확인하지 못했습니다. 다시 로그인해 주세요.'
+              : undefined
         }
         onSsoLogin={handleSsoLogin}
       />

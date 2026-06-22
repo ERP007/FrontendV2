@@ -1,57 +1,106 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Calendar, Plus, RotateCcw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import {
-  applyStatusTab,
-  createDefaultSoFilter,
-  deriveSoBranchKpi,
-  filterSalesOrders,
-  MY_BRANCH,
-  SALES_ORDER_FIXTURES,
+  SO_TAB_STATUS_MAP,
   SoBranchKpiCards,
+  SoBranchStatusFilter,
   SoBranchTable,
-  SoFilterBar,
+  useBranchSalesOrdersQuery,
+  useSalesOrderBranchKpiQuery,
 } from '@/features/sales-order'
-import type { SalesOrderFilter, SoStatusTab } from '@/features/sales-order'
+import type {
+  PageSize,
+  SalesOrderSortField,
+  SalesOrderStatus,
+  SortDirection,
+  SoStatusTab,
+} from '@/features/sales-order'
 import { formatNumber } from '@/shared/lib/format'
-import { FgBadge, FgButton, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
+import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
+import { FgButton, FgCard, FgInput, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }]
 
-const MY_ORDERS = SALES_ORDER_FIXTURES.filter((order) => order.branchCode === MY_BRANCH.code)
+const TAB_ITEMS = [
+  { label: '전체', value: 'ALL' },
+  { label: '진행 중', value: 'IN_PROGRESS' },
+  { label: '완료', value: 'DONE' },
+  { label: '취소 · 거절', value: 'CLOSED' },
+]
+
+interface SoBranchQueryState {
+  endDate?: string
+  page: number
+  search: string
+  size: PageSize
+  sortDirection: SortDirection
+  sortField: SalesOrderSortField
+  startDate?: string
+  status: SalesOrderStatus[]
+}
+
+function createDefaultQueryState(): SoBranchQueryState {
+  return {
+    endDate: undefined,
+    page: 1,
+    search: '',
+    size: 10,
+    sortDirection: 'desc',
+    sortField: 'requestedAt',
+    startDate: undefined,
+    status: [],
+  }
+}
+
+function statusListEquals(a: SalesOrderStatus[], b: SalesOrderStatus[] | undefined) {
+  const setA = new Set(a)
+  const setB = new Set(b ?? [])
+  if (setA.size !== setB.size) return false
+  for (const value of setA) if (!setB.has(value)) return false
+  return true
+}
+
+function deriveTab(status: SalesOrderStatus[]): SoStatusTab {
+  const entries = Object.entries(SO_TAB_STATUS_MAP) as [SoStatusTab, SalesOrderStatus[] | undefined][]
+  return entries.find(([, value]) => statusListEquals(status, value))?.[0] ?? 'ALL'
+}
+
+function deriveKpiActive(status: SalesOrderStatus[]): SalesOrderStatus | undefined {
+  return status.length === 1 ? status[0] : undefined
+}
 
 export function BranchSalesOrdersPage() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState<SalesOrderFilter>(createDefaultSoFilter)
-  const [tab, setTab] = useState<SoStatusTab>('ALL')
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [state, setState] = useState<SoBranchQueryState>(createDefaultQueryState)
 
-  const kpi = useMemo(() => deriveSoBranchKpi(MY_ORDERS), [])
-  const filtered = useMemo(() => filterSalesOrders(MY_ORDERS, filter), [filter])
-  const tabbed = useMemo(() => applyStatusTab(filtered, tab), [filtered, tab])
+  const debouncedSearch = useDebouncedValue(state.search, 300)
+  const { data: kpi } = useSalesOrderBranchKpiQuery()
+  const { data } = useBranchSalesOrdersQuery({
+    endDate: state.endDate,
+    page: state.page,
+    search: debouncedSearch || undefined,
+    size: state.size,
+    sortDirection: state.sortDirection,
+    sortField: state.sortField,
+    startDate: state.startDate,
+    status: state.status,
+  })
 
-  const tabCounts = useMemo(
-    () => ({
-      all: filtered.length,
-      closed: applyStatusTab(filtered, 'CLOSED').length,
-      done: applyStatusTab(filtered, 'DONE').length,
-      inProgress: applyStatusTab(filtered, 'IN_PROGRESS').length,
-    }),
-    [filtered],
-  )
+  const orders = data?.content ?? []
+  const totalElements = data?.totalElements ?? 0
+  const totalPages = Math.max(1, data?.totalPages ?? 1)
 
-  const totalPages = Math.max(1, Math.ceil(tabbed.length / pageSize))
-  const pageRows = tabbed.slice((page - 1) * pageSize, page * pageSize)
+  const tab = useMemo(() => deriveTab(state.status), [state.status])
+  const activeKpiStatus = useMemo(() => deriveKpiActive(state.status), [state.status])
 
-  function handleFilterChange(next: SalesOrderFilter) {
-    setFilter(next)
-    setPage(1)
+  function patchState(patch: Partial<SoBranchQueryState>) {
+    setState((prev) => ({ ...prev, ...patch }))
   }
 
-  const rangeStart = tabbed.length === 0 ? 0 : (page - 1) * pageSize + 1
-  const rangeEnd = Math.min(page * pageSize, tabbed.length)
+  const rangeStart = totalElements === 0 ? 0 : (state.page - 1) * state.size + 1
+  const rangeEnd = Math.min(state.page * state.size, totalElements)
 
   return (
     <div className="fg-content">
@@ -65,57 +114,84 @@ export function BranchSalesOrdersPage() {
             발주 요청 등록
           </FgButton>
         }
-        badge={
-          <FgBadge variant="primary">
-            {MY_BRANCH.name} · {MY_BRANCH.code}
-          </FgBadge>
-        }
         breadcrumbs={breadcrumbs}
         title="내 지점 발주 요청"
       />
-      <SoBranchKpiCards kpi={kpi} />
-      <SoFilterBar
-        filter={filter}
-        searchPlaceholder="요청번호 또는 부품명·코드 검색"
-        onChange={handleFilterChange}
-        onReset={() => handleFilterChange(createDefaultSoFilter())}
-      />
+      {kpi ? (
+        <SoBranchKpiCards
+          activeStatus={activeKpiStatus}
+          kpi={kpi}
+          onSelect={(status) => patchState({ page: 1, status: status ? [status] : [] })}
+        />
+      ) : null}
+
+      <FgCard className="flex items-center gap-3 p-4">
+        <FgInput
+          leftIcon={<Search aria-hidden className="h-4 w-4" />}
+          placeholder="요청번호 또는 부품명·코드 검색"
+          rootClassName="flex-1"
+          value={state.search}
+          onChange={(event) => patchState({ page: 1, search: event.target.value })}
+        />
+        <SoBranchStatusFilter
+          value={state.status}
+          onChange={(status) => patchState({ page: 1, status: status ?? [] })}
+        />
+        <FgInput
+          leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
+          rootClassName="w-44"
+          type="date"
+          value={state.startDate ?? ''}
+          onChange={(event) => patchState({ page: 1, startDate: event.target.value || undefined })}
+        />
+        <span className="text-faint">~</span>
+        <FgInput
+          leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
+          rootClassName="w-44"
+          type="date"
+          value={state.endDate ?? ''}
+          onChange={(event) => patchState({ page: 1, endDate: event.target.value || undefined })}
+        />
+        <FgButton
+          leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />}
+          onClick={() => setState(createDefaultQueryState())}
+        >
+          초기화
+        </FgButton>
+      </FgCard>
+
       <div className="flex items-center justify-between gap-4">
         <FgTabs
-          items={[
-            { count: tabCounts.all, label: '전체', value: 'ALL' },
-            { count: tabCounts.inProgress, label: '진행 중', value: 'IN_PROGRESS' },
-            { count: tabCounts.done, label: '완료', value: 'DONE' },
-            { count: tabCounts.closed, label: '취소 · 거절', value: 'CLOSED' },
-          ]}
+          items={TAB_ITEMS}
           value={tab}
-          onValueChange={(value) => {
-            setTab(value as SoStatusTab)
-            setPage(1)
-          }}
+          onValueChange={(value) =>
+            patchState({ page: 1, status: SO_TAB_STATUS_MAP[value as SoStatusTab] ?? [] })
+          }
         />
         <span className="text-label text-muted">
-          전체 <strong className="text-ink">{formatNumber(tabbed.length)}</strong>건 중 {rangeStart}–
+          전체 <strong className="text-ink">{formatNumber(totalElements)}</strong>건 중 {rangeStart}–
           {rangeEnd}
         </span>
       </div>
       <SoBranchTable
-        orders={pageRows}
-        onArrival={(order) =>
-          void navigate({ params: { soNo: order.reqNo }, to: '/branch/sales-orders/$soNo/arrival' })
+        rows={orders}
+        sortDirection={state.sortDirection}
+        sortField={state.sortField}
+        onOpen={(order) =>
+          void navigate({ params: { soNo: order.code }, to: '/branch/sales-orders/$soNo' })
         }
-        onOpen={(order) => void navigate({ params: { soNo: order.reqNo }, to: '/sales-orders/$soNo' })}
+        onSortChange={(sortField, sortDirection) =>
+          patchState({ page: 1, sortDirection, sortField })
+        }
       />
       <FgPagination
-        page={page}
-        pageSize={pageSize}
-        totalCount={tabbed.length}
+        page={state.page}
+        pageSize={state.size}
+        pageSizeOptions={[10, 20, 50]}
+        totalCount={totalElements}
         totalPages={totalPages}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size)
-          setPage(1)
-        }}
+        onPageChange={(nextPage) => patchState({ page: nextPage })}
+        onPageSizeChange={(size) => patchState({ page: 1, size: size as PageSize })}
       />
     </div>
   )

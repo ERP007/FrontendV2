@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Boxes, ChevronRight, ClipboardList, RefreshCw, ShoppingCart } from 'lucide-react'
-import { toast } from 'sonner'
+import { Boxes, ChevronRight, ClipboardList, ShoppingCart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import {
@@ -11,7 +10,7 @@ import {
   TODO_FIXTURES,
   TodoPanel,
 } from '@/features/dashboard'
-import { FgButton, FgPageHeader } from '@/shared/ui'
+import { FgPageHeader } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '본사' }, { label: '대시보드' }]
 
@@ -32,22 +31,7 @@ export function DashboardPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <div className="flex items-center gap-3">
-            <span className="text-meta font-medium text-faint">마지막 업데이트 · 방금 전</span>
-            <FgButton
-              aria-label="새로고침"
-              size="icon"
-              onClick={() => toast.success('대시보드를 새로고침했습니다.')}
-            >
-              <RefreshCw aria-hidden className="h-4 w-4" />
-            </FgButton>
-          </div>
-        }
-        breadcrumbs={breadcrumbs}
-        title="본사 대시보드"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="본사 대시보드" />
 
       <DashboardKpiGrid kpi={DASHBOARD_KPI_FIXTURE} />
 

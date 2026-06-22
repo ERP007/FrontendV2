@@ -1,16 +1,27 @@
 import { Clock, Lock, Pencil, User as UserIcon } from 'lucide-react'
 
-import type { AuthSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { cn } from '@/shared/lib/cn'
-import { formatDateTime, formatDelta } from '@/shared/lib/format'
+import { formatDate, formatDateTime, formatDelta } from '@/shared/lib/format'
 import { FgAvatar, FgBadge, FgButton, FgCard, FgCardHeader, FgMeta } from '@/shared/ui'
 
 import { ACTIVITY_TYPE_LABELS } from '../model/types'
 
-import type { UserActivity } from '../model/types'
+import type { MyPageResponse, UserActivity } from '../model/types'
 
-export function MyProfileCard({ session }: { session: AuthSession }) {
+function formatRole(profile: MyPageResponse) {
+  return `${roleLabel(profile.role)} (${profile.role})`
+}
+
+function formatTenancy(profile: MyPageResponse) {
+  if (profile.tenancyName && profile.tenancyCode) {
+    return `${profile.tenancyName} (${profile.tenancyCode})`
+  }
+
+  return profile.tenancyName || profile.tenancyCode || '-'
+}
+
+export function MyProfileCard({ profile }: { profile: MyPageResponse }) {
   return (
     <FgCard>
       <FgCardHeader icon={<UserIcon aria-hidden className="h-4 w-4" />} title="본인 정보" />
@@ -18,19 +29,19 @@ export function MyProfileCard({ session }: { session: AuthSession }) {
         <div className="flex w-48 shrink-0 flex-col items-center gap-3 text-center">
           <FgAvatar size="profile" />
           <div>
-            <p className="text-xl font-extrabold text-ink">{session.name}</p>
-            <p className="mt-1 text-meta font-medium text-faint">{session.employeeNo}</p>
+            <p className="text-xl font-extrabold text-ink">{profile.name}</p>
+            <p className="mt-1 text-meta font-medium text-faint">{profile.employeeNo.toUpperCase()}</p>
           </div>
-          <FgBadge variant="primary">{roleLabel(session.userRole)}</FgBadge>
+        <FgBadge variant="primary">{roleLabel(profile.role)}</FgBadge>
         </div>
         <div className="min-w-0 flex-1">
           <dl className="grid grid-cols-2 gap-x-10 gap-y-6">
-            <FgMeta label="사번" value={session.employeeNo} />
-            <FgMeta label="권한" value={roleLabel(session.userRole)} />
-            <FgMeta label="소속 유형" value={session.tenancyType || '-'} />
-            <FgMeta label="소속 코드" value={session.tenancyCode || '-'} />
-            <FgMeta label="직급" value={session.position || '-'} />
-            <FgMeta label="이름" value={session.name} />
+            <FgMeta label="이메일" value={profile.email || '-'} />
+            <FgMeta label="권한" value={formatRole(profile)} />
+            <FgMeta label="소속" value={formatTenancy(profile)} />
+            <FgMeta label="직급" value={profile.position || '-'} />
+            <FgMeta label="가입일" value={formatDate(profile.joinedAt)} />
+            <FgMeta label="마지막 로그인" value={formatDateTime(profile.lastLoginAt)} />
           </dl>
           <p className="mt-6 flex items-center gap-1.5 border-t border-line-soft pt-4 text-meta text-faint">
             <Clock aria-hidden className="h-3.5 w-3.5" />

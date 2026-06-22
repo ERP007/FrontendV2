@@ -4,19 +4,34 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
 
 type FgInputSize = 'md' | 'lg'
+type FgInputGap = 'default' | 'tight'
 
 const inputSizeClasses: Record<FgInputSize, string> = {
-  md: 'h-11 gap-3 rounded-control border px-3',
-  lg: 'h-13 gap-3.5 rounded-control-lg border-1.5 px-4',
+  md: 'h-11 rounded-control border px-3',
+  lg: 'h-13 rounded-control-lg border-1.5 px-4',
+}
+
+const inputGapClasses: Record<FgInputSize, Record<FgInputGap, string>> = {
+  md: {
+    default: 'gap-3',
+    tight: 'gap-2',
+  },
+  lg: {
+    default: 'gap-3.5',
+    tight: 'gap-2',
+  },
 }
 
 export interface FgInputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'className' | 'prefix' | 'size'> {
+  controlClassName?: string
+  controlGap?: FgInputGap
   error?: string
   hint?: string
   inputClassName?: string
   label?: string
   leftIcon?: ReactNode
   rightIcon?: ReactNode
+  rightIconClassName?: string
   rootClassName?: string
   size?: FgInputSize
 }
@@ -25,6 +40,8 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
   (
     {
       disabled,
+      controlClassName,
+      controlGap = 'default',
       error,
       hint,
       id,
@@ -33,6 +50,7 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
       leftIcon,
       required,
       rightIcon,
+      rightIconClassName,
       rootClassName,
       size = 'md',
       ...props
@@ -56,9 +74,11 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
           className={cn(
             'flex items-center border-line bg-surface text-body text-ink shadow-none transition-colors',
             inputSizeClasses[size],
+            inputGapClasses[size][controlGap],
             'focus-within:border-primary focus-within:ring-1 focus-within:ring-primary',
             disabled && 'bg-line-soft text-muted',
             error && 'border-danger focus-within:border-danger focus-within:ring-danger',
+            controlClassName,
           )}
         >
           {leftIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{leftIcon}</span> : null}
@@ -70,16 +90,26 @@ export const FgInput = forwardRef<HTMLInputElement, FgInputProps>(
             aria-invalid={error ? true : undefined}
             aria-describedby={helperId}
             className={cn(
-              'h-full min-w-0 flex-1 border-none bg-transparent p-0 text-inherit outline-none placeholder:text-faint',
+              'h-full min-w-0 flex-1 appearance-none border-none bg-transparent p-0 text-inherit outline-none placeholder:text-faint',
+              'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
               'disabled:cursor-not-allowed',
               inputClassName,
             )}
             {...props}
           />
-          {rightIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{rightIcon}</span> : null}
+          {rightIcon ? (
+            <span
+              className={cn(
+                'flex h-5 shrink-0 items-center justify-center whitespace-nowrap text-faint',
+                rightIconClassName,
+              )}
+            >
+              {rightIcon}
+            </span>
+          ) : null}
         </div>
         {helperText ? (
-          <p id={helperId} className={cn('text-meta text-faint', error && 'text-danger')}>
+          <p id={helperId} className={cn('whitespace-pre-line text-meta text-faint', error && 'text-danger')}>
             {helperText}
           </p>
         ) : null}

@@ -1,41 +1,78 @@
 import { useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import type { SortingState } from '@tanstack/react-table'
 
 import {
-  createDefaultPoFilter,
-  derivePoKpi,
-  filterPurchaseOrders,
   PoFilterBar,
   PoKpiCards,
   PoTable,
-  PURCHASE_ORDER_FIXTURES,
-  SUPPLIER_FIXTURES,
+  usePurchaseOrderKpiQuery,
+  usePurchaseOrdersQuery,
+  usePurchaseOrderVendorsQuery,
 } from '@/features/purchase-order'
-import type { PurchaseOrderFilter } from '@/features/purchase-order'
+import type {
+  PoKpiFilter,
+  SearchPurchaseOrderRequest,
+  SortField,
+} from '@/features/purchase-order'
 import { formatNumber } from '@/shared/lib/format'
 import { FgButton, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }]
 
+const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1 }
+
+const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set([
+  'createdAt',
+  'desiredArrivalDate',
+  'totalAmount',
+])
+
 export function PurchaseOrdersPage() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState<PurchaseOrderFilter>(createDefaultPoFilter)
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [params, setParams] = useState<SearchPurchaseOrderRequest>(DEFAULT_PARAMS)
 
-  const kpi = useMemo(() => derivePoKpi(PURCHASE_ORDER_FIXTURES), [])
-  const filtered = useMemo(() => filterPurchaseOrders(PURCHASE_ORDER_FIXTURES, filter), [filter])
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
+  const { data: kpi } = usePurchaseOrderKpiQuery()
+  const { data: vendors } = usePurchaseOrderVendorsQuery()
+  const { data } = usePurchaseOrdersQuery(params)
 
-  function handleFilterChange(next: PurchaseOrderFilter) {
-    setFilter(next)
-    setPage(1)
+  const rows = data?.content ?? []
+
+  const totalElements = data?.totalElements ?? 0
+  const totalPages = data?.totalPages ?? 1
+  const page = params.page ?? 1
+  const size = params.size ?? 20
+  const rangeStart = totalElements === 0 ? 0 : (page - 1) * size + 1
+  const rangeEnd = Math.min(page * size, totalElements)
+
+  const sorting: SortingState = useMemo(() => {
+    const field = (params.sortField ?? 'createdAt') as SortField
+    const desc = (params.sortDirection ?? 'desc') === 'desc'
+    return [{ desc, id: field }]
+  }, [params.sortField, params.sortDirection])
+
+  function handleSortingChange(next: SortingState) {
+    const first = next[0]
+    if (!first || !SORTABLE_FIELDS.has(first.id as SortField)) {
+      setParams((prev) => ({ ...prev, sortDirection: undefined, sortField: undefined }))
+      return
+    }
+    setParams((prev) => ({
+      ...prev,
+      sortDirection: first.desc ? 'desc' : 'asc',
+      sortField: first.id as SortField,
+    }))
   }
 
-  const rangeStart = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1
-  const rangeEnd = Math.min(page * pageSize, filtered.length)
+  function handleKpiSelect(filter: PoKpiFilter) {
+    if (filter === 'all') {
+      setParams(DEFAULT_PARAMS)
+      return
+    }
+    const status = filter === 'draft' ? 'DRAFT' : 'APPROVED'
+    setParams({ ...DEFAULT_PARAMS, status })
+  }
 
   return (
     <div className="fg-content">
@@ -52,35 +89,40 @@ export function PurchaseOrdersPage() {
         breadcrumbs={breadcrumbs}
         title="구매 주문"
       />
-      <PoKpiCards kpi={kpi} />
+      {kpi ? <PoKpiCards kpi={kpi} onSelect={handleKpiSelect} /> : null}
       <PoFilterBar
-        filter={filter}
-        suppliers={SUPPLIER_FIXTURES}
-        onChange={handleFilterChange}
-        onReset={() => handleFilterChange(createDefaultPoFilter())}
+        params={params}
+        vendors={vendors}
+        onChange={setParams}
+        onReset={() => setParams(DEFAULT_PARAMS)}
       />
       <PoTable
         header={
           <span>
-            전체 <strong className="text-ink">{formatNumber(filtered.length)}</strong>건 중 {rangeStart}–
-            {rangeEnd}
+            전체 <strong className="text-ink">{formatNumber(totalElements)}</strong>건 중{' '}
+            {rangeStart}–{rangeEnd}
           </span>
         }
-        orders={pageRows}
-        onOpen={(order) =>
-          void navigate({ params: { poNo: order.poNo }, to: '/purchase-orders/$poNo' })
+        rows={rows}
+        sorting={sorting}
+        onOpen={(row) =>
+          void navigate({ params: { poNo: row.code }, to: '/purchase-orders/$poNo' })
         }
+        onSortingChange={handleSortingChange}
       />
       <FgPagination
         page={page}
-        pageSize={pageSize}
-        totalCount={filtered.length}
+        pageSize={size}
+        totalCount={totalElements}
         totalPages={totalPages}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size)
-          setPage(1)
-        }}
+        onPageChange={(nextPage) => setParams((prev) => ({ ...prev, page: nextPage }))}
+        onPageSizeChange={(nextSize) =>
+          setParams((prev) => ({
+            ...prev,
+            page: 1,
+            size: nextSize as SearchPurchaseOrderRequest['size'],
+          }))
+        }
       />
     </div>
   )

@@ -1,17 +1,26 @@
 import { RotateCcw, Search } from 'lucide-react'
+import { useMemo } from 'react'
 
-import { ROLE_LABELS } from '@/shared/config/session'
-import type { UserRole } from '@/shared/config/session'
+import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
-import { BELONG_OPTIONS } from '../model/fixtures'
+import type { UserApiRole, UserFilter, UserRoleFilter, UserStatus, UserTenancyCodeFilter } from '../model/types'
+import type { UserTenancyOption } from '../model/user-tenancy'
 
-import type { UserFilter, UserStatus } from '../model/types'
+const roleValues: UserApiRole[] = [
+  'ADMIN',
+  'HQ_MANAGER',
+  'HQ_STAFF',
+  'BRANCH_MANAGER',
+  'BRANCH_STAFF',
+  'WAREHOUSE_MANAGER',
+  'WAREHOUSE_STAFF',
+]
 
 const roleOptions = [
   { label: 'Role : 전체', value: 'ALL' },
-  ...(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
-    label: `${role} · ${ROLE_LABELS[role]}`,
+  ...roleValues.map((role) => ({
+    label: `${role} · ${roleLabel(role)}`,
     value: role,
   })),
 ]
@@ -23,18 +32,22 @@ const statusOptions = [
   { label: 'SUSPENDED · 정지', value: 'SUSPENDED' },
 ]
 
-const belongOptions = [
-  { label: '소속 : 전체', value: 'ALL' },
-  ...BELONG_OPTIONS.map((name) => ({ label: name, value: name })),
-]
-
 export interface UserFilterBarProps {
   filter: UserFilter
   onChange: (filter: UserFilter) => void
   onReset: () => void
+  tenancyOptions: UserTenancyOption[]
 }
 
-export function UserFilterBar({ filter, onChange, onReset }: UserFilterBarProps) {
+export function UserFilterBar({ filter, onChange, onReset, tenancyOptions }: UserFilterBarProps) {
+  const belongOptions = useMemo(
+    () => [
+      { label: '소속 : 전체', value: 'ALL' },
+      ...tenancyOptions.map((option) => ({ label: option.label, value: option.code })),
+    ],
+    [tenancyOptions],
+  )
+
   return (
     <FgCard className="flex items-center gap-3 p-4">
       <FgInput
@@ -48,13 +61,13 @@ export function UserFilterBar({ filter, onChange, onReset }: UserFilterBarProps)
         className="w-52"
         options={roleOptions}
         value={filter.role}
-        onValueChange={(value) => onChange({ ...filter, role: value as UserFilter['role'] })}
+        onValueChange={(value) => onChange({ ...filter, role: value as UserRoleFilter })}
       />
       <FgSelect
         className="w-48"
         options={belongOptions}
-        value={filter.warehouseName}
-        onValueChange={(value) => onChange({ ...filter, warehouseName: value })}
+        value={filter.tenancyCode}
+        onValueChange={(value) => onChange({ ...filter, tenancyCode: value as UserTenancyCodeFilter })}
       />
       <FgSelect
         className="w-48"
