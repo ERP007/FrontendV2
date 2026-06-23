@@ -11,7 +11,6 @@ import type { StockSkuDetail, StockStatus } from '../model/types'
 const gaugeColorClasses: Record<StockStatus, string> = {
   LOW: 'bg-warning-dot',
   NORMAL: 'bg-primary',
-  OUT: 'bg-danger',
 }
 
 export interface StockDetailPanelProps {
@@ -85,11 +84,7 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
                   <span
                     className={cn(
                       'font-bold',
-                      warehouse.status === 'OUT'
-                        ? 'text-danger'
-                        : warehouse.status === 'LOW'
-                          ? 'text-warning'
-                          : 'text-ink',
+                      warehouse.status === 'LOW' ? 'text-warning' : 'text-ink',
                     )}
                   >
                     {formatNumber(warehouse.quantity)}

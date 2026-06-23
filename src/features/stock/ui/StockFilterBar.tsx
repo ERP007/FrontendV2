@@ -1,21 +1,13 @@
-import { ArrowUpDown, RotateCcw, Search } from 'lucide-react'
+import { ArrowDownNarrowWide, RotateCcw, Search } from 'lucide-react'
 
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
-import type { StockFilter, StockSortKey } from '../model/types'
+import type { StockFilter } from '../model/types'
 
 const statusOptions = [
   { label: '재고 상태 : 전체', value: 'ALL' },
   { label: '충분', value: 'NORMAL' },
   { label: '부족', value: 'LOW' },
-  { label: '재고 없음', value: 'OUT' },
-]
-
-const sortOptions = [
-  { label: '안전재고 대비', value: 'safetyRatio' },
-  { label: '부품명순', value: 'name' },
-  { label: '수량 많은순', value: 'quantity' },
-  { label: '최근 조정일순', value: 'lastAdjustedAt' },
 ]
 
 export interface StockWarehouseOption {
@@ -29,6 +21,10 @@ export interface StockFilterBarProps {
   includeAllOption?: boolean
   onChange: (filter: StockFilter) => void
   onReset: () => void
+  /** '안전재고 대비' 정렬(비율 낮은 순)을 적용한다. 헤더 정렬 중이면 버튼은 비활성으로 표시된다. */
+  onSafetyRatioSort: () => void
+  /** 현재 정렬이 '안전재고 대비'면 true(버튼 활성 표시). */
+  safetyRatioActive: boolean
   warehouses: StockWarehouseOption[]
 }
 
@@ -37,6 +33,8 @@ export function StockFilterBar({
   includeAllOption = true,
   onChange,
   onReset,
+  onSafetyRatioSort,
+  safetyRatioActive,
   warehouses,
 }: StockFilterBarProps) {
   const warehouseOptions = [
@@ -69,13 +67,14 @@ export function StockFilterBar({
         초기화
       </FgButton>
       <span className="h-6 w-px bg-line" />
-      <FgSelect
-        className="w-44"
-        leftIcon={<ArrowUpDown aria-hidden className="h-4 w-4" />}
-        options={sortOptions}
-        value={filter.sort}
-        onValueChange={(value) => onChange({ ...filter, sort: value as StockSortKey })}
-      />
+      <FgButton
+        aria-pressed={safetyRatioActive}
+        leftIcon={<ArrowDownNarrowWide aria-hidden className="h-4 w-4" />}
+        variant={safetyRatioActive ? 'soft' : 'default'}
+        onClick={onSafetyRatioSort}
+      >
+        안전재고 대비
+      </FgButton>
     </FgCard>
   )
 }

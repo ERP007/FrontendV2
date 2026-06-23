@@ -22,12 +22,22 @@ const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '
 const MAX_RANGE_DAYS = 365
 
 export function StockMovementsPage() {
-  // 재고 조회 상세 패널에서 넘어온 sku를 검색어 초기값으로 채운다(선택적).
-  const { keyword: keywordParam } = useSearch({ strict: false }) as { keyword?: string }
-  const [filter, setFilter] = useState<MovementFilter>(() => ({
-    ...createDefaultMovementFilter(),
-    keyword: keywordParam ?? '',
-  }))
+  // 재고 조회 상세 패널에서 sku(keyword)를, KPI '최근 7일 이동' 클릭에서 기간(from/to)을 넘겨받는다(모두 선택적).
+  const {
+    from: fromParam,
+    keyword: keywordParam,
+    to: toParam,
+  } = useSearch({ strict: false }) as { from?: string; keyword?: string; to?: string }
+  const [filter, setFilter] = useState<MovementFilter>(() => {
+    const base = createDefaultMovementFilter()
+    return {
+      ...base,
+      // 기간이 넘어오면 기본값(30일) 대신 그 기간으로 시작한다(KPI 최근 7일 이동 진입).
+      from: fromParam ?? base.from,
+      keyword: keywordParam ?? '',
+      to: toParam ?? base.to,
+    }
+  })
   const [sort, setSort] = useState<MovementSort>(DEFAULT_MOVEMENT_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)

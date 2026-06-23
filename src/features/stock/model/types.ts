@@ -3,7 +3,7 @@
  * (docs/api/inventory-openapi.json — StockResponse/MovementResponse/StockKpiResponse 등과 1:1)
  */
 export type ItemUnit = 'EA' | 'BOX' | 'SET' | 'L'
-export type StockStatus = 'NORMAL' | 'LOW' | 'OUT'
+export type StockStatus = 'NORMAL' | 'LOW'
 export type MovementType = 'INBOUND' | 'OUTBOUND' | 'INCREASE' | 'DECREASE' | 'ADJUST'
 export type AdjustmentType = 'INCREASE' | 'DECREASE' | 'ADJUST'
 export type AdjustmentReason = 'DAMAGE' | 'LOST' | 'FOUND'
@@ -29,8 +29,11 @@ export interface Stock {
 
 /** swagger StockKpiResponse */
 export interface StockKpi {
+  /** 안전재고 충족률(정상÷총×100, %). 신 백엔드가 계산해 보낸다. 없으면 total·low로 유도한다. */
+  fulfillmentRate?: number
   lowStockCount: number
-  noStockCount: number
+  /** 구 백엔드 호환(전환기). 신 응답엔 없다 — 충족률을 신 정의(정상=총−부족)로 유도할 때만 쓴다. */
+  noStockCount?: number
   recentAdjustCount: number
   totalSkuCount: number
 }
@@ -88,17 +91,24 @@ export interface Movement {
 }
 
 export type StockSortKey = 'safetyRatio' | 'name' | 'quantity' | 'lastAdjustedAt'
+export type StockSortDirection = 'asc' | 'desc'
+
+export interface StockSort {
+  direction: StockSortDirection
+  field: StockSortKey
+}
+
+/** 첫 진입 기본 정렬: 안전재고 대비 비율이 낮은(위험한) 재고 먼저. */
+export const DEFAULT_STOCK_SORT: StockSort = { direction: 'asc', field: 'safetyRatio' }
 
 export interface StockFilter {
   keyword: string
-  sort: StockSortKey
   status: 'ALL' | StockStatus
   warehouseCode: 'ALL' | string
 }
 
 export const DEFAULT_STOCK_FILTER: StockFilter = {
   keyword: '',
-  sort: 'safetyRatio',
   status: 'ALL',
   warehouseCode: 'ALL',
 }
@@ -159,7 +169,6 @@ export interface StockCreateFormValues {
 export const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
   LOW: '부족',
   NORMAL: '충분',
-  OUT: '없음',
 }
 
 export const MOVEMENT_TYPE_LABELS: Record<MovementType, string> = {
@@ -183,9 +192,8 @@ export const ADJUSTMENT_REASON_LABELS: Record<AdjustmentReason, string> = {
 }
 
 export function resolveStockStatus(quantity: number, safetyStock: number): StockStatus {
-  if (quantity <= 0) return 'OUT'
-  if (quantity < safetyStock) return 'LOW'
-  return 'NORMAL'
+  // 재고 0도 안전재고 미만이면 '부족'(LOW)에 편입. 안전재고 0이면 0재고도 '충분'(NORMAL).
+  return quantity < safetyStock ? 'LOW' : 'NORMAL'
 }
 
 /** 조정 유형별 조정 후 예상 재고 (ADJUST는 실사값으로 덮어씀) */

@@ -1,4 +1,4 @@
-import { AlertTriangle, Boxes, History, PackageX } from 'lucide-react'
+import { AlertTriangle, Boxes, Gauge, History } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
 
 import { formatNumber } from '@/shared/lib/format'
@@ -8,7 +8,9 @@ import type { StockFilter, StockKpi } from '../model/types'
 
 export interface StockKpiCardsProps {
   kpi: StockKpi
-  /** 제공 시 총 SKU/부족 재고/재고 없음 카드가 클릭 가능해진다(해당 상태로 필터). */
+  /** 제공 시 '최근 7일 이동' 카드가 클릭 가능해진다(이력 페이지로 이동, 최근 7일 필터). */
+  onRecentMovementsClick?: () => void
+  /** 제공 시 총 SKU/부족 재고 카드가 클릭 가능해진다(해당 상태로 필터). */
   onStatusSelect?: (status: StockFilter['status']) => void
 }
 
@@ -30,9 +32,15 @@ function clickableProps(handler: (() => void) | undefined, label: string) {
   }
 }
 
-export function StockKpiCards({ kpi, onStatusSelect }: StockKpiCardsProps) {
+export function StockKpiCards({ kpi, onRecentMovementsClick, onStatusSelect }: StockKpiCardsProps) {
   const select = (status: StockFilter['status']) =>
     onStatusSelect ? () => onStatusSelect(status) : undefined
+
+  // 충족률(%) = 정상 ÷ 총. 신 백엔드의 fulfillmentRate를 우선 쓰고, 없으면(구 백엔드) total·low·무재고로 유도한다.
+  const normalCount = kpi.totalSkuCount - kpi.lowStockCount - (kpi.noStockCount ?? 0)
+  const fulfillmentRate =
+    kpi.fulfillmentRate ??
+    (kpi.totalSkuCount > 0 ? Math.round((normalCount / kpi.totalSkuCount) * 1000) / 10 : 0)
 
   return (
     <div className="grid grid-cols-4 gap-5">
@@ -52,17 +60,17 @@ export function StockKpiCards({ kpi, onStatusSelect }: StockKpiCardsProps) {
         {...clickableProps(select('LOW'), '부족 재고만 보기')}
       />
       <FgKpiCard
-        icon={<PackageX aria-hidden className="h-4 w-4" />}
-        label="재고 없음"
-        metric={formatNumber(kpi.noStockCount)}
-        tag={<FgBadge variant="danger">발주 시급</FgBadge>}
-        {...clickableProps(select('OUT'), '재고 없음만 보기')}
+        footer="정상 ÷ 전체 포지션"
+        icon={<Gauge aria-hidden className="h-4 w-4" />}
+        label="안전재고 충족률"
+        metric={`${fulfillmentRate.toFixed(1)}%`}
       />
       <FgKpiCard
-        footer="증가 · 감소 · 실사 보정 기준"
+        footer="입고 · 출고 · 조정 전체"
         icon={<History aria-hidden className="h-4 w-4" />}
-        label="최근 7일 조정"
+        label="최근 7일 이동"
         metric={formatNumber(kpi.recentAdjustCount)}
+        {...clickableProps(onRecentMovementsClick, '최근 7일 이동 이력 보기')}
       />
     </div>
   )

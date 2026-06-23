@@ -117,9 +117,13 @@ const stockMovementsRoute = createRoute({
   component: StockMovementsPage,
   getParentRoute: () => shellRoute,
   path: '/stock-movements',
-  // 재고 조회 상세 패널 '전체 이력 보기'에서 sku를 keyword로 넘겨받는다(선택적).
-  validateSearch: (search: Record<string, unknown>): { keyword?: string } => ({
+  // 재고 조회 상세 패널 '전체 이력 보기'의 sku(keyword), KPI '최근 7일 이동'의 기간(from/to)을 넘겨받는다(모두 선택적).
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { from?: string; keyword?: string; to?: string } => ({
+    from: typeof search.from === 'string' ? search.from : undefined,
     keyword: typeof search.keyword === 'string' ? search.keyword : undefined,
+    to: typeof search.to === 'string' ? search.to : undefined,
   }),
 })
 
