@@ -22,6 +22,7 @@ export {
   ADJUSTMENT_TYPE_LABELS,
   DEFAULT_MOVEMENT_SORT,
   DEFAULT_STOCK_FILTER,
+  DEFAULT_STOCK_SORT,
   MOVEMENT_TYPE_LABELS,
   movementSourceLabel,
   previewAdjustedQuantity,
@@ -44,6 +45,8 @@ export type {
   StockFilter,
   StockKpi,
   StockSkuDetail,
+  StockSort,
+  StockSortKey,
   StockStatus,
 } from './model/types'
 export { MovementFilterBar } from './ui/MovementFilterBar'

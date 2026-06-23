@@ -1,10 +1,12 @@
 import { useNavigate } from '@tanstack/react-router'
+import dayjs from 'dayjs'
 import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   DEFAULT_STOCK_FILTER,
+  DEFAULT_STOCK_SORT,
   SafetyStockModal,
   StockAdjustModal,
   StockCreateModal,
@@ -20,7 +22,7 @@ import {
   useStockListQuery,
   useStockSkuDetailQuery,
 } from '@/features/stock'
-import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter } from '@/features/stock'
+import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter, StockSort } from '@/features/stock'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -36,6 +38,7 @@ export function StocksPage() {
   const navigate = useNavigate()
 
   const [filter, setFilter] = useState<StockFilter>(DEFAULT_STOCK_FILTER)
+  const [sort, setSort] = useState<StockSort>(DEFAULT_STOCK_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   // 첫 진입 시 우측 상세 패널은 비워둔다(선택 전).
@@ -63,8 +66,9 @@ export function StocksPage() {
       filter: { ...filter, keyword: debouncedKeyword, warehouseCode: effectiveWarehouseCode },
       page,
       size: pageSize,
+      sort,
     }),
-    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize],
+    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize, sort],
   )
 
   const kpiQuery = useStockKpiQuery()
@@ -208,15 +212,32 @@ export function StocksPage() {
       {kpiQuery.data ? (
         <StockKpiCards
           kpi={kpiQuery.data}
+          onRecentMovementsClick={() =>
+            void navigate({
+              to: '/stock-movements',
+              search: {
+                from: dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+                to: dayjs().format('YYYY-MM-DD'),
+              },
+            })
+          }
           onStatusSelect={(status) => handleFilterChange({ ...filter, status })}
         />
       ) : null}
       <StockFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        safetyRatioActive={sort.field === 'safetyRatio'}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
-        onReset={() => handleFilterChange(DEFAULT_STOCK_FILTER)}
+        onReset={() => {
+          handleFilterChange(DEFAULT_STOCK_FILTER)
+          setSort(DEFAULT_STOCK_SORT)
+        }}
+        onSafetyRatioSort={() => {
+          setSort(DEFAULT_STOCK_SORT)
+          setPage(1)
+        }}
       />
       <div className="flex items-start gap-5">
         <div className="min-w-0 flex-1 space-y-5">
@@ -233,8 +254,13 @@ export function StocksPage() {
                 </span>
               }
               selectedId={selectedStock?.id ?? null}
+              sort={sort}
               stocks={stocks}
               onSelect={handleSelectStock}
+              onSortChange={(next) => {
+                setSort(next)
+                setPage(1)
+              }}
             />
           )}
           <FgPagination

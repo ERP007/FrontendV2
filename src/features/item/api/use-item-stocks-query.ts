@@ -4,7 +4,7 @@ import { api } from '@/shared/api'
 
 import type { ItemStockRow, ItemStockStatus } from '../model/types'
 
-const ITEM_STOCK_STATUSES = ['NORMAL', 'LOW', 'OUT'] as const satisfies ItemStockStatus[]
+const ITEM_STOCK_STATUSES = ['NORMAL', 'LOW'] as const satisfies ItemStockStatus[]
 
 interface ItemStockApiRow {
   currentStock: number
