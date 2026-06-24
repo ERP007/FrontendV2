@@ -162,7 +162,6 @@ export function PurchaseOrderEditPage() {
     }
     setLineError(null)
     const payload: DraftPurchaseOrderRequest = {
-      desiredArrivalDate: values.desiredArrivalDate,
       lines: payloadLines.length > 0 ? payloadLines : undefined,
       memo: values.memo || undefined,
       vendorCode: values.vendorCode,

@@ -19,13 +19,13 @@ import {
   PoCancelModal,
   PoHistoryTimeline,
   PoReceiveModal,
+  PoSagaProgressModal,
   useApprovePurchaseOrderMutation,
   useCancelPurchaseOrderMutation,
   usePurchaseOrderHistoriesQuery,
   usePurchaseOrderQuery,
   useReceivePurchaseOrderMutation,
 } from '@/features/purchase-order'
-import { cn } from '@/shared/lib/cn'
 import { formatDateWithDay } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
@@ -52,6 +52,8 @@ export function PurchaseOrderDetailPage() {
   const cancelMutation = useCancelPurchaseOrderMutation()
   const [receiveOpen, setReceiveOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
+  // 입고(#11) saga 진행 스텝퍼 모달
+  const [receiveProgressOpen, setReceiveProgressOpen] = useState(false)
 
   if (!po) return null
 
@@ -83,12 +85,10 @@ export function PurchaseOrderDetailPage() {
 
   async function handleReceive(receivedDate: string) {
     try {
-      const result = await receiveMutation.mutateAsync({
-        code,
-        payload: { receivedDate },
-      })
-      toast.success(`${result.code} 입고 처리되었습니다.`)
+      await receiveMutation.mutateAsync({ code, payload: { receivedDate } })
+      // 입고는 비동기 saga → 진행 스텝퍼 모달에서 폴링으로 결과 확인.
       setReceiveOpen(false)
+      setReceiveProgressOpen(true)
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -142,7 +142,7 @@ export function PurchaseOrderDetailPage() {
             ) : null}
           </>
         }
-        badge={<FgDomainStatusBadge label={po.statusLabel} status={po.status} />}
+        badge={<FgDomainStatusBadge label={po.progressLabel} status={po.progressBadgeStatus} />}
         breadcrumbs={[{ label: '구매' }, { label: '구매 주문' }, { label: po.code }]}
         title={po.code}
       />
@@ -194,23 +194,6 @@ export function PurchaseOrderDetailPage() {
                 icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
                 label="등록일"
                 value={formatDateWithDay(po.createdAt)}
-              />
-              <InfoCell
-                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-                label="도착 희망일"
-                value={
-                  <span className={cn('font-semibold', po.delayed && 'text-danger')}>
-                    {formatDateWithDay(po.desiredArrivalDate)}
-                    <strong
-                      className={cn(
-                        'ml-1.5',
-                        po.delayed ? 'text-danger' : 'text-primary-strong',
-                      )}
-                    >
-                      {po.dday}
-                    </strong>
-                  </span>
-                }
               />
               <InfoCell
                 icon={<CircleDollarSign aria-hidden className="h-3.5 w-3.5" />}
@@ -288,6 +271,17 @@ export function PurchaseOrderDetailPage() {
         onClose={() => setCancelOpen(false)}
         onConfirm={handleCancel}
       />
+      {receiveProgressOpen ? (
+        <PoSagaProgressModal
+          code={code}
+          open
+          onClose={() => setReceiveProgressOpen(false)}
+          onSuccess={() => {
+            setReceiveProgressOpen(false)
+            toast.success(`${code} 입고 처리되었습니다.`)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

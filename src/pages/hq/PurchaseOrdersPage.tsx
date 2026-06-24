@@ -23,11 +23,7 @@ const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }]
 
 const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1 }
 
-const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set([
-  'createdAt',
-  'desiredArrivalDate',
-  'totalAmount',
-])
+const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set(['createdAt', 'totalAmount'])
 
 export function PurchaseOrdersPage() {
   const navigate = useNavigate()

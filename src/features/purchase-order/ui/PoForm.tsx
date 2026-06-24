@@ -1,4 +1,4 @@
-import { Building2, Calendar } from 'lucide-react'
+import { Building2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Controller } from 'react-hook-form'
 import type {
@@ -9,7 +9,7 @@ import type {
 } from 'react-hook-form'
 
 import { formatCurrency } from '@/shared/lib/format'
-import { FgCard, FgInput, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
+import { FgCard, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
 import { draftLineAmount } from '../model/ui-types'
 import type { PoDraftLine } from '../model/ui-types'
@@ -17,9 +17,6 @@ import type { PurchaseOrderDraftFormValues } from '../model/po-schema'
 import { PoLineEditor } from './PoLineEditor'
 import type { PoLineSearchPanelProps } from './PoLineEditor'
 import { VendorPicker } from './VendorPicker'
-
-const DATE_INPUT_CLASSNAME =
-  'appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0'
 
 export interface PoFormWarehouseOption {
   code: string
@@ -75,19 +72,6 @@ export function PoForm({
                 onChange={field.onChange}
               />
             )}
-          />
-          <FgInput
-            error={errors.desiredArrivalDate?.message}
-            inputClassName={DATE_INPUT_CLASSNAME}
-            label="도착 예정일"
-            leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
-            required
-            type="date"
-            {...register('desiredArrivalDate')}
-            onClick={(event) => {
-              const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void }
-              input.showPicker?.()
-            }}
           />
           <Controller
             control={control}

@@ -4,7 +4,7 @@ import { api } from '@/shared/api'
 
 import type {
   ReceivePurchaseOrderRequest,
-  ReceivePurchaseOrderResponse,
+  PurchaseOrderStatusResponse,
 } from '../model/types'
 import { invalidatePurchaseOrder } from './po-cache'
 
@@ -17,7 +17,7 @@ export function useReceivePurchaseOrderMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ code, payload }: ReceivePurchaseOrderVariables) => {
-      const response = await api.patch<ReceivePurchaseOrderResponse>(
+      const response = await api.patch<PurchaseOrderStatusResponse>(
         `/procurement-orders/${code}/receive`,
         payload,
       )

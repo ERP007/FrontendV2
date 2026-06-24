@@ -1,10 +1,12 @@
-import { formatDday, isOverdue } from '@/shared/lib/format'
+import type { FgDomainStatus } from '@/shared/ui'
 
 import { PO_STATUS_LABELS } from './po-list-row'
+import { PO_PROGRESS_BADGE_STATUS, PO_PROGRESS_LABELS } from './ui-types'
 import type {
   PersonInfo,
   PurchaseOrderDetailLine,
   PurchaseOrderDetailResponse,
+  PurchaseOrderProgress,
   PurchaseOrderStatus,
   VendorRef,
   WarehouseRef,
@@ -26,11 +28,12 @@ export interface PurchaseOrderDetail {
   code: string
   createdAt: string
   currency: string
-  dday: string
-  delayed: boolean
-  desiredArrivalDate: string
   lineCount: number
   lines: PurchaseOrderDetailLineRow[]
+  memo: string | null
+  progress: PurchaseOrderProgress
+  progressBadgeStatus: FgDomainStatus
+  progressLabel: string
   status: PurchaseOrderStatus
   statusLabel: string
   totalAmount: string
@@ -38,8 +41,6 @@ export interface PurchaseOrderDetail {
   vendor: VendorRef
   warehouse: WarehouseRef
 }
-
-const OPEN_STATUSES: ReadonlySet<PurchaseOrderStatus> = new Set(['DRAFT', 'APPROVED'])
 
 function formatAmount(value: number, currency: string): string {
   return `${currency} ${value.toLocaleString('ko-KR')}`
@@ -65,8 +66,6 @@ function mapLine(line: PurchaseOrderDetailLine, currency: string): PurchaseOrder
 export function mapPurchaseOrderDetail(
   detail: PurchaseOrderDetailResponse,
 ): PurchaseOrderDetail {
-  const isOpen = OPEN_STATUSES.has(detail.status)
-  const delayed = isOpen && isOverdue(detail.desiredArrivalDate)
   const totalQuantity = detail.lines.reduce((sum, line) => sum + line.quantity, 0)
 
   return {
@@ -75,11 +74,12 @@ export function mapPurchaseOrderDetail(
     code: detail.code,
     createdAt: detail.createdAt,
     currency: detail.currency,
-    dday: formatDday(detail.desiredArrivalDate),
-    delayed,
-    desiredArrivalDate: detail.desiredArrivalDate,
     lineCount: detail.lines.length,
     lines: detail.lines.map((line) => mapLine(line, detail.currency)),
+    memo: detail.memo,
+    progress: detail.progress,
+    progressBadgeStatus: PO_PROGRESS_BADGE_STATUS[detail.progress],
+    progressLabel: PO_PROGRESS_LABELS[detail.progress],
     status: detail.status,
     statusLabel: PO_STATUS_LABELS[detail.status],
     totalAmount: formatAmount(detail.totalAmount, detail.currency),
