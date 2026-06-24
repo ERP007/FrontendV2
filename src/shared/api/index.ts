@@ -9,6 +9,7 @@ export {
   clearAuthRedirectAttempt,
   clearLogoutRedirectPending,
   consumeLogoutRedirectPending,
+  hasRecentAuthRedirectAttempt,
   isAuthRedirectInProgress,
   logoutAndRedirectToLogin,
   redirectToAuthLogin,

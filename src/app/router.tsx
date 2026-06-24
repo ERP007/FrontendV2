@@ -1,4 +1,5 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
+import { AlertTriangle, RotateCw } from 'lucide-react'
 
 import { AppShellLayout } from '@/app/layouts/AppShellLayout'
 import { UsersPage } from '@/pages/admin/UsersPage'
@@ -28,14 +29,49 @@ import {
   redirectToForcedAuthLogin,
   waitForAuthRedirect,
 } from '@/shared/api'
-import { ensureSession } from '@/shared/auth/session'
+import { ensureSession, isAuthSessionCookieError } from '@/shared/auth/session'
 import {
   canAccessBranchScope,
   canAccessHqScope,
   canAccessUserManagement,
 } from '@/shared/config/session'
+import { FgButton, FgNotice } from '@/shared/ui'
 
 const rootRoute = createRootRoute()
+
+function AuthSessionCookieErrorPage() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-6 py-10">
+      <section className="w-full max-w-[560px] space-y-6 rounded-card border border-line bg-surface p-8 shadow-card">
+        <div className="flex h-12 w-12 items-center justify-center rounded-control bg-danger-bg text-danger">
+          <AlertTriangle aria-hidden className="h-6 w-6" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-title font-bold text-ink">세션 쿠키를 확인하지 못했습니다.</h1>
+          <p className="text-body text-muted">
+            로그인을 완료했지만 브라우저가 서비스 세션 쿠키를 저장하거나 API 요청에 전송하지 못했습니다.
+          </p>
+        </div>
+        <FgNotice tone="warning">
+          시크릿 모드의 쿠키 차단 설정을 확인하거나, 로컬 개발 환경에서는 API 요청을 /api 프록시로 보내주세요.
+        </FgNotice>
+        <div className="flex justify-end">
+          <FgButton leftIcon={<RotateCw aria-hidden className="h-4 w-4" />} onClick={() => redirectToAuthLogin()}>
+            다시 로그인
+          </FgButton>
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function ShellErrorComponent({ error }: { error: unknown }) {
+  if (isAuthSessionCookieError(error)) {
+    return <AuthSessionCookieErrorPage />
+  }
+
+  throw error
+}
 
 function getInitialHomePath(userRole?: string | null) {
   if (canAccessUserManagement(userRole)) {
@@ -97,6 +133,10 @@ const shellRoute = createRoute({
         return await waitForAuthRedirect()
       }
 
+      if (isAuthSessionCookieError(error)) {
+        throw error
+      }
+
       if (isUnauthorizedError(error)) {
         redirectToAuthLogin()
         return await waitForAuthRedirect()
@@ -106,6 +146,7 @@ const shellRoute = createRoute({
     }
   },
   component: AppShellLayout,
+  errorComponent: ShellErrorComponent,
   getParentRoute: () => rootRoute,
   id: 'shell',
 })

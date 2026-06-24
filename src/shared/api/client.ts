@@ -6,7 +6,7 @@ import { queryClient } from '@/shared/api/query-client'
 
 import type { ErrorResponse } from '@/shared/api/error'
 
-type Auth401Redirect = 'forced-login' | 'login'
+type Auth401Redirect = 'forced-login' | 'login' | 'none'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -22,9 +22,11 @@ const KEYCLOAK_FORCED_AUTHORIZATION_PATH = '/api/auth/login?prompt=login'
 const PASSWORD_CHANGE_PATH = '/api/auth/password-change'
 const LOGOUT_PATH = '/api/auth/logout'
 const LOGOUT_REDIRECT_PENDING_KEY = 'erp007.logoutRedirectPending'
-const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
+const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempt'
+const AUTH_REDIRECT_ATTEMPT_WINDOW_MS = 120_000
 
 type LogoutRedirectTarget = 'forced-login' | 'login'
+type AuthRedirectAttemptTarget = LogoutRedirectTarget
 
 let authRedirectInProgress = false
 
@@ -60,6 +62,36 @@ export function clearAuthRedirectAttempt() {
   }
 }
 
+export function hasRecentAuthRedirectAttempt(target?: AuthRedirectAttemptTarget) {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY)
+
+    if (!rawValue) {
+      return false
+    }
+
+    const value = JSON.parse(rawValue) as Partial<{
+      startedAt: number
+      target: AuthRedirectAttemptTarget
+    }>
+    const startedAt = typeof value.startedAt === 'number' ? value.startedAt : 0
+    const isFresh = Date.now() - startedAt <= AUTH_REDIRECT_ATTEMPT_WINDOW_MS
+    const isTargetMatched = !target || value.target === target
+
+    if (!isFresh) {
+      clearAuthRedirectAttempt()
+    }
+
+    return isFresh && isTargetMatched
+  } catch {
+    return false
+  }
+}
+
 export function consumeLogoutRedirectPending() {
   if (typeof window === 'undefined') {
     return null
@@ -85,6 +117,20 @@ export function consumeLogoutRedirectPending() {
 function markLogoutRedirectPending(target: LogoutRedirectTarget) {
   try {
     window.sessionStorage.setItem(LOGOUT_REDIRECT_PENDING_KEY, target)
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function markAuthRedirectAttempt(target: AuthRedirectAttemptTarget) {
+  try {
+    window.sessionStorage.setItem(
+      AUTH_REDIRECT_ATTEMPT_KEY,
+      JSON.stringify({
+        startedAt: Date.now(),
+        target,
+      }),
+    )
   } catch {
     // Ignore storage failures.
   }
@@ -139,6 +185,7 @@ export function redirectToAuthLogin() {
 
   authRedirectInProgress = true
   clearLogoutRedirectPending()
+  markAuthRedirectAttempt('login')
   queryClient.clear()
   window.location.assign(KEYCLOAK_AUTHORIZATION_URL)
 
@@ -156,6 +203,7 @@ export function redirectToForcedAuthLogin() {
 
   authRedirectInProgress = true
   clearLogoutRedirectPending()
+  markAuthRedirectAttempt('forced-login')
   queryClient.clear()
   window.location.assign(KEYCLOAK_FORCED_AUTHORIZATION_URL)
 
@@ -189,6 +237,10 @@ function handleGlobalError(
   }: { auth401Redirect?: Auth401Redirect; suppressToast?: boolean } = {},
 ) {
   if (error.status === 401) {
+    if (auth401Redirect === 'none') {
+      return false
+    }
+
     return auth401Redirect === 'login' ? redirectToAuthLogin() : redirectToForcedAuthLogin()
   }
 
