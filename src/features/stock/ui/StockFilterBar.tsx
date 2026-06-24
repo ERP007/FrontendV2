@@ -1,4 +1,4 @@
-import { ArrowDownNarrowWide, RotateCcw, Search, Warehouse } from 'lucide-react'
+import { ArrowDownNarrowWide, Eye, EyeOff, RotateCcw, Search, Warehouse } from 'lucide-react'
 
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
@@ -60,7 +60,7 @@ export function StockFilterBar({
       <FgInput
         leftIcon={<Search aria-hidden className="h-4 w-4" />}
         placeholder="부품명 또는 코드"
-        rootClassName="flex-1"
+        rootClassName="min-w-0 flex-1 max-w-md"
         value={filter.keyword}
         onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
       />
@@ -83,7 +83,7 @@ export function StockFilterBar({
       <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
         초기화
       </FgButton>
-      <span className="h-6 w-px bg-line" />
+      <span className="ml-auto h-6 w-px bg-line" />
       <FgButton
         aria-pressed={safetyRatioActive}
         leftIcon={<ArrowDownNarrowWide aria-hidden className="h-4 w-4" />}
@@ -91,6 +91,21 @@ export function StockFilterBar({
         onClick={onSafetyRatioSort}
       >
         안전재고 대비
+      </FgButton>
+      <FgButton
+        aria-pressed={filter.includeInactive}
+        leftIcon={
+          filter.includeInactive ? (
+            <Eye aria-hidden className="h-4 w-4" />
+          ) : (
+            <EyeOff aria-hidden className="h-4 w-4" />
+          )
+        }
+        size="sm"
+        variant={filter.includeInactive ? 'soft' : 'default'}
+        onClick={() => onChange({ ...filter, includeInactive: !filter.includeInactive })}
+      >
+        비활성 표시
       </FgButton>
     </FgCard>
   )

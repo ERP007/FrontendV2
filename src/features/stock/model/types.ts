@@ -105,12 +105,15 @@ export interface StockFilter {
   keyword: string
   status: 'ALL' | StockStatus
   warehouseCode: 'ALL' | string
+  /** 비활성(창고/부품) 재고 표시 여부. 기본 false(활성만), 토글로 켜면 포함. */
+  includeInactive: boolean
 }
 
 export const DEFAULT_STOCK_FILTER: StockFilter = {
   keyword: '',
   status: 'ALL',
   warehouseCode: 'ALL',
+  includeInactive: false,
 }
 
 export interface MovementFilter {

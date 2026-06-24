@@ -42,6 +42,7 @@ export function useStockListQuery(params: StockListParams) {
       if (keyword) search.set('keyword', keyword)
       if (filter.warehouseCode !== 'ALL') search.set('warehouseCodes', filter.warehouseCode)
       if (filter.status !== 'ALL') search.set('status', filter.status)
+      if (filter.includeInactive) search.set('includeInactive', 'true')
       search.set('sort', `${sort.field},${sort.direction}`)
       search.set('page', String(page))
       search.set('size', String(size))
