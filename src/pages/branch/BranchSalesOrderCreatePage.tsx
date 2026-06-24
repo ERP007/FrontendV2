@@ -69,9 +69,8 @@ export function BranchSalesOrderCreatePage() {
 
     try {
       const order = await createSalesOrderMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: payloadLines,
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${order.code} 발주 요청이 제출되었습니다.`)
@@ -93,9 +92,8 @@ export function BranchSalesOrderCreatePage() {
 
     try {
       const draft = await createDraftMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: payloadLines,
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${draft.code} 임시저장되었습니다.`)

@@ -1,19 +1,28 @@
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { Ban, Calendar, Edit3, FileText, PackageCheck, Send, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import {
+  Ban,
+  Calendar,
+  Check,
+  Edit3,
+  PackageCheck,
+  Send,
+  User as UserIcon,
+  Warehouse as WarehouseIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
-  CARRIER_TYPE_LABELS,
   SoCancelModal,
   SoHistoryTimeline,
+  SoNoteBox,
   useBranchSalesOrderQuery,
   useCancelSalesOrderMutation,
   useRequestSalesOrderMutation,
 } from '@/features/sales-order'
-import type { BranchSalesOrderDetail } from '@/features/sales-order'
-import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
+import type { SalesOrderDetail } from '@/features/sales-order'
+import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
 function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
@@ -58,7 +67,7 @@ export function BranchSalesOrderDetailPage() {
     }
   }
 
-  function renderActions(so: BranchSalesOrderDetail) {
+  function renderActions(so: SalesOrderDetail) {
     if (so.status === 'DRAFT') {
       return (
         <>
@@ -131,45 +140,34 @@ export function BranchSalesOrderDetailPage() {
             <div className="mb-6 flex items-center justify-between gap-4">
               <h2 className="text-section text-ink">발주 요약</h2>
               <span className="text-meta font-medium text-faint">
-                출고지 · {so.toWarehouse.name} ({so.toWarehouse.code})
+                수신 창고 · {so.toWarehouse.name ?? so.toWarehouse.code} ({so.toWarehouse.code})
               </span>
             </div>
             <div className="grid grid-cols-4 gap-x-6 gap-y-7">
               <InfoCell
-                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-                label="본사 출고 일자"
-                value={
-                  so.approvedAt ? (
-                    <span>
-                      {formatDate(so.approvedAt)}
-                      <span className="ml-1.5 text-meta font-medium text-faint">
-                        {formatTime(so.approvedAt)}
-                      </span>
-                    </span>
-                  ) : (
-                    '—'
-                  )
-                }
-              />
-              <InfoCell
-                icon={<FileText aria-hidden className="h-3.5 w-3.5" />}
-                label="송장번호"
-                value={so.invoiceNumber ?? '—'}
-              />
-              <InfoCell
-                icon={<Truck aria-hidden className="h-3.5 w-3.5" />}
-                label="운송 수단"
-                value={so.carrierType ? CARRIER_TYPE_LABELS[so.carrierType] : '—'}
-              />
-              <InfoCell
                 icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
-                label="수신 창고"
+                label="출고 창고"
                 value={
                   <span>
-                    {so.fromWarehouse.name}
+                    {so.fromWarehouse.name ?? so.fromWarehouse.code}
                     <span className="ml-1.5 text-meta font-medium text-faint">{so.fromWarehouse.code}</span>
                   </span>
                 }
+              />
+              <InfoCell
+                icon={<UserIcon aria-hidden className="h-3.5 w-3.5" />}
+                label="요청자"
+                value={so.requesterLabel}
+              />
+              <InfoCell
+                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
+                label="요청일"
+                value={so.requestedAtLabel}
+              />
+              <InfoCell
+                icon={<Check aria-hidden className="h-3.5 w-3.5" />}
+                label="승인자"
+                value={so.approvalLabel ?? <span className="font-medium text-muted">미승인</span>}
               />
             </div>
           </FgCard>
@@ -206,6 +204,7 @@ export function BranchSalesOrderDetailPage() {
                 </tbody>
               </table>
             </div>
+            {so.requestMemo ? <SoNoteBox note={so.requestMemo} /> : null}
           </FgCard>
         </div>
 

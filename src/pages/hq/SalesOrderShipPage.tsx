@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
 import dayjs from 'dayjs'
 import { Building2, Calendar, FileText, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
@@ -9,6 +9,7 @@ import {
   CARRIER_TYPE_LABELS,
   useApproveSalesOrderMutation,
   useHqSalesOrderQuery,
+  useSalesOrderProgressQuery,
 } from '@/features/sales-order'
 import type { CarrierType } from '@/features/sales-order'
 import { useStockQuantitiesQuery } from '@/features/stock'
@@ -55,10 +56,28 @@ export function SalesOrderShipPage() {
   const [carrierType, setCarrierType] = useState<CarrierType | ''>('')
   const [approvedDate, setApprovedDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [invoiceNumber, setInvoiceNumber] = useState('')
+  // 승인(#6)은 saga 라 OUTBOUND_IN_PROGRESS 면 진행 상태(#10)를 폴링한다.
+  const [polling, setPolling] = useState(false)
+  const progressQuery = useSalesOrderProgressQuery(code, polling)
+  const progress = progressQuery.data
+
+  // 폴링 종료(pending=false)는 refetchInterval 이 멈춘다. 종료 시 결과만 처리한다.
+  // 재시도 시에는 approve mutation 의 캐시 무효화로 진행 폴링이 다시 시작된다.
+  useEffect(() => {
+    if (!polling || !progress || progress.pending) return
+    if (progress.outcome === 'SUCCESS') {
+      toast.success(`${code} 출고되었습니다.`)
+      void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+    } else if (progress.outcome === 'FAILED') {
+      toast.error(progress.failureReason ?? '출고 처리에 실패했습니다. 다시 시도해주세요.')
+    }
+  }, [code, navigate, polling, progress])
 
   if (!so) return null
 
   const totalRequested = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
+  const isProcessing =
+    approveMutation.isPending || (polling && progress?.pending !== false)
 
   async function handleConfirm() {
     if (!carrierType) {
@@ -69,10 +88,15 @@ export function SalesOrderShipPage() {
       const result = await approveMutation.mutateAsync({
         approvedDate,
         carrierType,
-        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : null,
+        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : undefined,
       })
-      toast.success(`${result.code} 출고되었습니다.`)
-      void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      // 진행중이면 폴링 시작, 즉시 확정이면 바로 이동.
+      if (result.progress === 'OUTBOUND_IN_PROGRESS') {
+        setPolling(true)
+      } else {
+        toast.success(`${result.code} 출고되었습니다.`)
+        void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      }
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -106,16 +130,6 @@ export function SalesOrderShipPage() {
                 <span className="ml-1.5 text-meta font-medium text-faint">
                   {so.fromWarehouse.code}
                 </span>
-              </span>
-            }
-          />
-          <InfoCell
-            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-            label="도착 희망일"
-            value={
-              <span>
-                {so.desiredArrivalDateLabel}
-                <strong className="ml-1.5 text-primary-strong">{so.dday}</strong>
               </span>
             }
           />
@@ -233,12 +247,12 @@ export function SalesOrderShipPage() {
           취소
         </FgButton>
         <FgButton
-          disabled={approveMutation.isPending}
+          disabled={isProcessing}
           leftIcon={<Truck aria-hidden className="h-4 w-4" />}
           variant="primary"
           onClick={() => void handleConfirm()}
         >
-          출고 확정
+          {isProcessing ? '출고 처리중…' : '출고 확정'}
         </FgButton>
       </FgCard>
     </div>

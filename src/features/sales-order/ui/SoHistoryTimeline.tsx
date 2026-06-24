@@ -31,6 +31,15 @@ export function SoHistoryTimeline({ code }: SoHistoryTimelineProps) {
                 <UserIcon aria-hidden className="h-3.5 w-3.5 text-faint" />
                 {entry.changedByLabel}
               </p>
+              {entry.metaLines.length > 0 ? (
+                <ul className="mt-1.5 space-y-0.5">
+                  {entry.metaLines.map((line) => (
+                    <li key={line} className="text-meta font-medium text-faint">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ol>

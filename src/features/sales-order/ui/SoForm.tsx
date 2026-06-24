@@ -1,18 +1,15 @@
-import { AlertTriangle, Calendar, Lock } from 'lucide-react'
+import { AlertTriangle, Lock } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 import type { Control, FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
 import { formatNumber } from '@/shared/lib/format'
-import { FgCard, FgInput, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
+import { FgCard, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
 import type { SoLine } from '../model/ui-types'
 import type { SoFormValues } from '../model/so-draft-schema'
 import { SoLineEditor } from './SoLineEditor'
 import type { SoLineSearchPanelProps } from './SoLineEditor'
-
-const DATE_INPUT_CLASSNAME =
-  'appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0'
 
 export interface SoFormWarehouseOption {
   code: string
@@ -84,19 +81,6 @@ export function SoForm({
               </span>
             </div>
           </div>
-          <FgInput
-            error={errors.desiredArrivalDate?.message}
-            inputClassName={DATE_INPUT_CLASSNAME}
-            label="도착 희망일"
-            leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
-            required
-            type="date"
-            {...register('desiredArrivalDate')}
-            onClick={(event) => {
-              const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void }
-              input.showPicker?.()
-            }}
-          />
           <Controller
             control={control}
             name="warehouseCode"

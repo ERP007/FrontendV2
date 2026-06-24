@@ -1,17 +1,23 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Calendar, Check, FileText, Lock, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
-import { useState } from 'react'
+import {
+  Calendar,
+  Check,
+  Lock,
+  User as UserIcon,
+  Warehouse as WarehouseIcon,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
-  CARRIER_TYPE_LABELS,
   useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
+  useSalesOrderProgressQuery,
 } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
-import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
+import { formatNumber } from '@/shared/lib/format'
 import {
   FgBadge,
   FgButton,
@@ -44,16 +50,39 @@ export function BranchSalesOrderArrivalPage() {
   const deliverMutation = useSalesOrderDeliverMutation(code)
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
+  // 입고 처리(#9)는 saga 라 INBOUND_IN_PROGRESS 면 진행 상태(#10)를 폴링한다.
+  const [polling, setPolling] = useState(false)
+  const progressQuery = useSalesOrderProgressQuery(code, polling)
+  const progress = progressQuery.data
+
+  // 폴링 종료(pending=false)는 refetchInterval 이 멈춘다. 종료 시 결과만 처리한다.
+  // 재시도 시에는 deliver mutation 의 캐시 무효화로 진행 폴링이 다시 시작된다.
+  useEffect(() => {
+    if (!polling || !progress || progress.pending) return
+    if (progress.outcome === 'SUCCESS') {
+      toast.success(`${code} 입고가 확정되었습니다.`)
+      void navigate({ replace: true, to: '/branch/sales-orders' })
+    } else if (progress.outcome === 'FAILED') {
+      toast.error(progress.failureReason ?? '입고 처리에 실패했습니다. 다시 시도해주세요.')
+    }
+  }, [code, navigate, polling, progress])
 
   if (!so) return null
 
   const totalQuantity = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
+  const isProcessing =
+    deliverMutation.isPending || (polling && progress?.pending !== false)
 
   async function handleConfirm() {
     try {
       const result = await deliverMutation.mutateAsync({ deliveredDate: arrivalDate })
-      toast.success(`${result.code} 도착이 확정되었습니다.`)
-      void navigate({ replace: true, to: '/branch/sales-orders' })
+      // 진행중이면 폴링 시작, 즉시 확정이면 바로 이동.
+      if (result.progress === 'INBOUND_IN_PROGRESS') {
+        setPolling(true)
+      } else {
+        toast.success(`${result.code} 입고가 확정되었습니다.`)
+        void navigate({ replace: true, to: '/branch/sales-orders' })
+      }
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -80,45 +109,39 @@ export function BranchSalesOrderArrivalPage() {
         <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-section text-ink">발주 요약</h2>
           <span className="text-meta font-medium text-faint">
-            출고지 · {so.fromWarehouse.name} ({so.fromWarehouse.code})
+            출고지 · {so.fromWarehouse.name ?? so.fromWarehouse.code} ({so.fromWarehouse.code})
           </span>
         </div>
         <div className="grid grid-cols-4 gap-x-6 gap-y-7">
           <InfoCell
-            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-            label="본사 출고 일자"
+            icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
+            label="출고 창고"
             value={
-              so.approvedAt ? (
-                <span>
-                  {formatDate(so.approvedAt)}
-                  <span className="ml-1.5 text-meta font-medium text-faint">
-                    {formatTime(so.approvedAt)}
-                  </span>
-                </span>
-              ) : (
-                '—'
-              )
+              <span>
+                {so.fromWarehouse.name ?? so.fromWarehouse.code}
+                <span className="ml-1.5 text-meta font-medium text-faint">{so.fromWarehouse.code}</span>
+              </span>
             }
-          />
-          <InfoCell
-            icon={<FileText aria-hidden className="h-3.5 w-3.5" />}
-            label="송장번호"
-            value={so.invoiceNumber ?? '—'}
-          />
-          <InfoCell
-            icon={<Truck aria-hidden className="h-3.5 w-3.5" />}
-            label="운송 수단"
-            value={so.carrierType ? CARRIER_TYPE_LABELS[so.carrierType] : '—'}
           />
           <InfoCell
             icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
             label="수신 창고"
             value={
               <span>
-                {so.toWarehouse.name}
+                {so.toWarehouse.name ?? so.toWarehouse.code}
                 <span className="ml-1.5 text-meta font-medium text-faint">{so.toWarehouse.code}</span>
               </span>
             }
+          />
+          <InfoCell
+            icon={<UserIcon aria-hidden className="h-3.5 w-3.5" />}
+            label="요청자"
+            value={so.requesterLabel}
+          />
+          <InfoCell
+            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
+            label="요청일"
+            value={so.requestedAtLabel}
           />
         </div>
       </FgCard>
@@ -218,12 +241,12 @@ export function BranchSalesOrderArrivalPage() {
             취소
           </FgButton>
           <FgButton
-            disabled={deliverMutation.isPending}
+            disabled={isProcessing}
             leftIcon={<Check aria-hidden className="h-4 w-4" />}
             variant="primary"
             onClick={() => void handleConfirm()}
           >
-            도착 확정
+            {isProcessing ? '입고 처리중…' : '도착 확정'}
           </FgButton>
         </span>
       </FgCard>

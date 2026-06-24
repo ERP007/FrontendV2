@@ -48,7 +48,7 @@ export function SalesOrderDetailPage() {
 
   async function handleReject(reasonCategory: RejectReasonCategory, memo: string | null) {
     try {
-      const result = await rejectMutation.mutateAsync({ memo, reasonCategory })
+      const result = await rejectMutation.mutateAsync({ memo: memo ?? undefined, reasonCategory })
       toast.success(`${result.code} 발주 요청이 거절되었습니다.`)
       setRejectOpen(false)
     } catch {
@@ -129,16 +129,6 @@ export function SalesOrderDetailPage() {
                 icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
                 label="요청일"
                 value={so.requestedAtLabel}
-              />
-              <InfoCell
-                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-                label="도착 희망일"
-                value={
-                  <span>
-                    {so.desiredArrivalDateLabel}
-                    <strong className="ml-1.5 text-primary-strong">{so.dday}</strong>
-                  </span>
-                }
               />
             </div>
           </FgCard>

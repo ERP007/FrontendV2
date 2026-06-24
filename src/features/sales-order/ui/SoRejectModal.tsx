@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { FgBadge, FgButton, FgModal, FgNotice, FgSelect, FgTextarea } from '@/shared/ui'
 
 import { REJECT_REASON_CATEGORY_LABELS } from '../model/ui-types'
-import type { HqSalesOrderDetail } from '../model/so-detail'
+import type { SalesOrderDetail } from '../model/so-detail'
 import type { RejectReasonCategory } from '../model/types'
 
 const MAX_MEMO = 500
@@ -18,7 +18,7 @@ export interface SoRejectModalProps {
   onClose: () => void
   onConfirm: (reasonCategory: RejectReasonCategory, memo: string | null) => void
   open: boolean
-  so: HqSalesOrderDetail
+  so: SalesOrderDetail
 }
 
 export function SoRejectModal({ isSubmitting, onClose, onConfirm, open, so }: SoRejectModalProps) {

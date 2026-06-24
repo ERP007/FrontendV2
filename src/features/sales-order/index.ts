@@ -5,40 +5,40 @@
 // ----- 백엔드 DTO (model/types) -----
 export type {
   ApproveSalesOrderRequest,
-  ApproveSalesOrderResponse,
-  BranchSalesOrderDetailResponse,
   BranchSalesOrderKpiResponse,
   BranchSalesOrderPageResponse,
   BranchSalesOrderQuery,
   BranchSalesOrderSummary,
   CancelSalesOrderRequest,
-  CancelSalesOrderResponse,
   CarrierType,
   CreateDraftSalesOrderRequest,
   CreateSalesOrderRequest,
-  CreateSalesOrderResponse,
   DeliverSalesOrderRequest,
-  DeliverSalesOrderResponse,
-  HqSalesOrderDetailResponse,
   HqSalesOrderKpiResponse,
   HqSalesOrderPageResponse,
   HqSalesOrderQuery,
   HqSalesOrderSummary,
+  OrderProgress,
   PageSize,
   PersonInfo,
   Priority,
+  ProgressOutcome,
   RejectReasonCategory,
   RejectSalesOrderRequest,
-  RejectSalesOrderResponse,
-  RequestSalesOrderResponse,
+  RequestInfo,
+  SalesOrderDetailResponse,
   SalesOrderHistoryListResponse,
   SalesOrderHistoryResponse,
   SalesOrderLineRequest,
   SalesOrderLineResponse,
+  SalesOrderProgressResponse,
   SalesOrderSortField,
   SalesOrderStatus,
+  SalesOrderStatusChangedResponse,
   SortDirection,
+  StatusChangeMeta,
   SubmitSalesOrderRequest,
+  UpdateDraftSalesOrderRequest,
   WarehouseInfo,
 } from './model/types'
 
@@ -61,7 +61,7 @@ export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-muta
 export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
 export type { BranchSalesOrderListParams } from './api/use-branch-sales-orders-query'
 export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
-export type { BranchSalesOrderDetail, HqSalesOrderDetail } from './model/so-detail'
+export type { SalesOrderDetail, SalesOrderDetailLine } from './model/so-detail'
 export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
 export type { HqSalesOrderListParams } from './api/use-hq-sales-orders-query'
 export { useHqSalesOrderQuery } from './api/use-hq-sales-order-query'
@@ -71,9 +71,15 @@ export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-qu
 export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export { useSalesOrderHistoriesQuery } from './api/use-sales-order-histories-query'
 export type { SalesOrderHistoryRow } from './model/so-history'
+export { useSalesOrderProgressQuery } from './api/use-sales-order-progress-query'
 
 // ----- 화면 모델 / 라벨 / 헬퍼 (model/ui-types) -----
-export { CARRIER_TYPE_LABELS, emptySoDraftLine, SO_TAB_STATUS_MAP } from './model/ui-types'
+export {
+  CARRIER_TYPE_LABELS,
+  emptySoDraftLine,
+  ORDER_PROGRESS_LABELS,
+  SO_TAB_STATUS_MAP,
+} from './model/ui-types'
 export type { SoLine as SoDraftLine, SoStatusTab } from './model/ui-types'
 export type { BranchSalesOrderRow, HqSalesOrderRow } from './model/so-list-row'
 export { soDraftFormSchema } from './model/so-draft-schema'
