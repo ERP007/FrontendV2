@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -175,12 +175,6 @@ export function StocksPage() {
       <FgPageHeader
         actions={
           <>
-            <FgButton
-              leftIcon={<Download aria-hidden className="h-4 w-4" />}
-              onClick={() => toast.info('내보내기는 백엔드 연동 후 제공됩니다.')}
-            >
-              내보내기
-            </FgButton>
             {canManage ? (
               <>
                 <FgButton

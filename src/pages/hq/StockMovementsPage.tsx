@@ -1,6 +1,5 @@
 import { useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,7 +13,7 @@ import {
 import type { MovementFilter, MovementSort, MovementSortField } from '@/features/stock'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgButton, FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
+import { FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 이력' }]
 
@@ -98,18 +97,7 @@ export function StockMovementsPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <FgButton
-            leftIcon={<Download aria-hidden className="h-4 w-4" />}
-            onClick={() => toast.info('CSV 내보내기는 백엔드 연동 후 제공됩니다.')}
-          >
-            CSV 내보내기
-          </FgButton>
-        }
-        breadcrumbs={breadcrumbs}
-        title="재고 이력"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="재고 이력" />
       <MovementFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
