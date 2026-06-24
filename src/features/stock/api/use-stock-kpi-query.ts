@@ -30,12 +30,18 @@ function normalizeStockKpi(value: unknown): StockKpi {
   const data = isRecord(value) && 'content' in value ? value.content : value
   if (!isRecord(data)) return emptyStockKpi
 
-  return {
+  const normalized: StockKpi = {
     lowStockCount: toFiniteNumber(data.lowStockCount),
     noStockCount: toFiniteNumber(data.noStockCount),
     recentAdjustCount: toFiniteNumber(data.recentAdjustCount),
     totalSkuCount: toFiniteNumber(data.totalSkuCount),
   }
+
+  if (typeof data.fulfillmentRate === 'number' && Number.isFinite(data.fulfillmentRate)) {
+    normalized.fulfillmentRate = data.fulfillmentRate
+  }
+
+  return normalized
 }
 
 /**
