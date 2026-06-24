@@ -1,24 +1,13 @@
 /**
- * 본사 대시보드(DA-01) UI 모델.
+ * 본사 대시보드(DA-01) 보조 KPI UI 모델 (구매·발주).
  *
- * 대시보드는 여러 서비스의 집계를 한 화면에 모은다:
- * - 재고 KPI 4종(총 SKU/부족/무재고/최근 7일 조정) = Inventory `GET /inventory/stocks/kpi`
- *   (swagger StockKpiResponse: totalSkuCount/lowStockCount/noStockCount/recentAdjustCount)
+ * 상단 재고 KPI 4종(총 SKU/부족/충족률/최근 7일 이동)은 features/stock의 StockKpi로 분리되어
+ * `GET /inventory/stocks/kpi`(ADMIN·HQ는 전사 범위) 실데이터로 그린다(StockKpiCards 재사용).
+ * 이 타입은 아직 연동 전이라 fixture로 채우는 구매·발주 KPI만 담는다:
  * - 구매 KPI 2종(진행 중 PO/도착 예정 PO) = Procurement 요약
  * - 발주 KPI 2종(승인 대기/출고 대기) = Sales 요약
- * 집계 범위는 본사 전체(전 지점)이므로 목록 화면의 표본 fixture보다 큰 수치를 가진다.
  */
 export interface DashboardKpi {
-  /** 재고 — 총 SKU 포지션 수 */
-  totalSkuCount: number
-  /** 재고 — 안전재고 미만 부족 포지션 수 */
-  lowStockCount: number
-  /** 재고 — 무재고 포지션 수 */
-  noStockCount: number
-  /** 재고 — 최근 7일 조정 건수 */
-  recentAdjustCount: number
-  /** 재고 — 최근 7일 조정 전주 대비 증감 */
-  adjustDelta: number
   /** 구매 — 진행 중(DRAFT/APPROVED/SHIPPED) 구매 PO 수 */
   activePoCount: number
   /** 구매 — 진행 중 PO 총 발주 금액 합 */
@@ -59,20 +48,25 @@ export const TODO_CATEGORY_LABELS: Record<TodoCategory, string> = {
   SHIP: '출고 대기',
 }
 
-/** 최근 7일 활동 — 일자별 입고/출고/조정 건수 */
+/** swagger StockActivityResponse — 최근 7일 활동(일자별 입고/출고/조정 건수). */
 export interface DailyActivity {
-  /** 막대 x축 라벨 (일자, 예: '15') */
-  day: string
-  adjust: number
+  /** 일자(ISO, 예: '2026-06-18'). 차트 x축에는 '일'(day-of-month)만 표시한다. */
+  date: string
   inbound: number
   outbound: number
+  adjust: number
 }
 
 export interface ActivitySummary {
-  daily: DailyActivity[]
-  totalAdjust: number
+  /** 집계 시작일(ISO, KST, to의 6일 전) */
+  from: string
+  /** 집계 종료일(ISO, KST, 오늘) */
+  to: string
+  /** from→to 오름차순 7개(이동이 없는 날도 0으로 포함) */
+  days: DailyActivity[]
   totalInbound: number
   totalOutbound: number
+  totalAdjust: number
 }
 
 export function activityGrandTotal(summary: ActivitySummary): number {

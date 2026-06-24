@@ -1,38 +1,17 @@
-import { AlertTriangle, Boxes, ClipboardCheck, History, PackageX, ShoppingCart, Truck } from 'lucide-react'
+import { ClipboardCheck, ShoppingCart, Truck } from 'lucide-react'
 
 import { formatCurrency, formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgKpiCard } from '@/shared/ui'
 
 import type { DashboardKpi } from '../model/types'
 
+/**
+ * 대시보드 보조 KPI(구매 2 + 발주 2). 상단 재고 KPI 4종은 StockKpiCards가 실데이터로 그리며,
+ * 이 그리드는 Procurement·Sales 연동 전까지 fixture 값을 받아 그린다.
+ */
 export function DashboardKpiGrid({ kpi }: { kpi: DashboardKpi }) {
   return (
     <div className="grid grid-cols-4 gap-5">
-      <FgKpiCard
-        footer="활성 부품 기준"
-        icon={<Boxes aria-hidden className="h-4 w-4" />}
-        label="총 SKU"
-        metric={formatNumber(kpi.totalSkuCount)}
-      />
-      <FgKpiCard
-        footer="안전재고 미만"
-        icon={<AlertTriangle aria-hidden className="h-4 w-4" />}
-        label="부족 재고"
-        metric={<span className="text-warning">{formatNumber(kpi.lowStockCount)}</span>}
-        tone="warning"
-      />
-      <FgKpiCard
-        footer="SKU"
-        icon={<PackageX aria-hidden className="h-4 w-4" />}
-        label="무재고"
-        metric={formatNumber(kpi.noStockCount)}
-      />
-      <FgKpiCard
-        footer={`전주 대비 ${kpi.adjustDelta >= 0 ? '+' : ''}${formatNumber(kpi.adjustDelta)}`}
-        icon={<History aria-hidden className="h-4 w-4" />}
-        label="최근 7일 조정"
-        metric={formatNumber(kpi.recentAdjustCount)}
-      />
       <FgKpiCard
         footer={`총 금액 ${formatCurrency(kpi.activePoAmount)}`}
         icon={<ShoppingCart aria-hidden className="h-4 w-4" />}

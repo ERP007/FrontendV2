@@ -1,6 +1,5 @@
 import { useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,7 +13,7 @@ import {
 import type { MovementFilter, MovementSort, MovementSortField } from '@/features/stock'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgButton, FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
+import { FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 이력' }]
 
@@ -49,7 +48,7 @@ export function StockMovementsPage() {
   const rangeInvalid = Boolean(filter.from && filter.to && dayjs(filter.from).isAfter(filter.to, 'day'))
 
   // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
-  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  const { branchLockedCode, branchLockedName, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
   // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
   const effectiveWarehouseCode = isBranch
     ? (branchLockedCode ?? filter.warehouseCode)
@@ -98,21 +97,11 @@ export function StockMovementsPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <FgButton
-            leftIcon={<Download aria-hidden className="h-4 w-4" />}
-            onClick={() => toast.info('CSV 내보내기는 백엔드 연동 후 제공됩니다.')}
-          >
-            CSV 내보내기
-          </FgButton>
-        }
-        breadcrumbs={breadcrumbs}
-        title="재고 이력"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="재고 이력" />
       <MovementFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        lockedWarehouseName={branchLockedName}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
         onReset={() => {

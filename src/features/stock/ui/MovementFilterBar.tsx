@@ -3,6 +3,7 @@ import { Calendar, RotateCcw, Search } from 'lucide-react'
 import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
 
 import { MOVEMENT_TYPE_LABELS } from '../model/types'
+import { LockedWarehouseField } from './StockFilterBar'
 
 import type { MovementFilter } from '../model/types'
 import type { StockWarehouseOption } from './StockFilterBar'
@@ -19,6 +20,8 @@ export interface MovementFilterBarProps {
   filter: MovementFilter
   /** "창고 : 전체" 옵션 노출 여부. BRANCH 사용자는 자기 창고만 보여야 하므로 false로 숨긴다. */
   includeAllOption?: boolean
+  /** BRANCH 사용자의 고정 창고 이름. 있으면 창고 드롭다운 대신 이 이름을 고정 표시한다(선택 불가). */
+  lockedWarehouseName?: string | null
   onChange: (filter: MovementFilter) => void
   onReset: () => void
   warehouses: StockWarehouseOption[]
@@ -27,6 +30,7 @@ export interface MovementFilterBarProps {
 export function MovementFilterBar({
   filter,
   includeAllOption = true,
+  lockedWarehouseName,
   onChange,
   onReset,
   warehouses,
@@ -45,12 +49,16 @@ export function MovementFilterBar({
         value={filter.keyword}
         onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
       />
-      <FgSelect
-        className="w-48"
-        options={warehouseOptions}
-        value={filter.warehouseCode}
-        onValueChange={(value) => onChange({ ...filter, warehouseCode: value })}
-      />
+      {lockedWarehouseName ? (
+        <LockedWarehouseField name={lockedWarehouseName} />
+      ) : (
+        <FgSelect
+          className="w-48"
+          options={warehouseOptions}
+          value={filter.warehouseCode}
+          onValueChange={(value) => onChange({ ...filter, warehouseCode: value })}
+        />
+      )}
       <FgSelect
         className="w-44"
         options={typeOptions}

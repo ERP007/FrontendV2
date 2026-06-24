@@ -73,7 +73,7 @@ export function AppShellLayout() {
             item('/stock-movements', '재고 이력', <History aria-hidden className={iconClassName} />),
           ],
           icon: <Package aria-hidden className={iconClassName} />,
-          label: '재고 현황',
+          label: '재고 관리',
         },
         ...(canShowHqMenus
           ? [item('/purchase-orders', '구매 관리', <ShoppingCart aria-hidden className={iconClassName} />)]

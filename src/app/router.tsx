@@ -172,6 +172,13 @@ const stocksRoute = createRoute({
   component: StocksPage,
   getParentRoute: () => shellRoute,
   path: '/stocks',
+  // 대시보드 KPI '총 SKU'(전체)·'부족 재고'(LOW) 카드 클릭 시 초기 재고 상태 필터를 넘겨받는다(선택적).
+  validateSearch: (search: Record<string, unknown>): { status?: 'ALL' | 'LOW' | 'NORMAL' } => ({
+    status:
+      search.status === 'ALL' || search.status === 'LOW' || search.status === 'NORMAL'
+        ? search.status
+        : undefined,
+  }),
 })
 
 const stockMovementsRoute = createRoute({
