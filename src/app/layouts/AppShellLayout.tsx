@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { LOGOUT_URL, PASSWORD_CHANGE_URL, queryClient } from '@/shared/api'
+import { logoutAndRedirectToLogin, PASSWORD_CHANGE_URL } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
 import {
   canAccessBranchScope,
@@ -126,10 +126,7 @@ export function AppShellLayout() {
       danger: true,
       icon: <LogOut aria-hidden className={iconClassName} />,
       label: '로그아웃',
-      onSelect: () => {
-        queryClient.clear()
-        window.location.assign(LOGOUT_URL)
-      },
+      onSelect: logoutAndRedirectToLogin,
     },
   ]
 
