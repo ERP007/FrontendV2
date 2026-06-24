@@ -38,7 +38,7 @@ function FgSidebarItem({ active = false, children, href, icon, label, onClick }:
   const className = cn(
     'flex w-full items-center gap-3 rounded-nav px-3 py-2.5 text-left text-sm font-medium text-ink-2 transition-colors',
     'hover:bg-background hover:text-primary-strong',
-    active && 'bg-primary-soft font-bold text-primary-strong shadow-selected',
+    active && 'bg-primary-soft font-bold text-primary-strong',
   )
 
   if (children?.length) {

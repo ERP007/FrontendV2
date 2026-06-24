@@ -48,7 +48,7 @@ export function StockMovementsPage() {
   const rangeInvalid = Boolean(filter.from && filter.to && dayjs(filter.from).isAfter(filter.to, 'day'))
 
   // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
-  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  const { branchLockedCode, branchLockedName, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
   // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
   const effectiveWarehouseCode = isBranch
     ? (branchLockedCode ?? filter.warehouseCode)
@@ -101,6 +101,7 @@ export function StockMovementsPage() {
       <MovementFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        lockedWarehouseName={branchLockedName}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
         onReset={() => {
