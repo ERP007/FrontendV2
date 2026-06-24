@@ -7,14 +7,14 @@ import {
   User as UserIcon,
   Warehouse as WarehouseIcon,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
+  SoSagaProgressModal,
   useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
-  useSalesOrderProgressQuery,
 } from '@/features/sales-order'
 import { useMeQuery } from '@/features/user'
 import { formatNumber } from '@/shared/lib/format'
@@ -50,35 +50,19 @@ export function BranchSalesOrderArrivalPage() {
   const deliverMutation = useSalesOrderDeliverMutation(code)
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
-  // 입고 처리(#9)는 saga 라 INBOUND_IN_PROGRESS 면 진행 상태(#10)를 폴링한다.
-  const [polling, setPolling] = useState(false)
-  const progressQuery = useSalesOrderProgressQuery(code, polling)
-  const progress = progressQuery.data
-
-  // 폴링 종료(pending=false)는 refetchInterval 이 멈춘다. 종료 시 결과만 처리한다.
-  // 재시도 시에는 deliver mutation 의 캐시 무효화로 진행 폴링이 다시 시작된다.
-  useEffect(() => {
-    if (!polling || !progress || progress.pending) return
-    if (progress.outcome === 'SUCCESS') {
-      toast.success(`${code} 입고가 확정되었습니다.`)
-      void navigate({ replace: true, to: '/branch/sales-orders' })
-    } else if (progress.outcome === 'FAILED') {
-      toast.error(progress.failureReason ?? '입고 처리에 실패했습니다. 다시 시도해주세요.')
-    }
-  }, [code, navigate, polling, progress])
+  // 입고(#9) saga 진행을 스텝퍼 모달로 표시한다(INBOUND_IN_PROGRESS 시).
+  const [progressOpen, setProgressOpen] = useState(false)
 
   if (!so) return null
 
   const totalQuantity = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
-  const isProcessing =
-    deliverMutation.isPending || (polling && progress?.pending !== false)
 
   async function handleConfirm() {
     try {
       const result = await deliverMutation.mutateAsync({ deliveredDate: arrivalDate })
-      // 진행중이면 폴링 시작, 즉시 확정이면 바로 이동.
+      // 진행중이면 스텝퍼 모달, 즉시 확정이면 바로 이동.
       if (result.progress === 'INBOUND_IN_PROGRESS') {
-        setPolling(true)
+        setProgressOpen(true)
       } else {
         toast.success(`${result.code} 입고가 확정되었습니다.`)
         void navigate({ replace: true, to: '/branch/sales-orders' })
@@ -241,15 +225,29 @@ export function BranchSalesOrderArrivalPage() {
             취소
           </FgButton>
           <FgButton
-            disabled={isProcessing}
+            disabled={deliverMutation.isPending || progressOpen}
             leftIcon={<Check aria-hidden className="h-4 w-4" />}
             variant="primary"
             onClick={() => void handleConfirm()}
           >
-            {isProcessing ? '입고 처리중…' : '도착 확정'}
+            도착 확정
           </FgButton>
         </span>
       </FgCard>
+
+      {progressOpen ? (
+        <SoSagaProgressModal
+          code={code}
+          mode="INBOUND"
+          open
+          onClose={() => setProgressOpen(false)}
+          onSuccess={() => {
+            setProgressOpen(false)
+            toast.success(`${code} 입고가 확정되었습니다.`)
+            void navigate({ replace: true, to: '/branch/sales-orders' })
+          }}
+        />
+      ) : null}
     </div>
   )
 }
