@@ -99,7 +99,7 @@ export function BranchSalesOrderArrivalPage() {
         }
         breadcrumbs={[
           { label: '발주' },
-          { label: '내 지점 발주 요청' },
+          { label: '발주 현황' },
           { label: `${so.code} 도착 입고 확인` },
         ]}
         title={so.code}

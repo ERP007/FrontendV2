@@ -140,7 +140,7 @@ export function BranchSalesOrderEditPage() {
 
   const breadcrumbs = [
     { label: '발주' },
-    { label: '내 지점 발주 요청' },
+    { label: '발주 현황' },
     { label: code || '—' },
     { label: '수정' },
   ]

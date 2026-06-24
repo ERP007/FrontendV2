@@ -22,7 +22,7 @@ import { FgButton, FgPageHeader } from '@/shared/ui'
 
 import { SoItemSearchPanel } from './SoItemSearchPanel'
 
-const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
+const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
 
 export function BranchSalesOrderCreatePage() {
   const navigate = useNavigate()
