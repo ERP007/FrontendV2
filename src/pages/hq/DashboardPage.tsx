@@ -4,15 +4,15 @@ import { Boxes, ChevronRight, ClipboardList, ShoppingCart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import {
-  ACTIVITY_SUMMARY_FIXTURE,
   ActivityChart,
   DASHBOARD_KPI_FIXTURE,
   DashboardKpiGrid,
   TODO_FIXTURES,
   TodoPanel,
+  useActivitySummaryQuery,
 } from '@/features/dashboard'
 import { StockKpiCards, useStockKpiQuery } from '@/features/stock'
-import { FgPageHeader } from '@/shared/ui'
+import { FgCard, FgPageHeader } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '본사' }, { label: '대시보드' }]
 
@@ -32,6 +32,8 @@ export function DashboardPage() {
   const navigate = useNavigate()
   // 상단 재고 KPI. 집계 범위는 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
   const stockKpiQuery = useStockKpiQuery()
+  // 최근 7일 활동 차트. 집계 범위는 KPI와 동일하게 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
+  const activitySummaryQuery = useActivitySummaryQuery()
 
   return (
     <div className="fg-content">
@@ -65,7 +67,17 @@ export function DashboardPage() {
             void navigate({ params: { soNo: item.reqNo }, to: '/sales-orders/$soNo' })
           }
         />
-        <ActivityChart summary={ACTIVITY_SUMMARY_FIXTURE} />
+        {activitySummaryQuery.isError ? (
+          <FgCard className="flex h-full items-center justify-center text-muted">
+            최근 7일 활동을 불러오지 못했습니다.
+          </FgCard>
+        ) : activitySummaryQuery.data ? (
+          <ActivityChart summary={activitySummaryQuery.data} />
+        ) : (
+          <FgCard className="flex h-full items-center justify-center text-muted">
+            최근 7일 활동을 불러오는 중…
+          </FgCard>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-5">

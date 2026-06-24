@@ -1,4 +1,4 @@
-import type { ActivitySummary, DashboardKpi, TodoItem } from './types'
+import type { DashboardKpi, TodoItem } from './types'
 
 /** 백엔드 연동 전 화면 확인용 구매·발주 KPI fixture (상단 재고 KPI는 실데이터로 대체됨). */
 export const DASHBOARD_KPI_FIXTURE: DashboardKpi = {
@@ -244,19 +244,3 @@ export const TODO_FIXTURES: TodoItem[] = [
     whenLabel: 'D+3',
   },
 ]
-
-/** 최근 7일 활동 — 일자별 입고/출고/조정 (합계 입고 612 / 출고 330 / 조정 142 = 1,084건) */
-export const ACTIVITY_SUMMARY_FIXTURE: ActivitySummary = {
-  daily: [
-    { adjust: 18, day: '15', inbound: 70, outbound: 40 },
-    { adjust: 22, day: '16', inbound: 82, outbound: 45 },
-    { adjust: 24, day: '17', inbound: 95, outbound: 55 },
-    { adjust: 12, day: '18', inbound: 78, outbound: 38 },
-    { adjust: 28, day: '19', inbound: 110, outbound: 60 },
-    { adjust: 22, day: '20', inbound: 92, outbound: 50 },
-    { adjust: 16, day: '21', inbound: 85, outbound: 42 },
-  ],
-  totalAdjust: 142,
-  totalInbound: 612,
-  totalOutbound: 330,
-}
