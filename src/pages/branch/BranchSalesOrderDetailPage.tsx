@@ -22,6 +22,8 @@ import {
   useRequestSalesOrderMutation,
 } from '@/features/sales-order'
 import type { SalesOrderDetail } from '@/features/sales-order'
+import { useStockQuantitiesQuery } from '@/features/stock'
+import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
@@ -45,6 +47,10 @@ export function BranchSalesOrderDetailPage() {
   const requestMutation = useRequestSalesOrderMutation(code)
   const cancelMutation = useCancelSalesOrderMutation(code)
   const [cancelOpen, setCancelOpen] = useState(false)
+
+  // 수신(지점) 창고 기준 현재고·안전재고 조회 (toWarehouseCode + 라인 sku)
+  const skus = so?.lines.map((line) => line.itemCode) ?? []
+  const { data: stockMap } = useStockQuantitiesQuery(so?.toWarehouse.code, skus)
 
   if (!so) return null
 
@@ -139,18 +145,25 @@ export function BranchSalesOrderDetailPage() {
           <FgCard>
             <div className="mb-6 flex items-center justify-between gap-4">
               <h2 className="text-section text-ink">발주 요약</h2>
-              <span className="text-meta font-medium text-faint">
-                수신 창고 · {so.toWarehouse.name ?? so.toWarehouse.code} ({so.toWarehouse.code})
-              </span>
             </div>
-            <div className="grid grid-cols-4 gap-x-6 gap-y-7">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-7">
               <InfoCell
                 icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
                 label="출고 창고"
                 value={
-                  <span>
+                  <span className="block">
+                    {so.toWarehouse.name ?? so.toWarehouse.code}
+                    <span className="block text-meta font-medium text-faint">{so.toWarehouse.code}</span>
+                  </span>
+                }
+              />
+              <InfoCell
+                icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
+                label="수신 창고"
+                value={
+                  <span className="block">
                     {so.fromWarehouse.name ?? so.fromWarehouse.code}
-                    <span className="ml-1.5 text-meta font-medium text-faint">{so.fromWarehouse.code}</span>
+                    <span className="block text-meta font-medium text-faint">{so.fromWarehouse.code}</span>
                   </span>
                 }
               />
@@ -160,14 +173,14 @@ export function BranchSalesOrderDetailPage() {
                 value={so.requesterLabel}
               />
               <InfoCell
-                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-                label="요청일"
-                value={so.requestedAtLabel}
-              />
-              <InfoCell
                 icon={<Check aria-hidden className="h-3.5 w-3.5" />}
                 label="승인자"
                 value={so.approvalLabel ?? <span className="font-medium text-muted">미승인</span>}
+              />
+              <InfoCell
+                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
+                label="요청일"
+                value={so.requestedAtLabel}
               />
             </div>
           </FgCard>
@@ -186,21 +199,40 @@ export function BranchSalesOrderDetailPage() {
                     <th className="px-4 py-3 text-left">부품</th>
                     <th className="w-24 px-4 py-3 text-center">단위</th>
                     <th className="w-32 px-4 py-3 text-right">요청 수량</th>
+                    <th className="w-32 px-4 py-3 text-right">현재고</th>
+                    <th className="w-32 px-4 py-3 text-right">안전재고</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line-soft">
-                  {so.lines.map((line) => (
-                    <tr key={line.id}>
-                      <td className="px-4 py-3">
-                        <span className="block font-semibold text-ink">{line.itemName}</span>
-                        <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
-                      <td className="px-4 py-3 text-right font-bold text-ink">
-                        {formatNumber(line.requestQuantity)}
-                      </td>
-                    </tr>
-                  ))}
+                  {so.lines.map((line) => {
+                    const stock = stockMap?.get(line.itemCode)
+                    const shortage =
+                      stock != null && stock.quantity < stock.safetyStock
+                    return (
+                      <tr key={line.id}>
+                        <td className="px-4 py-3">
+                          <span className="block font-semibold text-ink">{line.itemName}</span>
+                          <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
+                        <td className="px-4 py-3 text-right font-bold text-ink">
+                          {formatNumber(line.requestQuantity)}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {stock ? (
+                            <span className={cn('font-bold', shortage ? 'text-danger' : 'text-ink')}>
+                              {formatNumber(stock.quantity)}
+                            </span>
+                          ) : (
+                            <span className="font-medium text-faint">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-ink-2">
+                          {stock ? formatNumber(stock.safetyStock) : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

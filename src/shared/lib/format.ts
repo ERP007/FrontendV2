@@ -21,7 +21,7 @@ export function formatDateWithDay(value: DateInput): string {
 }
 
 export function formatDateTime(value: DateInput): string {
-  return safeFormat(value, 'YYYY-MM-DD HH:mm')
+  return safeFormat(value, 'YYYY년 MM월 DD일 HH시 mm분')
 }
 
 export function formatTime(value: DateInput): string {
