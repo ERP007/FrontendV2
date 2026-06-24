@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
 import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -37,7 +37,12 @@ const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 export function StocksPage() {
   const navigate = useNavigate()
 
-  const [filter, setFilter] = useState<StockFilter>(DEFAULT_STOCK_FILTER)
+  // 대시보드 KPI 카드로 진입하면 초기 상태 필터(전체/부족)를 search 파라미터에서 받아 적용한다.
+  const { status: statusParam } = useSearch({ strict: false }) as { status?: StockFilter['status'] }
+  const [filter, setFilter] = useState<StockFilter>(() => ({
+    ...DEFAULT_STOCK_FILTER,
+    status: statusParam ?? DEFAULT_STOCK_FILTER.status,
+  }))
   const [sort, setSort] = useState<StockSort>(DEFAULT_STOCK_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)

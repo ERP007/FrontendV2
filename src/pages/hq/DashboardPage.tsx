@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import dayjs from 'dayjs'
 import { Boxes, ChevronRight, ClipboardList, ShoppingCart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -36,8 +37,23 @@ export function DashboardPage() {
     <div className="fg-content">
       <FgPageHeader breadcrumbs={breadcrumbs} title="본사 대시보드" />
 
-      {/* 상단 재고 KPI 4종 — 재고 조회와 동일한 카드(StockKpiCards)를 실데이터로 렌더 */}
-      {stockKpiQuery.data ? <StockKpiCards kpi={stockKpiQuery.data} /> : null}
+      {/* 상단 재고 KPI 4종 — 재고 조회와 동일한 카드(StockKpiCards)를 실데이터로 렌더.
+          카드 클릭 시 재고 조회(상태 필터)·재고 이력(최근 7일)로 이동한다. */}
+      {stockKpiQuery.data ? (
+        <StockKpiCards
+          kpi={stockKpiQuery.data}
+          onRecentMovementsClick={() =>
+            void navigate({
+              search: {
+                from: dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+                to: dayjs().format('YYYY-MM-DD'),
+              },
+              to: '/stock-movements',
+            })
+          }
+          onStatusSelect={(status) => void navigate({ search: { status }, to: '/stocks' })}
+        />
+      ) : null}
 
       {/* 구매·발주 KPI — Procurement·Sales 연동 전까지 fixture */}
       <DashboardKpiGrid kpi={DASHBOARD_KPI_FIXTURE} />
