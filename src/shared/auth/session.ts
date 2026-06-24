@@ -24,7 +24,7 @@ interface SessionResponse {
 export const sessionQueryKey = ['auth', 'session'] as const
 
 export async function fetchSession() {
-  const response = await api.get<SessionResponse>('/users/session')
+  const response = await api.get<SessionResponse>('/users/session', { auth401Redirect: 'login' })
   const session = response.data.content
 
   if (!session) {

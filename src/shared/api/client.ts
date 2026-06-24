@@ -6,8 +6,11 @@ import { queryClient } from '@/shared/api/query-client'
 
 import type { ErrorResponse } from '@/shared/api/error'
 
+type Auth401Redirect = 'forced-login' | 'login'
+
 declare module 'axios' {
   export interface AxiosRequestConfig {
+    auth401Redirect?: Auth401Redirect
     suppressGlobalErrorToast?: boolean
   }
 }
@@ -15,10 +18,13 @@ declare module 'axios' {
 const API_PATH_PREFIX = '/api'
 const DEFAULT_API_ORIGIN = ''
 const KEYCLOAK_AUTHORIZATION_PATH = '/oauth2/authorization/keycloak'
+const KEYCLOAK_FORCED_AUTHORIZATION_PATH = '/api/auth/login?prompt=login'
 const PASSWORD_CHANGE_PATH = '/api/auth/password-change'
 const LOGOUT_PATH = '/api/auth/logout'
-const LOGIN_PATH = '/login'
+const LOGOUT_REDIRECT_PENDING_KEY = 'erp007.logoutRedirectPending'
 const AUTH_REDIRECT_ATTEMPT_KEY = 'erp007.authRedirectAttempted'
+
+type LogoutRedirectTarget = 'forced-login' | 'login'
 
 let authRedirectInProgress = false
 
@@ -28,6 +34,18 @@ export function isAuthRedirectInProgress() {
 
 export function waitForAuthRedirect(): Promise<never> {
   return new Promise(() => undefined)
+}
+
+export function clearLogoutRedirectPending() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.sessionStorage.removeItem(LOGOUT_REDIRECT_PENDING_KEY)
+  } catch {
+    // Ignore storage failures.
+  }
 }
 
 export function clearAuthRedirectAttempt() {
@@ -42,17 +60,31 @@ export function clearAuthRedirectAttempt() {
   }
 }
 
-function hasAuthRedirectAttempt() {
+export function consumeLogoutRedirectPending() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   try {
-    return window.sessionStorage.getItem(AUTH_REDIRECT_ATTEMPT_KEY) === 'true'
+    const value = window.sessionStorage.getItem(LOGOUT_REDIRECT_PENDING_KEY)
+
+    if (value) {
+      window.sessionStorage.removeItem(LOGOUT_REDIRECT_PENDING_KEY)
+    }
+
+    if (value === 'forced-login') {
+      return 'forced-login'
+    }
+
+    return value === 'login' || value === 'true' ? 'login' : null
   } catch {
-    return false
+    return null
   }
 }
 
-function markAuthRedirectAttempt() {
+function markLogoutRedirectPending(target: LogoutRedirectTarget) {
   try {
-    window.sessionStorage.setItem(AUTH_REDIRECT_ATTEMPT_KEY, 'true')
+    window.sessionStorage.setItem(LOGOUT_REDIRECT_PENDING_KEY, target)
   } catch {
     // Ignore storage failures.
   }
@@ -92,10 +124,11 @@ function buildBackendUrl(path: string) {
 
 export const API_BASE_URL = buildBackendUrl(API_PATH_PREFIX)
 export const KEYCLOAK_AUTHORIZATION_URL = buildBackendUrl(KEYCLOAK_AUTHORIZATION_PATH)
+export const KEYCLOAK_FORCED_AUTHORIZATION_URL = buildBackendUrl(KEYCLOAK_FORCED_AUTHORIZATION_PATH)
 export const PASSWORD_CHANGE_URL = buildBackendUrl(PASSWORD_CHANGE_PATH)
 export const LOGOUT_URL = buildBackendUrl(LOGOUT_PATH)
 
-export function redirectToAuthLogin({ force = false }: { force?: boolean } = {}) {
+export function redirectToAuthLogin() {
   if (typeof window === 'undefined') {
     return false
   }
@@ -104,27 +137,59 @@ export function redirectToAuthLogin({ force = false }: { force?: boolean } = {})
     return true
   }
 
-  if (!force && window.location.pathname === LOGIN_PATH) {
-    return false
-  }
-
   authRedirectInProgress = true
-
-  if (hasAuthRedirectAttempt()) {
-    window.location.assign(`${LOGIN_PATH}?auth_error=session`)
-    return true
-  }
-
-  markAuthRedirectAttempt()
+  clearLogoutRedirectPending()
+  queryClient.clear()
   window.location.assign(KEYCLOAK_AUTHORIZATION_URL)
+
   return true
 }
 
-function handleGlobalError(error: ErrorResponse, { suppressToast = false }: { suppressToast?: boolean } = {}) {
+export function redirectToForcedAuthLogin() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  if (authRedirectInProgress) {
+    return true
+  }
+
+  authRedirectInProgress = true
+  clearLogoutRedirectPending()
+  queryClient.clear()
+  window.location.assign(KEYCLOAK_FORCED_AUTHORIZATION_URL)
+
+  return true
+}
+
+export function logoutAndRedirectToLogin({
+  afterLogout = 'login',
+}: { afterLogout?: LogoutRedirectTarget } = {}) {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  if (authRedirectInProgress) {
+    return true
+  }
+
+  authRedirectInProgress = true
+  markLogoutRedirectPending(afterLogout)
+  queryClient.clear()
+  window.location.assign(LOGOUT_URL)
+
+  return true
+}
+
+function handleGlobalError(
+  error: ErrorResponse,
+  {
+    auth401Redirect = 'forced-login',
+    suppressToast = false,
+  }: { auth401Redirect?: Auth401Redirect; suppressToast?: boolean } = {},
+) {
   if (error.status === 401) {
-    queryClient.clear()
-    const isRedirecting = redirectToAuthLogin({ force: true })
-    return isRedirecting
+    return auth401Redirect === 'login' ? redirectToAuthLogin() : redirectToForcedAuthLogin()
   }
 
   if (suppressToast) {
@@ -149,9 +214,10 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
+    const auth401Redirect = axios.isAxiosError(error) ? error.config?.auth401Redirect : undefined
     const suppressToast = axios.isAxiosError(error) && Boolean(error.config?.suppressGlobalErrorToast)
     const errorResponse = normalizeErrorResponse(error)
-    const isWaitingForAuthRedirect = handleGlobalError(errorResponse, { suppressToast })
+    const isWaitingForAuthRedirect = handleGlobalError(errorResponse, { auth401Redirect, suppressToast })
 
     if (isWaitingForAuthRedirect) {
       return waitForAuthRedirect()

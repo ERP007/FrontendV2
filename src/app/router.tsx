@@ -2,7 +2,6 @@ import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/
 
 import { AppShellLayout } from '@/app/layouts/AppShellLayout'
 import { UsersPage } from '@/pages/admin/UsersPage'
-import { LoginPage } from '@/pages/auth/LoginPage'
 import { BranchSalesOrderArrivalPage } from '@/pages/branch/BranchSalesOrderArrivalPage'
 import { BranchSalesOrderCreatePage } from '@/pages/branch/BranchSalesOrderCreatePage'
 import { BranchSalesOrderDetailPage } from '@/pages/branch/BranchSalesOrderDetailPage'
@@ -22,9 +21,11 @@ import { StockMovementsPage } from '@/pages/hq/StockMovementsPage'
 import { StocksPage } from '@/pages/hq/StocksPage'
 import { WarehousesPage } from '@/pages/hq/WarehousesPage'
 import {
+  consumeLogoutRedirectPending,
   isAuthRedirectInProgress,
   isErrorResponse,
   redirectToAuthLogin,
+  redirectToForcedAuthLogin,
   waitForAuthRedirect,
 } from '@/shared/api'
 import { ensureSession } from '@/shared/auth/session'
@@ -48,8 +49,8 @@ function getInitialHomePath(userRole?: string | null) {
   return '/stocks'
 }
 
-function shouldWaitForAuthRedirect(error: unknown) {
-  return isAuthRedirectInProgress() || (isErrorResponse(error) && error.status === 401)
+function isUnauthorizedError(error: unknown) {
+  return isErrorResponse(error) && error.status === 401
 }
 
 function createRoleGuard(canAccess: (role?: string | null) => boolean) {
@@ -66,19 +67,38 @@ const requireUserManagementAccess = createRoleGuard(canAccessUserManagement)
 const requireHqScopeAccess = createRoleGuard(canAccessHqScope)
 const requireBranchScopeAccess = createRoleGuard(canAccessBranchScope)
 
-const loginRoute = createRoute({
-  component: LoginPage,
+const loginRedirectRoute = createRoute({
+  beforeLoad: async () => {
+    redirectToAuthLogin()
+    return await waitForAuthRedirect()
+  },
   getParentRoute: () => rootRoute,
   path: '/login',
 })
 
 const shellRoute = createRoute({
   beforeLoad: async () => {
+    const logoutRedirectTarget = consumeLogoutRedirectPending()
+
+    if (logoutRedirectTarget === 'forced-login') {
+      redirectToForcedAuthLogin()
+      return await waitForAuthRedirect()
+    }
+
+    if (logoutRedirectTarget === 'login') {
+      redirectToAuthLogin()
+      return await waitForAuthRedirect()
+    }
+
     try {
       await ensureSession()
     } catch (error) {
-      if (shouldWaitForAuthRedirect(error)) {
-        redirectToAuthLogin({ force: true })
+      if (isAuthRedirectInProgress()) {
+        return await waitForAuthRedirect()
+      }
+
+      if (isUnauthorizedError(error)) {
+        redirectToAuthLogin()
         return await waitForAuthRedirect()
       }
 
@@ -243,7 +263,7 @@ const branchSalesOrderEditRoute = createRoute({
 })
 
 const routeTree = rootRoute.addChildren([
-  loginRoute,
+  loginRedirectRoute,
   shellRoute.addChildren([
     indexRoute,
     dashboardRoute,

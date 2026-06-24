@@ -2,12 +2,17 @@ export {
   API_BASE_URL,
   API_ORIGIN,
   KEYCLOAK_AUTHORIZATION_URL,
+  KEYCLOAK_FORCED_AUTHORIZATION_URL,
   LOGOUT_URL,
   PASSWORD_CHANGE_URL,
   api,
   clearAuthRedirectAttempt,
+  clearLogoutRedirectPending,
+  consumeLogoutRedirectPending,
   isAuthRedirectInProgress,
+  logoutAndRedirectToLogin,
   redirectToAuthLogin,
+  redirectToForcedAuthLogin,
   waitForAuthRedirect,
 } from '@/shared/api/client'
 export type { PageResponse } from '@/shared/api/page'
