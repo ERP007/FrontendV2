@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Copy, Download, KeyRound, Plus, RefreshCw } from 'lucide-react'
+import { CheckCircle2, Copy, KeyRound, Plus, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -449,12 +449,6 @@ export function UsersPage() {
       <FgPageHeader
         actions={
           <>
-            <FgButton
-              leftIcon={<Download aria-hidden className="h-4 w-4" />}
-              onClick={() => toast.info('내보내기는 백엔드 연동 후 제공됩니다.')}
-            >
-              내보내기
-            </FgButton>
             <FgButton
               leftIcon={<Plus aria-hidden className="h-4 w-4" />}
               variant="primary"

@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -58,7 +58,7 @@ export function StocksPage() {
   const canCreate = userRole === 'ADMIN'
 
   // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
-  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  const { branchLockedCode, branchLockedName, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
   // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
   const effectiveWarehouseCode = isBranch
     ? (branchLockedCode ?? filter.warehouseCode)
@@ -175,12 +175,6 @@ export function StocksPage() {
       <FgPageHeader
         actions={
           <>
-            <FgButton
-              leftIcon={<Download aria-hidden className="h-4 w-4" />}
-              onClick={() => toast.info('내보내기는 백엔드 연동 후 제공됩니다.')}
-            >
-              내보내기
-            </FgButton>
             {canManage ? (
               <>
                 <FgButton
@@ -232,6 +226,7 @@ export function StocksPage() {
       <StockFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        lockedWarehouseName={branchLockedName}
         safetyRatioActive={sort.field === 'safetyRatio'}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}

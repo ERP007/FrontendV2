@@ -1,15 +1,9 @@
-import {
-  Bell,
-  ChevronDown,
-  Package,
-  Search,
-} from 'lucide-react'
+import { ChevronDown, Package } from 'lucide-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { FgAvatar } from '@/shared/ui/FgAvatar'
-import { FgButton } from '@/shared/ui/FgButton'
 import { FgDropdownMenu } from '@/shared/ui/FgDropdownMenu'
 
 import type { FgDropdownItem } from '@/shared/ui/FgDropdownMenu'
@@ -33,7 +27,6 @@ export interface FgAppShellProps {
   children: ReactNode
   navGroups: FgNavGroup[]
   profileMenuItems?: FgDropdownItem[]
-  searchPlaceholder?: string
   userName?: string
   userRole?: string
 }
@@ -45,7 +38,7 @@ function FgSidebarItem({ active = false, children, href, icon, label, onClick }:
   const className = cn(
     'flex w-full items-center gap-3 rounded-nav px-3 py-2.5 text-left text-sm font-medium text-ink-2 transition-colors',
     'hover:bg-background hover:text-primary-strong',
-    active && 'bg-primary-soft font-bold text-primary-strong shadow-selected',
+    active && 'bg-primary-soft font-bold text-primary-strong',
   )
 
   if (children?.length) {
@@ -104,7 +97,6 @@ export function FgAppShell({
   children,
   navGroups,
   profileMenuItems,
-  searchPlaceholder = '부품 코드, 사용자, 발주 번호 검색',
   userName = '김정수',
   userRole = '지점 관리자',
 }: FgAppShellProps) {
@@ -154,27 +146,12 @@ export function FgAppShell({
         ) : null}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-topbar shrink-0 items-center justify-between gap-4 border-b border-line bg-surface px-7">
-          <label className="flex h-10 w-80 items-center gap-3 rounded-nav border border-line bg-background px-3 text-label text-muted">
-            <Search aria-hidden className="h-4 w-4 text-faint" />
-            <input
-              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-faint"
-              placeholder={searchPlaceholder}
-              type="search"
-            />
-          </label>
-          <div className="flex items-center gap-4">
-            <FgButton aria-label="알림" className="relative" size="icon" variant="default">
-              <Bell aria-hidden className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-pill bg-warning-dot" />
-            </FgButton>
-            <span className="h-6 w-px bg-line" />
-            {profileMenuItems?.length ? (
-              <FgDropdownMenu align="end" items={profileMenuItems} trigger={profileTrigger} />
-            ) : (
-              profileTrigger
-            )}
-          </div>
+        <header className="flex h-topbar shrink-0 items-center justify-end border-b border-line bg-surface px-7">
+          {profileMenuItems?.length ? (
+            <FgDropdownMenu align="end" items={profileMenuItems} trigger={profileTrigger} />
+          ) : (
+            profileTrigger
+          )}
         </header>
         <main className="min-w-0 flex-1 bg-background px-10 py-9">{children}</main>
       </div>
