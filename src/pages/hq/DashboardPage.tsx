@@ -10,6 +10,7 @@ import {
   TODO_FIXTURES,
   TodoPanel,
 } from '@/features/dashboard'
+import { StockKpiCards, useStockKpiQuery } from '@/features/stock'
 import { FgPageHeader } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '본사' }, { label: '대시보드' }]
@@ -28,11 +29,17 @@ const quickLinks: QuickLink[] = [
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  // 상단 재고 KPI. 집계 범위는 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
+  const stockKpiQuery = useStockKpiQuery()
 
   return (
     <div className="fg-content">
       <FgPageHeader breadcrumbs={breadcrumbs} title="본사 대시보드" />
 
+      {/* 상단 재고 KPI 4종 — 재고 조회와 동일한 카드(StockKpiCards)를 실데이터로 렌더 */}
+      {stockKpiQuery.data ? <StockKpiCards kpi={stockKpiQuery.data} /> : null}
+
+      {/* 구매·발주 KPI — Procurement·Sales 연동 전까지 fixture */}
       <DashboardKpiGrid kpi={DASHBOARD_KPI_FIXTURE} />
 
       <div className="grid grid-cols-[1.15fr_1fr] gap-5">
