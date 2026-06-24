@@ -53,6 +53,7 @@ export function FgSelect({
       ) : null}
       <Select.Root disabled={disabled} name={name} onValueChange={onValueChange} value={value}>
         <Select.Trigger
+          aria-label={label ?? placeholder}
           className={cn(
             'flex h-11 w-full items-center justify-between gap-3 rounded-control border border-line bg-surface px-3.5 text-left text-body text-ink transition-colors',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',

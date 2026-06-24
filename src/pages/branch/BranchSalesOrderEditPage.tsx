@@ -254,7 +254,7 @@ export function BranchSalesOrderEditPage() {
         title="발주 요청 수정"
       />
 
-      <form className="fg-content" onSubmit={submitOrder}>
+      <form noValidate className="fg-content" onSubmit={submitOrder}>
         <SoForm
           assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
           branchCode={me?.tenancyCode ?? '—'}

@@ -11,7 +11,13 @@ node_modules
 dist
 dist-ssr
 .env
+.env.e2e
 *.local
+playwright/.auth/
+test-results/
+playwright-report/
+allure-results/
+allure-report/
 
 # Editor directories and files
 .vscode/*

@@ -83,6 +83,7 @@ export function SoItemSearchPanel({ onSelect, query, warehouseCode }: SoItemSear
         <button
           key={item.sku}
           className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
+          data-testid="so-item-search-result"
           type="button"
           onMouseDown={(event) => {
             event.preventDefault()
