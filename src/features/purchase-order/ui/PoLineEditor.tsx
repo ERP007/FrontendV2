@@ -110,6 +110,7 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                     </button>
                   ) : (
                     <input
+                      aria-label={`주문 품목 ${index + 1} 검색`}
                       className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none ring-0 placeholder:text-faint focus:outline-none focus:ring-0"
                       placeholder="부품명 또는 코드 검색"
                       value={line.itemName}
@@ -133,6 +134,7 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                 {line.unit ?? '—'}
               </span>
               <input
+                aria-label={`주문 품목 ${index + 1} 수량`}
                 className="h-11 w-28 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
                 inputMode="numeric"
                 type="text"
@@ -143,6 +145,7 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                 }}
               />
               <input
+                aria-label={`주문 품목 ${index + 1} 단가`}
                 className="h-11 w-32 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
                 inputMode="numeric"
                 type="text"

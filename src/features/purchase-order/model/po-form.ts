@@ -35,8 +35,8 @@ export function validateLineValues(lines: PurchaseOrderLineRequest[]): string | 
   if (lines.some((line) => line.quantity < 1)) {
     return '모든 품목의 수량을 1 이상으로 입력하세요.'
   }
-  if (lines.some((line) => line.unitPrice < 0)) {
-    return '모든 품목의 단가를 0 이상으로 입력하세요.'
+  if (lines.some((line) => line.unitPrice < 1)) {
+    return '모든 품목의 단가를 1 이상으로 입력하세요.'
   }
   return null
 }

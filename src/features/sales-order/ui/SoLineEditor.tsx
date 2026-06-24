@@ -123,6 +123,7 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
                     </button>
                   ) : (
                     <input
+                      aria-label={`요청 품목 ${index + 1} 검색`}
                       className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none placeholder:text-faint"
                       placeholder="부품명 또는 코드 검색"
                       value={line.itemName}
@@ -152,6 +153,7 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
                 {line.unit ?? '—'}
               </span>
               <input
+                aria-label={`요청 품목 ${index + 1} 수량`}
                 className="h-11 w-24 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
                 min={0}
                 type="number"
