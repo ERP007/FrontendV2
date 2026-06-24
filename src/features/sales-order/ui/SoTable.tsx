@@ -2,12 +2,14 @@ import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
-import { formatDateTime } from '@/shared/lib/format'
+import { formatDate } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { BranchSalesOrderRow, HqSalesOrderRow } from '../model/so-list-row'
 import type { SalesOrderSortField, SortDirection } from '../model/types'
 
+// 컬럼 폭: 요청번호 = 가변폭(size 150)으로 남는 가로폭을 흡수한다.
+// 나머지는 고정폭. 상태는 whitespace-nowrap 으로 배지가 두 줄로 밀리지 않게 한다.
 export interface SoTableProps {
   header?: ReactNode
   onOpen: (row: HqSalesOrderRow) => void
@@ -25,7 +27,7 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
         accessorKey: 'code',
         cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         header: '요청번호',
-        size: 190,
+        size: 150, // 가변폭(absorber)
       },
       {
         accessorKey: 'fromWarehouseName',
@@ -40,7 +42,7 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
           </span>
         ),
         header: '지점',
-        size: 200,
+        size: 160,
       },
       {
         accessorKey: 'requesterName',
@@ -53,33 +55,34 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
           </span>
         ),
         header: '요청자',
-        size: 130,
+        size: 160,
       },
       {
         accessorKey: 'requestedAt',
         cell: ({ row }) => (
           <span className="font-medium text-muted">
-            {row.original.requestedAt ? formatDateTime(row.original.requestedAt) : '—'}
+            {row.original.requestedAt ? formatDate(row.original.requestedAt) : '—'}
           </span>
         ),
         enableSorting: true,
         header: '요청일',
-        size: 190,
+        size: 160,
       },
       {
         cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
         id: 'itemCount',
         meta: { align: 'right' },
-        size: 90,
+        size: 160,
       },
       {
         accessorKey: 'status',
         cell: ({ row }) => (
-          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.status} />
+          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.progressBadgeStatus} />
         ),
         header: '상태',
-        size: 130,
+        meta: { cellClassName: 'whitespace-nowrap' },
+        size: 160,
       },
     ],
     [],
@@ -142,33 +145,47 @@ export function SoBranchTable({
           </span>
         ),
         header: '요청번호',
-        size: 240,
+        size: 150, // 가변폭(absorber)
+      },
+      {
+        accessorKey: 'requesterName',
+        cell: ({ row }) => (
+          <span className="block">
+            <span className="block font-semibold text-ink-2">{row.original.requesterName ?? '—'}</span>
+            <span className="block text-meta font-medium text-faint">
+              {row.original.requesterPosition}
+            </span>
+          </span>
+        ),
+        header: '요청자',
+        size: 160,
       },
       {
         accessorKey: 'requestedAt',
         cell: ({ row }) => (
           <span className="font-medium text-muted">
-            {row.original.requestedAt ? formatDateTime(row.original.requestedAt) : '—'}
+            {row.original.requestedAt ? formatDate(row.original.requestedAt) : '—'}
           </span>
         ),
         enableSorting: true,
         header: '요청일',
-        size: 220,
+        size: 160,
       },
       {
         cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
         id: 'itemCount',
         meta: { align: 'right' },
-        size: 90,
+        size: 160,
       },
       {
         accessorKey: 'status',
         cell: ({ row }) => (
-          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.status} />
+          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.progressBadgeStatus} />
         ),
         header: '상태',
-        size: 150,
+        meta: { cellClassName: 'whitespace-nowrap' },
+        size: 160,
       },
     ],
     [],

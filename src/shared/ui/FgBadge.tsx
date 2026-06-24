@@ -62,7 +62,7 @@ export function FgStatusBadge({ label, status, ...props }: FgStatusBadgeProps) {
   )
 }
 
-type FgDomainStatus =
+export type FgDomainStatus =
   | 'APPROVED'
   | 'REQUESTED'
   | 'SHIPPED'

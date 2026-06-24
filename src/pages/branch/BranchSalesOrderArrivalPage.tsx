@@ -94,7 +94,7 @@ export function BranchSalesOrderArrivalPage() {
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">도착 입고 확인</span>
-            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
+            <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
         breadcrumbs={[

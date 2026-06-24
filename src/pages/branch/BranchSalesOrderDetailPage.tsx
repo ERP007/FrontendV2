@@ -125,7 +125,7 @@ export function BranchSalesOrderDetailPage() {
     <div className="fg-content">
       <FgPageHeader
         actions={renderActions(so)}
-        badge={<FgDomainStatusBadge label={so.statusLabel} status={so.status} />}
+        badge={<FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />}
         breadcrumbs={[
           { label: '발주' },
           { label: '발주 현황' },

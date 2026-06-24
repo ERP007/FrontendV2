@@ -116,7 +116,7 @@ export function BranchSalesOrdersPage() {
       <FgCard className="flex items-center gap-3 p-4">
         <FgInput
           leftIcon={<Search aria-hidden className="h-4 w-4" />}
-          placeholder="요청번호 또는 부품명·코드 검색"
+          placeholder="요청번호 검색"
           rootClassName="flex-1"
           value={state.search}
           onChange={(event) => patchState({ page: 1, search: event.target.value })}

@@ -5,6 +5,8 @@
 // enum 은 ./types 에서 재노출한다.
 // =============================================================================
 
+import type { FgDomainStatus } from '@/shared/ui'
+
 import type {
   CarrierType,
   OrderProgress,
@@ -33,6 +35,20 @@ export const ORDER_PROGRESS_LABELS: Record<OrderProgress, string> = {
   INBOUND_FAILED: '입고 실패',
   REJECTED: '거절',
   CANCELED: '취소',
+}
+
+/** OrderProgress → 상태 배지 색/아이콘(FgDomainStatus) 매핑. 라벨은 ORDER_PROGRESS_LABELS. */
+export const ORDER_PROGRESS_BADGE_STATUS: Record<OrderProgress, FgDomainStatus> = {
+  DRAFT: 'DRAFT',
+  REQUESTED: 'REQUESTED',
+  OUTBOUND_IN_PROGRESS: 'SHIPPED',
+  APPROVED: 'APPROVED',
+  OUTBOUND_FAILED: 'REJECTED',
+  INBOUND_IN_PROGRESS: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  INBOUND_FAILED: 'REJECTED',
+  REJECTED: 'REJECTED',
+  CANCELED: 'CANCELED',
 }
 
 export const REJECT_REASON_CATEGORY_LABELS: Record<RejectReasonCategory, string> = {

@@ -79,7 +79,7 @@ export function SalesOrderDetailPage() {
             </FgButton>
           </>
         }
-        badge={<FgDomainStatusBadge label={so.statusLabel} status={so.status} />}
+        badge={<FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />}
         breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: so.code }]}
         title={so.code}
       />

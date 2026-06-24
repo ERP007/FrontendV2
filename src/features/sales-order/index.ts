@@ -77,6 +77,7 @@ export { useSalesOrderProgressQuery } from './api/use-sales-order-progress-query
 export {
   CARRIER_TYPE_LABELS,
   emptySoDraftLine,
+  ORDER_PROGRESS_BADGE_STATUS,
   ORDER_PROGRESS_LABELS,
   SO_TAB_STATUS_MAP,
 } from './model/ui-types'

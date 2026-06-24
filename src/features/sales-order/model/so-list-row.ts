@@ -1,4 +1,11 @@
-import { IN_PROGRESS_STATUSES, ORDER_PROGRESS_LABELS, SO_STATUS_LABELS } from './ui-types'
+import type { FgDomainStatus } from '@/shared/ui'
+
+import {
+  IN_PROGRESS_STATUSES,
+  ORDER_PROGRESS_BADGE_STATUS,
+  ORDER_PROGRESS_LABELS,
+  SO_STATUS_LABELS,
+} from './ui-types'
 import type {
   BranchSalesOrderSummary,
   HqSalesOrderSummary,
@@ -14,8 +21,11 @@ export interface BranchSalesOrderRow {
   inProgress: boolean
   itemCount: number
   progress: OrderProgress
+  progressBadgeStatus: FgDomainStatus
   progressLabel: string
   requestedAt: string | null
+  requesterName: string | null
+  requesterPosition: string | null
   status: SalesOrderStatus
   statusLabel: string
 }
@@ -26,8 +36,11 @@ export function mapBranchSalesOrderRow(summary: BranchSalesOrderSummary): Branch
     inProgress: IN_PROGRESS_STATUSES.includes(summary.status),
     itemCount: summary.itemCount,
     progress: summary.progress,
+    progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[summary.progress],
     progressLabel: ORDER_PROGRESS_LABELS[summary.progress],
     requestedAt: summary.request?.requestedAt ?? null,
+    requesterName: summary.request?.requestedBy.name ?? null,
+    requesterPosition: summary.request?.requestedBy.position ?? null,
     status: summary.status,
     statusLabel: SO_STATUS_LABELS[summary.status],
   }
@@ -42,6 +55,7 @@ export interface HqSalesOrderRow {
   fromWarehouseName: string | null
   itemCount: number
   progress: OrderProgress
+  progressBadgeStatus: FgDomainStatus
   progressLabel: string
   requestedAt: string | null
   requesterName: string | null
@@ -57,6 +71,7 @@ export function mapHqSalesOrderRow(summary: HqSalesOrderSummary): HqSalesOrderRo
     fromWarehouseName: summary.fromWarehouse.name,
     itemCount: summary.itemCount,
     progress: summary.progress,
+    progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[summary.progress],
     progressLabel: ORDER_PROGRESS_LABELS[summary.progress],
     requestedAt: summary.request?.requestedAt ?? null,
     requesterName: summary.request?.requestedBy.name ?? null,

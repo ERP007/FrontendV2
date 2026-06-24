@@ -108,7 +108,7 @@ export function SalesOrderShipPage() {
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">출고 처리</span>
-            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
+            <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
         breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: `${so.code} 출고 처리` }]}

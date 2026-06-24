@@ -1,6 +1,8 @@
 import { formatDateTime } from '@/shared/lib/format'
 
-import { ORDER_PROGRESS_LABELS, SO_STATUS_LABELS } from './ui-types'
+import type { FgDomainStatus } from '@/shared/ui'
+
+import { ORDER_PROGRESS_BADGE_STATUS, ORDER_PROGRESS_LABELS, SO_STATUS_LABELS } from './ui-types'
 import type {
   PersonInfo,
   SalesOrderDetailResponse,
@@ -21,6 +23,7 @@ export interface SalesOrderDetailLine extends Omit<SalesOrderLineResponse, 'unit
 export interface SalesOrderDetail extends Omit<SalesOrderDetailResponse, 'lines'> {
   approvalLabel: string | null // 미승인이면 null
   lines: SalesOrderDetailLine[]
+  progressBadgeStatus: FgDomainStatus
   requestedAtLabel: string
   requesterLabel: string
   statusLabel: string
@@ -39,6 +42,7 @@ export function mapSalesOrderDetail(detail: SalesOrderDetailResponse): SalesOrde
     ...detail,
     approvalLabel: detail.approval ? personLabel(detail.approval) : null,
     lines: detail.lines.map(mapLine),
+    progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[detail.progress],
     requestedAtLabel: detail.requestedAt ? formatDateTime(detail.requestedAt) : '—',
     requesterLabel: personLabel(detail.requester),
     statusLabel: SO_STATUS_LABELS[detail.status],
