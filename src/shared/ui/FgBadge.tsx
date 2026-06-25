@@ -26,7 +26,7 @@ export function FgBadge({ children, className, dot = false, icon, variant = 'def
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-badge',
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-pill border px-2.5 py-1 text-badge',
         badgeVariantClasses[variant],
         className,
       )}
