@@ -1,8 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Circle, Loader2, XCircle } from 'lucide-react'
+import { useEffect } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { FgBadge, FgButton, FgModal, FgNotice } from '@/shared/ui'
 
+import { invalidatePurchaseOrder } from '../api/po-cache'
 import { usePurchaseOrderProgressQuery } from '../api/use-purchase-order-progress-query'
 
 type StepState = 'done' | 'active' | 'pending' | 'error'
@@ -36,11 +39,17 @@ export interface PoSagaProgressModalProps {
 
 /** 입고 saga 진행을 단계별 체크로 보여주는 모달 (진행 상태 폴링). */
 export function PoSagaProgressModal({ code, open, onClose, onSuccess }: PoSagaProgressModalProps) {
+  const queryClient = useQueryClient()
   const { data: progress } = usePurchaseOrderProgressQuery(code, open)
   const outcome = progress?.outcome
   const states = deriveStepStates(outcome)
   const isSuccess = outcome === 'SUCCESS'
   const isFailed = outcome === 'FAILED'
+
+  // saga 성공 확정 시 상세·이력·목록 캐시 무효화(요청 시점 invalidate 는 IN_PROGRESS 라 stale).
+  useEffect(() => {
+    if (isSuccess) invalidatePurchaseOrder(queryClient, code)
+  }, [isSuccess, code, queryClient])
 
   return (
     <FgModal

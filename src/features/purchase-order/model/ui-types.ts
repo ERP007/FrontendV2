@@ -10,8 +10,8 @@ import type { PurchaseOrderProgress } from './types'
 
 /** 진행 상태(PurchaseOrderProgress) 화면 라벨. UI 는 라벨 매핑만 담당한다. */
 export const PO_PROGRESS_LABELS: Record<PurchaseOrderProgress, string> = {
-  DRAFT: '작성 중',
-  APPROVED: '승인 확정',
+  DRAFT: '임시저장',
+  APPROVED: '입고 대기',
   INBOUND_IN_PROGRESS: '입고 처리중',
   RECEIVED: '입고 완료',
   INBOUND_FAILED: '입고 실패',

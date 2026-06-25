@@ -26,7 +26,7 @@ import {
   usePurchaseOrderQuery,
   useReceivePurchaseOrderMutation,
 } from '@/features/purchase-order'
-import { formatDateWithDay } from '@/shared/lib/format'
+import { formatDateKorean } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
 function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
@@ -193,7 +193,7 @@ export function PurchaseOrderDetailPage() {
               <InfoCell
                 icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
                 label="등록일"
-                value={formatDateWithDay(po.createdAt)}
+                value={formatDateKorean(po.createdAt)}
               />
               <InfoCell
                 icon={<CircleDollarSign aria-hidden className="h-3.5 w-3.5" />}
