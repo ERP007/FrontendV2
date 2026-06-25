@@ -1,10 +1,18 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Calendar, Check, ChevronDown, RotateCcw, Search } from 'lucide-react'
+import { Calendar, Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgBadge, FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
+import {
+  FgBadge,
+  FgFilterBar,
+  FgFilterMenuTrigger,
+  FgFilterResetButton,
+  FgFilterSearch,
+  FgFilterSelect,
+  FgInput,
+} from '@/shared/ui'
 
 const DATE_INPUT_CLASSNAME =
   'appearance-none bg-transparent shadow-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit]:outline-none [&::-webkit-datetime-edit]:border-0 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-clear-button]:appearance-none focus:!outline-none focus:!shadow-none focus:!ring-0 focus:!ring-offset-0 focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!ring-offset-0'
@@ -46,12 +54,10 @@ export interface PoFilterBarProps {
 }
 
 export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilterBarProps) {
-  const [searchInput, setSearchInput] = useState(params.search ?? '')
+  const paramsSearch = params.search ?? ''
+  const [searchState, setSearchState] = useState({ input: paramsSearch, paramsSearch })
+  const searchInput = searchState.paramsSearch === paramsSearch ? searchState.input : paramsSearch
   const debouncedSearch = useDebouncedValue(searchInput, 300)
-
-  useEffect(() => {
-    setSearchInput(params.search ?? '')
-  }, [params.search])
 
   useEffect(() => {
     const next = debouncedSearch || undefined
@@ -75,40 +81,33 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
   }
 
   const vendorOptions = [
-    { label: '공급사 : 전체', value: VENDOR_ALL },
+    { label: '전체', value: VENDOR_ALL },
     ...vendors.map((vendor) => ({ label: vendor.name, value: vendor.code })),
   ]
 
   return (
-    <FgCard className="flex items-center gap-3 p-4">
-      <FgInput
-        leftIcon={<Search aria-hidden className="h-4 w-4" />}
+    <FgFilterBar actions={<FgFilterResetButton onClick={onReset} />}>
+      <FgFilterSearch
         placeholder="요청번호 또는 공급사명"
-        rootClassName="flex-1"
         value={searchInput}
-        onChange={(event) => setSearchInput(event.target.value)}
+        onChange={(event) => setSearchState({ input: event.target.value, paramsSearch })}
       />
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger
-          className={cn(
-            'flex h-11 w-40 items-center justify-between gap-3 rounded-control border border-line bg-surface px-3.5 text-left text-body text-ink outline-none ring-0 transition-colors',
-            'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
-            'data-[state=open]:outline-none data-[state=open]:ring-0',
-          )}
-        >
-          <span className="flex min-w-0 items-center gap-2 truncate">
-            {statusCount > 0 ? (
-              <>
-                <FgBadge variant="primary">{statusCount}</FgBadge>
-                <span className="truncate font-semibold text-ink">
-                  {selectedStatuses.map((s) => PO_STATUS_LABELS[s]).join(', ')}
-                </span>
-              </>
-            ) : (
-              <span className="text-faint">상태 : 전체</span>
-            )}
-          </span>
-          <ChevronDown aria-hidden className="h-4 w-4 shrink-0 text-faint" />
+        <DropdownMenu.Trigger asChild>
+          <FgFilterMenuTrigger className="w-40" label="상태">
+            <span className="flex min-w-0 items-center gap-2 truncate">
+              {statusCount > 0 ? (
+                <>
+                  <FgBadge variant="primary">{statusCount}</FgBadge>
+                  <span className="truncate font-semibold text-ink">
+                    {selectedStatuses.map((s) => PO_STATUS_LABELS[s]).join(', ')}
+                  </span>
+                </>
+              ) : (
+                <span className="text-faint">전체</span>
+              )}
+            </span>
+          </FgFilterMenuTrigger>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
@@ -140,10 +139,10 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      <FgSelect
-        className="w-48 [&_[data-placeholder]]:text-faint"
+      <FgFilterSelect
+        className="w-48"
+        label="공급사"
         options={vendorOptions}
-        placeholder="공급사 : 전체"
         value={params.vendorCode || undefined}
         onValueChange={(value) =>
           update({ vendorCode: value === VENDOR_ALL ? undefined : value })
@@ -168,9 +167,6 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
         onChange={(event) => update({ endDate: event.target.value || undefined })}
         onClick={openDatePicker}
       />
-      <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
-        초기화
-      </FgButton>
-    </FgCard>
+    </FgFilterBar>
   )
 }

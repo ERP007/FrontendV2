@@ -1,8 +1,8 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check } from 'lucide-react'
 
 import { cn } from '@/shared/lib/cn'
-import { FgButton } from '@/shared/ui'
+import { FgFilterMenuTrigger } from '@/shared/ui'
 
 import {
   SO_STATUS_LABELS,
@@ -17,9 +17,9 @@ export interface SoBranchStatusFilterProps {
 }
 
 function triggerLabel(value: SalesOrderStatus[] | undefined): string {
-  if (!value || value.length === 0) return '상태 전체'
+  if (!value || value.length === 0) return '전체'
   if (value.length === 1) return SO_STATUS_LABELS[value[0]]
-  return `상태 ${value.length}건 선택`
+  return `${value.length}건 선택`
 }
 
 export function SoBranchStatusFilter({ onChange, value }: SoBranchStatusFilterProps) {
@@ -36,9 +36,9 @@ export function SoBranchStatusFilter({ onChange, value }: SoBranchStatusFilterPr
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <FgButton rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}>
+        <FgFilterMenuTrigger className="w-40" label="상태">
           {triggerLabel(value)}
-        </FgButton>
+        </FgFilterMenuTrigger>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content

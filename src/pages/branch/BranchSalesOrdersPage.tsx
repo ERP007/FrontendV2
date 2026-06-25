@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Calendar, RotateCcw, Search } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import {
@@ -19,7 +19,15 @@ import type {
 } from '@/features/sales-order'
 import { formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgButton, FgCard, FgInput, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
+import {
+  FgFilterBar,
+  FgFilterResetButton,
+  FgFilterSearch,
+  FgInput,
+  FgPageHeader,
+  FgPagination,
+  FgTabs,
+} from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
 
@@ -113,11 +121,13 @@ export function BranchSalesOrdersPage() {
         />
       ) : null}
 
-      <FgCard className="flex items-center gap-3 p-4">
-        <FgInput
-          leftIcon={<Search aria-hidden className="h-4 w-4" />}
+      <FgFilterBar
+        actions={
+          <FgFilterResetButton onClick={() => setState(createDefaultQueryState())} />
+        }
+      >
+        <FgFilterSearch
           placeholder="요청번호 또는 요청자 검색"
-          rootClassName="flex-1"
           value={state.search}
           onChange={(event) => patchState({ page: 1, search: event.target.value })}
         />
@@ -140,13 +150,7 @@ export function BranchSalesOrdersPage() {
           value={state.endDate ?? ''}
           onChange={(event) => patchState({ page: 1, endDate: event.target.value || undefined })}
         />
-        <FgButton
-          leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />}
-          onClick={() => setState(createDefaultQueryState())}
-        >
-          초기화
-        </FgButton>
-      </FgCard>
+      </FgFilterBar>
 
       <div className="flex items-center justify-between gap-4">
         <FgTabs

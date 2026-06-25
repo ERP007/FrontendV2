@@ -19,10 +19,12 @@ export interface FgSelectProps {
   label?: string
   leftIcon?: ReactNode
   name?: string
+  notchedLabel?: string
   onValueChange?: (value: string) => void
   options: FgSelectOption[]
   placeholder?: string
   required?: boolean
+  triggerClassName?: string
   value?: string
 }
 
@@ -34,10 +36,12 @@ export function FgSelect({
   label,
   leftIcon,
   name,
+  notchedLabel,
   onValueChange,
   options,
   placeholder = '선택',
   required,
+  triggerClassName,
   value,
 }: FgSelectProps) {
   const helperText = error ?? hint
@@ -53,15 +57,27 @@ export function FgSelect({
       ) : null}
       <Select.Root disabled={disabled} name={name} onValueChange={onValueChange} value={value}>
         <Select.Trigger
-          aria-label={label ?? placeholder}
+          aria-label={label ?? notchedLabel ?? placeholder}
           className={cn(
-            'flex h-11 w-full items-center justify-between gap-3 rounded-control border border-line bg-surface px-3.5 text-left text-body text-ink transition-colors',
+            'relative flex h-11 w-full items-center justify-between gap-3 rounded-control border border-line bg-surface px-3.5 text-left text-body text-ink transition-colors',
             'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
             'disabled:cursor-not-allowed disabled:bg-line-soft disabled:text-muted',
             error && 'border-danger focus:border-danger focus:ring-danger',
+            triggerClassName,
           )}
           aria-invalid={error ? true : undefined}
         >
+          {notchedLabel ? (
+            <span
+              className={cn(
+                'pointer-events-none absolute -top-2 left-3 px-1 text-micro font-bold',
+                'bg-surface',
+                error ? 'text-danger' : 'text-faint',
+              )}
+            >
+              {notchedLabel}
+            </span>
+          ) : null}
           <span className="flex min-w-0 items-center gap-3">
             {leftIcon ? <span className="flex h-5 w-5 items-center justify-center text-faint">{leftIcon}</span> : null}
             <span className="min-w-0 truncate">

@@ -1,8 +1,15 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Calendar, Check, ChevronDown, RotateCcw, Search } from 'lucide-react'
+import { Calendar, Check } from 'lucide-react'
 
 import { cn } from '@/shared/lib/cn'
-import { FgBadge, FgButton, FgCard, FgInput } from '@/shared/ui'
+import {
+  FgBadge,
+  FgFilterBar,
+  FgFilterMenuTrigger,
+  FgFilterResetButton,
+  FgFilterSearch,
+  FgInput,
+} from '@/shared/ui'
 
 import { SO_STATUS_LABELS } from '../model/ui-types'
 
@@ -51,22 +58,16 @@ export function SoFilterBar({
   }
 
   return (
-    <FgCard className="flex items-center gap-3 p-4">
-      <FgInput
-        leftIcon={<Search aria-hidden className="h-4 w-4" />}
+    <FgFilterBar actions={<FgFilterResetButton onClick={onReset} />}>
+      <FgFilterSearch
         placeholder={searchPlaceholder}
-        rootClassName="flex-1"
         value={values.search}
         onChange={(event) => onChange({ ...values, search: event.target.value })}
       />
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <FgButton
-            className="w-40 justify-between"
-            rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
-          >
+          <FgFilterMenuTrigger className="w-40" label="상태">
             <span className="flex items-center gap-2 truncate">
-              상태
               {statusCount > 0 ? (
                 <>
                   <FgBadge variant="primary">{statusCount}</FgBadge>
@@ -78,7 +79,7 @@ export function SoFilterBar({
                 <span className="text-meta text-faint">전체</span>
               )}
             </span>
-          </FgButton>
+          </FgFilterMenuTrigger>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
@@ -112,19 +113,15 @@ export function SoFilterBar({
       {warehouses ? (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <FgButton
-              className="w-40 justify-between"
-              rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
-            >
+            <FgFilterMenuTrigger className="w-40" label="창고">
               <span className="flex items-center gap-2 truncate">
-                창고
                 {values.warehouseCode ? (
                   <span className="truncate text-meta text-muted">{values.warehouseCode}</span>
                 ) : (
                   <span className="text-meta text-faint">전체</span>
                 )}
               </span>
-            </FgButton>
+            </FgFilterMenuTrigger>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
@@ -188,9 +185,6 @@ export function SoFilterBar({
         value={values.endDate ?? ''}
         onChange={(event) => onChange({ ...values, endDate: event.target.value || undefined })}
       />
-      <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
-        초기화
-      </FgButton>
-    </FgCard>
+    </FgFilterBar>
   )
 }
