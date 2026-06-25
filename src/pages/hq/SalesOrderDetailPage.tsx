@@ -166,9 +166,10 @@ export function SalesOrderDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-line-soft">
                   {so.lines.map((line) => {
-                    const quantity = stockMap?.get(line.itemCode)?.quantity ?? 0
-                    const remaining = quantity - line.requestQuantity
-                    const shortage = remaining < 0
+                    // 재고 미조회(로딩/SKU 없음)면 0 으로 단정하지 않고 '—' 표시.
+                    const stock = stockMap?.get(line.itemCode)
+                    const remaining = stock ? stock.quantity - line.requestQuantity : 0
+                    const shortage = stock != null && remaining < 0
                     return (
                       <tr key={line.id}>
                         <td className="px-4 py-3">
@@ -180,12 +181,16 @@ export function SalesOrderDetailPage() {
                           {formatNumber(line.requestQuantity)}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-ink-2">
-                          {formatNumber(quantity)}
+                          {stock ? formatNumber(stock.quantity) : '—'}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className={cn('font-bold', shortage ? 'text-danger' : 'text-ink')}>
-                            {formatNumber(remaining)}
-                          </span>
+                          {stock ? (
+                            <span className={cn('font-bold', shortage ? 'text-danger' : 'text-ink')}>
+                              {formatNumber(remaining)}
+                            </span>
+                          ) : (
+                            <span className="font-medium text-faint">—</span>
+                          )}
                         </td>
                       </tr>
                     )

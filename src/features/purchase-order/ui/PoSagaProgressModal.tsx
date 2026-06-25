@@ -40,8 +40,9 @@ export interface PoSagaProgressModalProps {
 /** 입고 saga 진행을 단계별 체크로 보여주는 모달 (진행 상태 폴링). */
 export function PoSagaProgressModal({ code, open, onClose, onSuccess }: PoSagaProgressModalProps) {
   const queryClient = useQueryClient()
-  const { data: progress } = usePurchaseOrderProgressQuery(code, open)
-  const outcome = progress?.outcome
+  const { data: progress, isError } = usePurchaseOrderProgressQuery(code, open)
+  // 폴링 요청 자체가 실패하면 진행 상태를 알 수 없으므로 실패로 처리(무한 '처리 중' 방지).
+  const outcome = isError ? 'FAILED' : progress?.outcome
   const states = deriveStepStates(outcome)
   const isSuccess = outcome === 'SUCCESS'
   const isFailed = outcome === 'FAILED'

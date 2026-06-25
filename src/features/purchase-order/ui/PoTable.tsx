@@ -29,7 +29,9 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
         accessorKey: 'vendorName',
         cell: ({ row }) => (
           <span className="block">
-            <span className="block truncate font-semibold text-ink">{row.original.vendorName}</span>
+            <span className="block truncate font-semibold text-ink">
+              {row.original.vendorName ?? '—'}
+            </span>
             <span className="block text-meta font-medium text-faint">{row.original.vendorCode}</span>
           </span>
         ),
