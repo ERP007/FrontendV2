@@ -26,6 +26,10 @@ interface SessionResponse {
   content: AuthSession
 }
 
+export interface SwitchDemoAccountRequest {
+  employeeNo: string
+}
+
 export const sessionQueryKey = ['auth', 'session'] as const
 export const AUTH_SESSION_COOKIE_ERROR_CODE = 'AUTH_SESSION_COOKIE_MISSING'
 
@@ -90,6 +94,43 @@ export function ensureSession() {
     retry: false,
     staleTime: 60_000,
   })
+}
+
+export async function switchDemoAccount(employeeNo: string) {
+  const response = await api.post<unknown, { data: unknown }, SwitchDemoAccountRequest>(
+    '/auth/demo/switch-account',
+    { employeeNo },
+    {
+      auth401Redirect: 'none',
+      suppressGlobalErrorToast: true,
+    },
+  )
+
+  return response.data
+}
+
+export function getSwitchDemoAccountErrorMessage(error: unknown) {
+  if (!isErrorResponse(error)) {
+    return '계정 전환 중 오류가 발생했습니다.'
+  }
+
+  if (error.status === 401) {
+    return '로그인이 필요합니다. 다시 로그인해주세요.'
+  }
+
+  if (error.status === 403) {
+    return '계정 전환 권한이 없습니다.'
+  }
+
+  if (error.status === 404) {
+    return '데모 계정 전환이 꺼져 있거나 허용되지 않은 계정입니다.'
+  }
+
+  if (error.status === 502) {
+    return 'Keycloak 토큰 발급에 실패했습니다.'
+  }
+
+  return error.detail || '계정 전환 중 오류가 발생했습니다.'
 }
 
 export function useSession() {
