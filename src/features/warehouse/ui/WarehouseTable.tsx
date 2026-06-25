@@ -43,104 +43,110 @@ export function WarehouseTable({
   }
 
   const columns = useMemo<ColumnDef<WarehouseListItem>[]>(
-    () => [
-      {
-        accessorKey: 'code',
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
-        enableSorting: true,
-        header: '창고 코드',
-        size: 140,
-      },
-      {
-        accessorKey: 'name',
-        cell: ({ row }) => {
-          const isHq = row.original.type === 'HQ'
-
-          return (
-            <span className="flex items-center gap-2.5">
-              <span
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
-                  isHq ? 'border-primary-line bg-primary-soft text-primary' : 'border-line bg-background text-muted',
-                )}
-              >
-                {isHq ? (
-                  <Building2 aria-hidden className="h-4 w-4" />
-                ) : (
-                  <WarehouseIcon aria-hidden className="h-4 w-4" />
-                )}
-              </span>
-              <span className={cn('truncate', isHq ? 'font-bold text-ink' : 'font-semibold text-ink')}>
-                {row.original.name}
-              </span>
-            </span>
-          )
+    () => {
+      const baseColumns: ColumnDef<WarehouseListItem>[] = [
+        {
+          accessorKey: 'code',
+          cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
+          enableSorting: true,
+          header: '창고 코드',
+          size: 140,
         },
-        enableSorting: true,
-        header: '창고명',
-        size: 220,
-      },
-      {
-        accessorKey: 'type',
-        cell: ({ row }) => <WarehouseTypeBadge type={row.original.type} />,
-        enableSorting: true,
-        header: '유형',
-        size: 110,
-      },
-      {
-        accessorKey: 'branchName',
-        cell: ({ row }) => (
-          <span className="font-medium text-ink-2">{row.original.branchName ?? '—'}</span>
-        ),
-        enableSorting: true,
-        header: '소속 지점',
-        id: 'branch',
-        size: 150,
-      },
-      {
-        accessorKey: 'address',
-        // 주소는 최대 2줄까지 표시하고 넘치면 말줄임한다(ERP-252).
-        cell: ({ row }) => (
-          <span className="line-clamp-2 font-medium text-muted">{row.original.address || '—'}</span>
-        ),
-        header: '주소',
-        size: 240,
-      },
-      {
-        accessorKey: 'active',
-        cell: ({ row }) => <WarehouseActiveBadge active={row.original.active} />,
-        header: '상태',
-        size: 110,
-      },
-      {
-        cell: ({ row }) => (
-          // 행 클릭(수정)과 분리: 액션 메뉴 클릭이 행 클릭으로 전파되지 않게 막는다.
-          <div onClick={(event) => event.stopPropagation()}>
-            <FgDropdownMenu
-              items={[
-                {
-                  disabled: !canManage,
-                  icon: <Pencil aria-hidden className="h-4 w-4" />,
-                  label: '수정',
-                  onSelect: () => onEdit(row.original),
-                },
-                {
-                  danger: row.original.active,
-                  disabled: !canManage,
-                  icon: <Power aria-hidden className="h-4 w-4" />,
-                  label: row.original.active ? '비활성 전환' : '활성 전환',
-                  onSelect: () => onToggleActive(row.original),
-                },
-              ]}
-            />
-          </div>
-        ),
-        header: '액션',
-        id: 'actions',
-        meta: { align: 'center' },
-        size: 70,
-      },
-    ],
+        {
+          accessorKey: 'name',
+          cell: ({ row }) => {
+            const isHq = row.original.type === 'HQ'
+
+            return (
+              <span className="flex items-center gap-2.5">
+                <span
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
+                    isHq ? 'border-primary-line bg-primary-soft text-primary' : 'border-line bg-background text-muted',
+                  )}
+                >
+                  {isHq ? (
+                    <Building2 aria-hidden className="h-4 w-4" />
+                  ) : (
+                    <WarehouseIcon aria-hidden className="h-4 w-4" />
+                  )}
+                </span>
+                <span className={cn('truncate', isHq ? 'font-bold text-ink' : 'font-semibold text-ink')}>
+                  {row.original.name}
+                </span>
+              </span>
+            )
+          },
+          enableSorting: true,
+          header: '창고명',
+          size: 220,
+        },
+        {
+          accessorKey: 'type',
+          cell: ({ row }) => <WarehouseTypeBadge type={row.original.type} />,
+          enableSorting: true,
+          header: '유형',
+          size: 110,
+        },
+        {
+          accessorKey: 'branchName',
+          cell: ({ row }) => (
+            <span className="font-medium text-ink-2">{row.original.branchName ?? '—'}</span>
+          ),
+          enableSorting: true,
+          header: '소속 지점',
+          id: 'branch',
+          size: 150,
+        },
+        {
+          accessorKey: 'address',
+          // 주소는 최대 2줄까지 표시하고 넘치면 말줄임한다(ERP-252).
+          cell: ({ row }) => (
+            <span className="line-clamp-2 font-medium text-muted">{row.original.address || '—'}</span>
+          ),
+          header: '주소',
+          size: 240,
+        },
+        {
+          accessorKey: 'active',
+          cell: ({ row }) => <WarehouseActiveBadge active={row.original.active} />,
+          header: '상태',
+          size: 110,
+        },
+      ]
+
+      if (!canManage) return baseColumns
+
+      return [
+        ...baseColumns,
+        {
+          cell: ({ row }) => (
+            // 행 클릭(수정)과 분리: 액션 메뉴 클릭이 행 클릭으로 전파되지 않게 막는다.
+            <div onClick={(event) => event.stopPropagation()}>
+              <FgDropdownMenu
+                items={[
+                  {
+                    icon: <Pencil aria-hidden className="h-4 w-4" />,
+                    label: '수정',
+                    onSelect: () => onEdit(row.original),
+                  },
+                  {
+                    danger: row.original.active,
+                    icon: <Power aria-hidden className="h-4 w-4" />,
+                    label: row.original.active ? '비활성 전환' : '활성 전환',
+                    onSelect: () => onToggleActive(row.original),
+                  },
+                ]}
+              />
+            </div>
+          ),
+          header: '액션',
+          id: 'actions',
+          meta: { align: 'center' },
+          size: 70,
+        },
+      ]
+    },
     [canManage, onEdit, onToggleActive],
   )
 

@@ -1,4 +1,4 @@
-import { ChevronRight, History, SlidersHorizontal } from 'lucide-react'
+import { History, ShieldCheck, SlidersHorizontal } from 'lucide-react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatDate, formatDelta, formatNumber } from '@/shared/lib/format'
@@ -14,14 +14,22 @@ const gaugeColorClasses: Record<StockStatus, string> = {
 }
 
 export interface StockDetailPanelProps {
-  canAdjust?: boolean
+  canManage?: boolean
   detail: StockSkuDetail | null
   loading?: boolean
   onAdjust: () => void
+  onSafetyAdjust?: () => void
   onViewHistory: () => void
 }
 
-export function StockDetailPanel({ canAdjust = false, detail, loading = false, onAdjust, onViewHistory }: StockDetailPanelProps) {
+export function StockDetailPanel({
+  canManage = false,
+  detail,
+  loading = false,
+  onAdjust,
+  onSafetyAdjust,
+  onViewHistory,
+}: StockDetailPanelProps) {
   if (loading && !detail) {
     return (
       <FgCard className="h-fit">
@@ -41,10 +49,8 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
     )
   }
 
-  const isShort = detail.totalQuantity < detail.totalSafetyStock
-
   return (
-    <FgCard className="flex h-fit flex-col gap-6" compact>
+    <FgCard className="flex h-fit flex-col gap-5" compact>
       <div>
         <p className="text-micro uppercase tracking-wide text-faint">선택된 부품</p>
         <h2 className="mt-2 text-modal-title text-ink">{detail.itemName}</h2>
@@ -52,19 +58,6 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
           <span className="text-meta font-semibold text-muted">{detail.sku}</span>
           {detail.majorCategory ? <FgBadge variant="primary">{detail.majorCategory}</FgBadge> : null}
           {detail.middleCategory ? <FgBadge variant="outline">{detail.middleCategory}</FgBadge> : null}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-control border border-line bg-background px-4 py-3.5">
-          <p className="text-meta text-faint">현재 재고</p>
-          <p className={cn('mt-1.5 text-kpi', isShort ? 'text-warning' : 'text-ink')}>
-            {formatNumber(detail.totalQuantity)}
-          </p>
-        </div>
-        <div className="rounded-control border border-line bg-background px-4 py-3.5">
-          <p className="text-meta text-faint">안전 재고</p>
-          <p className="mt-1.5 text-kpi text-ink">{formatNumber(detail.totalSafetyStock)}</p>
         </div>
       </div>
 
@@ -106,14 +99,6 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-label font-semibold text-ink-2">최근 이동 5건</p>
-          <button
-            className="flex items-center gap-1 text-meta font-semibold text-primary-strong"
-            type="button"
-            onClick={onViewHistory}
-          >
-            전체 보기
-            <ChevronRight aria-hidden className="h-3.5 w-3.5" />
-          </button>
         </div>
         <div className="divide-y divide-line-soft">
           {detail.history.map((entry, index) => (
@@ -137,23 +122,33 @@ export function StockDetailPanel({ canAdjust = false, detail, loading = false, o
         </div>
       </div>
 
-      <div className="flex gap-2.5 border-t border-line-soft pt-4">
+      <div className="flex flex-wrap gap-2 border-t border-line-soft pt-4">
         <FgButton
-          className="flex-1"
+          className="grow whitespace-nowrap"
           leftIcon={<History aria-hidden className="h-4 w-4" />}
           onClick={onViewHistory}
         >
           전체 이력 보기
         </FgButton>
-        <FgButton
-          className="flex-1"
-          disabled={!canAdjust}
-          leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-          variant="primary"
-          onClick={onAdjust}
-        >
-          재고 조정
-        </FgButton>
+        {canManage ? (
+          <>
+            <FgButton
+              className="grow whitespace-nowrap"
+              leftIcon={<ShieldCheck aria-hidden className="h-4 w-4" />}
+              onClick={onSafetyAdjust}
+            >
+              안전 재고 조정
+            </FgButton>
+            <FgButton
+              className="grow whitespace-nowrap"
+              leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
+              variant="primary"
+              onClick={onAdjust}
+            >
+              재고 조정
+            </FgButton>
+          </>
+        ) : null}
       </div>
     </FgCard>
   )
