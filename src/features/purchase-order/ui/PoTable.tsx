@@ -22,7 +22,7 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
         accessorKey: 'code',
         cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         enableSorting: false,
-        header: 'PO 번호',
+        header: '요청 번호',
         size: 140,
       },
       {
