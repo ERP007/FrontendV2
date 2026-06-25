@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   Boxes,
   Building2,
+  Check,
   ClipboardCheck,
   ClipboardList,
   History,
@@ -17,6 +18,7 @@ import {
   Users,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { toast } from 'sonner'
 
 import { logoutAndRedirectToLogin, PASSWORD_CHANGE_URL } from '@/shared/api'
 import { useSession } from '@/shared/auth/session'
@@ -30,6 +32,29 @@ import { FgAppShell } from '@/shared/ui'
 import type { FgDropdownItem, FgNavGroup, FgNavItem } from '@/shared/ui'
 
 const iconClassName = 'h-4.5 w-4.5'
+
+const switchableAccounts = [
+  { code: 'ADMIN', description: '관리자 계정' },
+  { code: 'HQ001', description: '본사 계정' },
+  { code: 'BR001', description: '지점 계정' },
+] as const
+
+function AccountSwitchLabel({
+  code,
+  description,
+}: {
+  code: string
+  description: string
+}) {
+  return (
+    <span className="min-w-44">
+      <span>
+        <strong className="block text-label font-extrabold">{code}</strong>
+        <span className="block text-micro font-medium text-faint">{description}</span>
+      </span>
+    </span>
+  )
+}
 
 export function AppShellLayout() {
   const navigate = useNavigate()
@@ -159,6 +184,27 @@ export function AppShellLayout() {
       icon: <KeyRound aria-hidden className={iconClassName} />,
       label: '비밀번호 변경',
       onSelect: () => window.location.assign(PASSWORD_CHANGE_URL),
+    },
+    {
+      icon: <User aria-hidden className={iconClassName} />,
+      label: '계정 전환',
+      separatorBefore: true,
+      subItems: switchableAccounts.map((account) => {
+        const active = account.code === session?.tenancyCode || account.code === session?.employeeNo
+
+        return {
+          icon: active ? <Check aria-hidden className={iconClassName} /> : <User aria-hidden className={iconClassName} />,
+          label: (
+            <AccountSwitchLabel
+              code={account.code}
+              description={account.description}
+            />
+          ),
+          onSelect: () => {
+            toast.info(`${account.code} 계정 전환은 백엔드 연동 후 활성화됩니다.`)
+          },
+        } satisfies FgDropdownItem
+      }),
     },
     {
       danger: true,
