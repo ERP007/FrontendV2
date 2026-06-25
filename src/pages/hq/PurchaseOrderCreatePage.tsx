@@ -21,8 +21,9 @@ import type {
   PoDraftLine,
   PurchaseOrderDraftFormValues,
 } from '@/features/purchase-order'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgPageHeader } from '@/shared/ui'
 
 import { PoItemSearchPanel } from './PoItemSearchPanel'
@@ -36,7 +37,7 @@ export function PurchaseOrderCreatePage() {
   const [lineError, setLineError] = useState<string | null>(null)
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
   const draftMutation = useCreatePurchaseOrderDraftMutation()
   const createMutation = useCreatePurchaseOrderMutation()
 
@@ -108,7 +109,7 @@ export function PurchaseOrderCreatePage() {
       <FgPageHeader breadcrumbs={breadcrumbs} title="구매 주문 등록" />
 
       <PoForm
-        assigneeLabel={`${me?.name ?? '—'} / ${me?.position ?? '—'}`}
+        assigneeLabel={`${session?.name ?? '—'} / ${roleLabel(session?.userRole)}`}
         control={control}
         errors={errors}
         lineError={lineError}

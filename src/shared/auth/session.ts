@@ -18,6 +18,7 @@ export interface AuthSession {
   name: string
   position: string | null
   tenancyCode: string | null
+  tenancyName: string | null
   tenancyType: string | null
   userRole: string | null
 }

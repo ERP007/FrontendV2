@@ -15,8 +15,8 @@ import {
   useCreateSalesOrderMutation,
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgPageHeader } from '@/shared/ui'
 
@@ -29,7 +29,7 @@ export function BranchSalesOrderCreatePage() {
   const router = useRouter()
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
 
   const {
     control,
@@ -109,16 +109,16 @@ export function BranchSalesOrderCreatePage() {
 
       <form noValidate className="fg-content" onSubmit={submit}>
         <SoForm
-          assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
-          branchCode={me?.tenancyCode ?? '—'}
-          branchName={me?.tenancyName ?? '—'}
+          assigneeLabel={`${session?.name ?? '—'} / ${session?.tenancyName ?? '—'} · ${roleLabel(session?.userRole)}`}
+          branchCode={session?.tenancyCode ?? '—'}
+          branchName={session?.tenancyName ?? '—'}
           control={control}
           errors={errors}
           lineError={linesError}
           lines={lines}
           register={register}
           renderSearchPanel={(props) => (
-            <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+            <SoItemSearchPanel {...props} warehouseCode={session?.tenancyCode ?? undefined} />
           )}
           warehouses={hqWarehouses}
           watch={watch}

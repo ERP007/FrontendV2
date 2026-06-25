@@ -18,9 +18,9 @@ import {
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
 import { stockQuantitiesQueryOptions } from '@/features/stock'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
 import { queryClient } from '@/shared/api'
+import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgCard, FgNotice, FgPageHeader } from '@/shared/ui'
 
@@ -54,27 +54,6 @@ function enrichDraftLines(lines: SoDraftLine[], batch: ItemBatchResponse): Enric
   return { lines: kept, removedSkus }
 }
 
-/** 지점 창고 현재고·안전재고를 라인에 채운다(생성 화면과 동일 소스). */
-async function fillBranchStock(lines: SoDraftLine[], warehouseCode: string): Promise<SoDraftLine[]> {
-  const skus = lines
-    .map((line) => line.itemCode)
-    .filter((sku): sku is string => Boolean(sku))
-  if (!skus.length) return lines
-  try {
-    const { stocks } = await queryClient.fetchQuery(
-      stockQuantitiesQueryOptions(warehouseCode, skus),
-    )
-    const stockMap = new Map(stocks.map((stock) => [stock.sku, stock]))
-    return lines.map((line) => {
-      const stock = line.itemCode ? stockMap.get(line.itemCode) : undefined
-      return stock ? { ...line, branchStock: stock.quantity, safetyStock: stock.safetyStock } : line
-    })
-  } catch {
-    // 재고 조회 실패 시 라인 유지 (전역 인터셉터가 toast 처리)
-    return lines
-  }
-}
-
 export function BranchSalesOrderEditPage() {
   const navigate = useNavigate()
   const router = useRouter()
@@ -83,7 +62,7 @@ export function BranchSalesOrderEditPage() {
 
   const { data, isLoading } = useSalesOrderFormQuery(code)
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
   const submitMutation = useSubmitSalesOrderMutation(code)
   const updateDraftMutation = useUpdateSalesOrderDraftMutation(code)
   const itemsBatchMutation = useItemsBatchMutation()
@@ -97,31 +76,39 @@ export function BranchSalesOrderEditPage() {
     formState: { errors },
     handleSubmit,
     register,
-    reset,
     watch,
   } = useForm<SoFormValues>({
     defaultValues: defaultSoFormValues,
+    // response 의 toWarehouse.code 등 서버 값을 폼에 지속 동기화한다.
+    // (reset 1회 방식은 리렌더로 폼이 defaultValues 로 풀리는 문제가 있어 values prop 사용)
+    // keepDirtyValues 로 사용자가 편집한 필드는 덮어쓰지 않는다.
+    resetOptions: { keepDirtyValues: true },
     resolver: zodResolver(soDraftFormSchema),
+    values: data?.values,
   })
 
-  const branchWarehouseCode = me?.tenancyCode
-
-  // 최초 1회만 서버 값으로 폼/라인을 채운다. (refetch가 사용자 편집을 덮지 않도록)
-  // DRAFT 라인은 itemName·unit 이 null 이라 batch 로 채우고(비활성/없는 품목 라인 제거),
-  // 현재고·안전재고는 지점 창고 재고에서 채운다(생성 화면과 동일 소스).
+  // response 도착 후 최초 1회만, 3가지 prefill 을 각각 독립적으로 수행한다.
+  // (refetch 가 사용자 편집을 덮지 않도록 hydratedRef 로 1회 제한)
+  // 기본 라인을 먼저 깔고 2)·3) 결과를 각각 functional setLines 로 머지해 호출 순서에 무관하게 동작한다.
   useEffect(() => {
-    if (!data || !branchWarehouseCode || hydratedRef.current) return
+    if (!data || hydratedRef.current) return
     hydratedRef.current = true
-    reset(data.values)
 
+    // 1) 입고 창고: useForm 의 values prop(data.values)으로 지속 동기화하므로 여기선 라인만 채운다.
     const detailLines = data.lines
     const skus = detailLines
       .map((line) => line.itemCode)
       .filter((sku): sku is string => Boolean(sku))
 
-    const hydrateLines = skus.length
-      ? itemsBatchMutation.mutateAsync(skus).then((batch) => {
-          const { lines: enriched, removedSkus } = enrichDraftLines(detailLines, batch)
+    setLines(detailLines)
+    if (!skus.length) return
+
+    // 2) 부품 정보: itemCode 들을 batch 조회해 itemName·unit 채우고 비활성/없는 품목 라인 제거
+    void itemsBatchMutation
+      .mutateAsync(skus)
+      .then((batch) => {
+        setLines((prev) => {
+          const { lines: enriched, removedSkus } = enrichDraftLines(prev, batch)
           if (removedSkus.length > 0) {
             toast.warning(
               `사용 불가 품목 ${removedSkus.length}건이 요청에서 제거되었습니다. (${removedSkus.join(', ')})`,
@@ -129,14 +116,28 @@ export function BranchSalesOrderEditPage() {
           }
           return enriched
         })
-      : Promise.resolve(detailLines)
+      })
+      .catch(() => {
+        // batch 실패 시 라인 유지 (전역 인터셉터가 toast 처리)
+      })
 
-    // batch 실패 시 원본 라인 유지 (전역 인터셉터가 toast 처리)
-    void hydrateLines
-      .catch(() => detailLines)
-      .then((nextLines) => fillBranchStock(nextLines, branchWarehouseCode))
-      .then(setLines)
-  }, [branchWarehouseCode, data, itemsBatchMutation, reset])
+    // 3) 현재고·안전재고: 같은 itemCode 들을 fromWarehouse 재고에서 batch 조회 (부품 선택 시와 동일 소스)
+    void queryClient
+      .fetchQuery(stockQuantitiesQueryOptions(data.fromWarehouse.code, skus))
+      .then(({ stocks }) => {
+        const stockMap = new Map(stocks.map((stock) => [stock.sku, stock]))
+        setLines((prev) =>
+          prev.map((line) => {
+            const stock = line.itemCode ? stockMap.get(line.itemCode) : undefined
+            // 매칭된 재고 없으면 현재고·안전재고 0 으로 표시
+            return { ...line, branchStock: stock?.quantity ?? 0, safetyStock: stock?.safetyStock ?? 0 }
+          }),
+        )
+      })
+      .catch(() => {
+        // 재고 조회 실패 시 라인 유지 (전역 인터셉터가 toast 처리)
+      })
+  }, [data, itemsBatchMutation])
 
   const breadcrumbs = [
     { label: '발주' },
@@ -178,7 +179,7 @@ export function BranchSalesOrderEditPage() {
 
   const isSubmitting = submitMutation.isPending || updateDraftMutation.isPending
 
-  // 수신 창고 옵션: 전체 hq 목록 + (목록에 없으면) 현재 발주의 수신 창고를 합쳐 라벨 표시·변경 모두 지원.
+  // 입고 창고 옵션: 전체 hq 목록 + (목록에 없으면) 현재 발주의 입고 창고를 합쳐 라벨 표시·변경 모두 지원.
   const toWh = data.toWarehouse
   const warehouseOptions =
     hqWarehouses?.some((w) => w.code === toWh.code) ?? false
@@ -194,6 +195,7 @@ export function BranchSalesOrderEditPage() {
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${updated.code} 발주 요청이 임시저장되었습니다.`)
+      void navigate({ to: '/branch/sales-orders' })
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -254,16 +256,16 @@ export function BranchSalesOrderEditPage() {
 
       <form noValidate className="fg-content" onSubmit={submitOrder}>
         <SoForm
-          assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
-          branchCode={me?.tenancyCode ?? '—'}
-          branchName={me?.tenancyName ?? '—'}
+          assigneeLabel={`${session?.name ?? '—'} / ${session?.tenancyName ?? '—'} · ${roleLabel(session?.userRole)}`}
+          branchCode={session?.tenancyCode ?? '—'}
+          branchName={session?.tenancyName ?? '—'}
           control={control}
           errors={errors}
           lineError={lineError}
           lines={lines}
           register={register}
           renderSearchPanel={(props) => (
-            <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+            <SoItemSearchPanel {...props} warehouseCode={session?.tenancyCode ?? undefined} />
           )}
           warehouses={warehouseOptions}
           watch={watch}

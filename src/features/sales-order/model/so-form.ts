@@ -28,7 +28,7 @@ export function linesToRequest(lines: SoLine[]): SalesOrderLineRequest[] {
 export function detailToFormValues(detail: SalesOrderDetailResponse): SoFormValues {
   return {
     memo: detail.requestMemo ?? '',
-    // 수신 창고(요청 시 warehouseCode) = 수신 본사 창고(toWarehouse)
+    // 입고 창고(요청 시 warehouseCode) = toWarehouse (요청 수신 = 본사 창고).
     warehouseCode: detail.toWarehouse.code,
   }
 }
