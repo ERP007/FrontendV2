@@ -2,10 +2,11 @@ import { RefreshCw } from 'lucide-react'
 
 import {
   getMeErrorMessage,
-  MY_ACTIVITY_FIXTURES,
+  getMyActivityErrorMessage,
   MyActivityCard,
   MyPasswordCard,
   MyProfileCard,
+  useMyActivityQuery,
   useMeQuery,
 } from '@/features/user'
 import { PASSWORD_CHANGE_URL } from '@/shared/api'
@@ -14,8 +15,12 @@ import { FgButton, FgNotice, FgPageHeader } from '@/shared/ui'
 
 export function MyPage() {
   const meQuery = useMeQuery()
+  const myActivityQuery = useMyActivityQuery()
   const me = meQuery.data
   const errorMessage = meQuery.isError ? getMeErrorMessage(meQuery.error) : null
+  const activityErrorMessage = myActivityQuery.isError
+    ? getMyActivityErrorMessage(myActivityQuery.error)
+    : null
 
   return (
     <div className="fg-content max-w-content-narrow">
@@ -34,6 +39,20 @@ export function MyPage() {
           </FgButton>
         </div>
       ) : null}
+      {myActivityQuery.isLoading ? <FgNotice>최근 활동을 불러오는 중입니다.</FgNotice> : null}
+      {activityErrorMessage ? (
+        <div className="space-y-3">
+          <FgNotice tone="danger">{activityErrorMessage}</FgNotice>
+          <FgButton
+            leftIcon={<RefreshCw aria-hidden className="h-4 w-4" />}
+            size="sm"
+            variant="soft"
+            onClick={() => void myActivityQuery.refetch()}
+          >
+            최근 활동 다시 시도
+          </FgButton>
+        </div>
+      ) : null}
       {me ? <MyProfileCard profile={me} /> : null}
       {me ? (
         <MyPasswordCard
@@ -41,7 +60,7 @@ export function MyPage() {
           onChangePassword={() => window.location.assign(PASSWORD_CHANGE_URL)}
         />
       ) : null}
-      <MyActivityCard activities={MY_ACTIVITY_FIXTURES} />
+      <MyActivityCard activities={myActivityQuery.data ?? []} />
     </div>
   )
 }

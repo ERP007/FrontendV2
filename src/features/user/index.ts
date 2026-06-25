@@ -4,6 +4,11 @@ export {
 } from './api/use-create-user-mutation'
 export { getMeErrorMessage, meQueryKey, useMeQuery } from './api/use-me-query'
 export {
+  getMyActivityErrorMessage,
+  myActivityQueryKey,
+  useMyActivityQuery,
+} from './api/use-my-activity-query'
+export {
   getResetPasswordErrorMessage,
   useResetUserPasswordMutation,
 } from './api/use-reset-user-password-mutation'
@@ -33,15 +38,10 @@ export {
 } from './api/use-users-query'
 export { filterUsers } from './model/filter-users'
 export {
-  BELONG_OPTIONS,
-  MY_ACTIVITY_FIXTURES,
-  PASSWORD_CHANGED_AT,
-  USER_FIXTURES,
-} from './model/fixtures'
-export {
-  ACTIVITY_TYPE_LABELS,
   DEFAULT_USER_FILTER,
+  getUserActionTypeLabel,
   RANK_OPTIONS,
+  USER_ACTION_TYPE_LABELS,
 } from './model/types'
 export {
   ADMIN_TENANCY_OPTION,
@@ -65,6 +65,7 @@ export type {
   UserDetailFormValues,
   User,
   UserActivity,
+  UserActionType,
   UserApiRole,
   UserDetailResponse,
   UserFilter,
