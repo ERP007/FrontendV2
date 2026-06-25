@@ -105,29 +105,7 @@ export function PurchaseOrderCreatePage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Box aria-hidden className="h-4 w-4" />}
-              onClick={handleDraftSave}
-            >
-              임시저장
-            </FgButton>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Check aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={handleConfirm}
-            >
-              제출
-            </FgButton>
-          </>
-        }
-        breadcrumbs={breadcrumbs}
-        title="구매 주문 등록"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="구매 주문 등록" />
 
       <PoForm
         assigneeLabel={`${me?.name ?? '—'} / ${me?.position ?? '—'}`}

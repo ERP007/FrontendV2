@@ -105,29 +105,7 @@ export function BranchSalesOrderCreatePage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Box aria-hidden className="h-4 w-4" />}
-              onClick={handleDraftSave}
-            >
-              임시저장
-            </FgButton>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Send aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={submit}
-            >
-              요청 제출
-            </FgButton>
-          </>
-        }
-        breadcrumbs={breadcrumbs}
-        title="발주 요청 등록"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="발주 요청 등록" />
 
       <form noValidate className="fg-content" onSubmit={submit}>
         <SoForm
