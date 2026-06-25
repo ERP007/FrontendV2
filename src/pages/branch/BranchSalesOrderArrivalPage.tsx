@@ -17,7 +17,8 @@ import {
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
 import { useStockQuantitiesQuery } from '@/features/stock'
-import { useMeQuery } from '@/features/user'
+import { useSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
 import { formatNumber } from '@/shared/lib/format'
 import {
   FgBadge,
@@ -47,8 +48,8 @@ export function BranchSalesOrderArrivalPage() {
   const code = params.soNo ?? ''
 
   const { data: so } = useBranchSalesOrderQuery(code)
-  const { data: me } = useMeQuery()
-  // 현 지점(수신 창고) 현재고 조회 → 입고 후 수량 표시.
+  const { data: session } = useSession()
+  // 현 지점(입고 창고) 현재고 조회 → 입고 후 수량 표시.
   const skus = so?.lines.map((line) => line.itemCode) ?? []
   const { data: stockMap } = useStockQuantitiesQuery(so?.toWarehouse.code, skus)
   const deliverMutation = useSalesOrderDeliverMutation(code)
@@ -113,7 +114,7 @@ export function BranchSalesOrderArrivalPage() {
           />
           <InfoCell
             icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
-            label="수신 창고"
+            label="입고 창고"
             value={
               <span>
                 {so.toWarehouse.name ?? so.toWarehouse.code}
@@ -209,9 +210,9 @@ export function BranchSalesOrderArrivalPage() {
             <span className="block text-label text-ink-2">수령자</span>
             <div className="flex h-11 items-center justify-between gap-3 rounded-control border border-line bg-background px-3.5 text-body">
               <span className="font-semibold text-ink">
-                {me?.name ?? '—'}
+                {session?.name ?? '—'}
                 <span className="ml-1.5 text-meta font-medium text-faint">
-                  {me?.tenancyName ?? '—'} · {me?.position ?? '—'}
+                  {session?.tenancyName ?? '—'} · {roleLabel(session?.userRole)}
                 </span>
               </span>
               <span className="flex items-center gap-1 text-meta font-semibold text-faint">

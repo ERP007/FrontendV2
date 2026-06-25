@@ -13,9 +13,10 @@ import type {
 } from '../model/types'
 
 export interface SalesOrderFormData {
+  fromWarehouse: WarehouseInfo // 출고 창고 (현재고·안전재고 batch 조회 기준)
   lines: SoLine[]
   status: SalesOrderStatus
-  toWarehouse: WarehouseInfo // 수신 창고 select 옵션 fallback (hq 목록에 없을 수 있음)
+  toWarehouse: WarehouseInfo // 입고 창고 select 옵션 fallback (hq 목록에 없을 수 있음)
   values: SoFormValues
 }
 
@@ -29,6 +30,7 @@ export function useSalesOrderFormQuery(code: string) {
     },
     queryKey: salesOrderKeys.detail(code),
     select: (detail): SalesOrderFormData => ({
+      fromWarehouse: detail.fromWarehouse,
       lines: detailToDraftLines(detail),
       status: detail.status,
       toWarehouse: detail.toWarehouse,

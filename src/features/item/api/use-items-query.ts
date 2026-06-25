@@ -95,7 +95,7 @@ export function useItemsInfiniteQuery({ enabled, ...params }: UseItemsInfiniteQu
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       const response = await api.get<PageResponse<ItemListItem>>('/items', {
-        params: { ...params, page: pageParam },
+        params: { ...params, page: pageParam, status: 'ACTIVE' },
       })
       return response.data
     },

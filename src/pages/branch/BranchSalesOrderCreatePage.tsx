@@ -15,8 +15,8 @@ import {
   useCreateSalesOrderMutation,
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgPageHeader } from '@/shared/ui'
 
@@ -29,7 +29,7 @@ export function BranchSalesOrderCreatePage() {
   const router = useRouter()
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
 
   const {
     control,
@@ -105,42 +105,20 @@ export function BranchSalesOrderCreatePage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Box aria-hidden className="h-4 w-4" />}
-              onClick={handleDraftSave}
-            >
-              임시저장
-            </FgButton>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Send aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={submit}
-            >
-              요청 제출
-            </FgButton>
-          </>
-        }
-        breadcrumbs={breadcrumbs}
-        title="발주 요청 등록"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="발주 요청 등록" />
 
       <form noValidate className="fg-content" onSubmit={submit}>
         <SoForm
-          assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
-          branchCode={me?.tenancyCode ?? '—'}
-          branchName={me?.tenancyName ?? '—'}
+          assigneeLabel={`${session?.name ?? '—'} / ${session?.tenancyName ?? '—'} · ${roleLabel(session?.userRole)}`}
+          branchCode={session?.tenancyCode ?? '—'}
+          branchName={session?.tenancyName ?? '—'}
           control={control}
           errors={errors}
           lineError={linesError}
           lines={lines}
           register={register}
           renderSearchPanel={(props) => (
-            <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+            <SoItemSearchPanel {...props} warehouseCode={session?.tenancyCode ?? undefined} />
           )}
           warehouses={hqWarehouses}
           watch={watch}

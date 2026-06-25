@@ -159,7 +159,7 @@ export function BranchSalesOrderDetailPage() {
               />
               <InfoCell
                 icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
-                label="수신 창고"
+                label="입고 창고"
                 value={
                   <span className="block">
                     {so.fromWarehouse.name ?? so.fromWarehouse.code}

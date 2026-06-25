@@ -87,7 +87,7 @@ export function SoForm({
             render={({ field }) => (
               <FgSelect
                 error={errors.warehouseCode?.message}
-                label="수신 창고"
+                label="입고 창고"
                 options={
                   warehouses?.map((warehouse) => ({
                     label: warehouse.name,
@@ -95,9 +95,9 @@ export function SoForm({
                     value: warehouse.code,
                   })) ?? []
                 }
-                placeholder="수신 창고를 선택하세요"
+                placeholder="입고 창고를 선택하세요"
                 required
-                value={field.value}
+                value={field.value || undefined}
                 onValueChange={field.onChange}
               />
             )}

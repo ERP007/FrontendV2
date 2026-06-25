@@ -15,12 +15,12 @@ import type {
   SearchPurchaseOrderRequest,
   SortField,
 } from '@/features/purchase-order'
-import { formatNumber } from '@/shared/lib/format'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 현황' }]
 
-const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1 }
+const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1, ...defaultDateRange(90) }
 
 const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set(['createdAt', 'totalAmount'])
 

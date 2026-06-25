@@ -94,7 +94,7 @@ export interface SalesOrderStatusChangedResponse {
 
 // ----- 1~5. 생성 / 임시저장 / 제출 요청 -----
 export interface CreateSalesOrderRequest {
-  warehouseCode: string // 필수, 수신 창고
+  warehouseCode: string // 필수, 입고 창고
   memo?: string // <= 500
   lines: SalesOrderLineRequest[] // 1..50 필수
 }
