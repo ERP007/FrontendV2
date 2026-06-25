@@ -57,6 +57,7 @@ export function StockFilterBar({
 
   return (
     <FgFilterBar
+      className="p-5"
       actions={
         <>
           <FgFilterResetButton onClick={onReset} />
@@ -89,7 +90,7 @@ export function StockFilterBar({
     >
       <FgFilterSearch
         placeholder="부품명 또는 코드"
-        rootClassName="min-w-0 flex-1 max-w-md"
+        rootClassName="w-full flex-1 basis-96"
         value={filter.keyword}
         onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
       />
