@@ -3,9 +3,10 @@ import { Calendar } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import {
+  SO_BRANCH_STATUS_ORDER,
+  SO_STATUS_LABELS,
   SO_TAB_STATUS_MAP,
   SoBranchKpiCards,
-  SoBranchStatusFilter,
   SoBranchTable,
   useBranchSalesOrdersQuery,
   useSalesOrderBranchKpiQuery,
@@ -21,6 +22,7 @@ import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import {
   FgFilterBar,
+  FgFilterChips,
   FgFilterResetButton,
   FgFilterSearch,
   FgInput,
@@ -30,6 +32,11 @@ import {
 } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
+
+const STATUS_CHIP_OPTIONS = SO_BRANCH_STATUS_ORDER.map((status) => ({
+  label: SO_STATUS_LABELS[status],
+  value: status,
+}))
 
 const TAB_ITEMS = [
   { label: '전체', value: 'ALL' },
@@ -108,6 +115,13 @@ export function BranchSalesOrdersPage() {
     setState((prev) => ({ ...prev, ...patch }))
   }
 
+  function toggleStatus(status: SalesOrderStatus) {
+    const next = state.status.includes(status)
+      ? state.status.filter((item) => item !== status)
+      : [...state.status, status]
+    patchState({ page: 1, status: next })
+  }
+
   const rangeStart = totalElements === 0 ? 0 : (state.page - 1) * state.size + 1
   const rangeEnd = Math.min(state.page * state.size, totalElements)
 
@@ -122,19 +136,11 @@ export function BranchSalesOrdersPage() {
         />
       ) : null}
 
-      <FgFilterBar
-        actions={
-          <FgFilterResetButton onClick={() => setState(createDefaultQueryState())} />
-        }
-      >
+      <FgFilterBar>
         <FgFilterSearch
           placeholder="요청번호 또는 요청자 검색"
           value={state.search}
           onChange={(event) => patchState({ page: 1, search: event.target.value })}
-        />
-        <SoBranchStatusFilter
-          value={state.status}
-          onChange={(status) => patchState({ page: 1, status: status ?? [] })}
         />
         <FgInput
           leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
@@ -150,6 +156,13 @@ export function BranchSalesOrdersPage() {
           type="date"
           value={state.endDate ?? ''}
           onChange={(event) => patchState({ page: 1, endDate: event.target.value || undefined })}
+        />
+        <FgFilterResetButton onClick={() => setState(createDefaultQueryState())} />
+        <FgFilterChips
+          label="상태"
+          options={STATUS_CHIP_OPTIONS}
+          selected={state.status}
+          onToggle={toggleStatus}
         />
       </FgFilterBar>
 

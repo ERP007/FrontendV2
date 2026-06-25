@@ -37,6 +37,8 @@ export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   CARRIER_TYPE_LABELS,
   emptySoDraftLine,
+  SO_BRANCH_STATUS_ORDER,
+  SO_STATUS_LABELS,
   SO_TAB_STATUS_MAP,
 } from './model/ui-types'
 export type { SoLine as SoDraftLine, SoStatusTab } from './model/ui-types'
@@ -45,7 +47,6 @@ export type { SoFormValues } from './model/so-draft-schema'
 export { defaultSoFormValues, linesToRequest } from './model/so-form'
 
 // ----- UI -----
-export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
 export { SoHistoryTimeline } from './ui/SoHistoryTimeline'
 export { SoCancelModal } from './ui/SoCancelModal'
 export { SoRejectModal } from './ui/SoRejectModal'
