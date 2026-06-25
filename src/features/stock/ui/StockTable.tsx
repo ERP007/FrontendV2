@@ -19,6 +19,10 @@ function isRowInactive(stock: Stock): boolean {
   return stock.warehouseActive === false || stock.itemActive === false
 }
 
+const ITEM_TEXT_COLUMN_SIZE = 216
+const ITEM_TEXT_CLASS = 'block w-44 truncate'
+const WAREHOUSE_COLUMN_SIZE = 232
+
 export interface StockTableProps {
   header?: React.ReactNode
   onSelect: (stock: Stock) => void
@@ -48,37 +52,56 @@ export function StockTable({ header, onSelect, onSortChange, selectedId, sort, s
         accessorKey: 'sku',
         // 비활성 창고·비활성 아이템 재고는 부품명·코드를 흐리게 표시한다(IV-01).
         cell: ({ row }) => (
-          <span className={cn('font-semibold', isRowInactive(row.original) ? 'text-faint' : 'text-ink')}>
+          <span
+            className={cn(
+              ITEM_TEXT_CLASS,
+              'font-semibold',
+              isRowInactive(row.original) ? 'text-faint' : 'text-ink',
+            )}
+            title={row.original.sku}
+          >
             {row.original.sku}
           </span>
         ),
-        header: '부품 코드',
-        size: 140,
+        header: '부품코드',
+        size: ITEM_TEXT_COLUMN_SIZE,
       },
       {
         accessorKey: 'itemName',
         cell: ({ row }) => (
-          <span className={cn('font-semibold', isRowInactive(row.original) ? 'text-faint' : 'text-ink')}>
+          <span
+            className={cn(
+              ITEM_TEXT_CLASS,
+              'font-semibold',
+              isRowInactive(row.original) ? 'text-faint' : 'text-ink',
+            )}
+            title={row.original.itemName}
+          >
             {row.original.itemName}
           </span>
         ),
         enableSorting: true,
         header: '부품명',
         id: 'name',
+        size: ITEM_TEXT_COLUMN_SIZE,
       },
       {
         accessorKey: 'warehouseName',
-        // 비활성 창고는 창고명 아래 줄에 '비활성'을 표시한다(IV-01).
+        // 비활성 창고는 같은 줄에서 배지로 표시해 창고명이 2줄로 밀리지 않게 한다(IV-01).
         cell: ({ row }) => (
-          <span className="flex flex-col gap-0.5 font-medium text-ink-2">
-            <span>{row.original.warehouseName}</span>
+          <span className="flex w-48 max-w-full items-center gap-1.5 font-medium text-ink-2">
+            <span className="min-w-0 flex-1 truncate" title={row.original.warehouseName}>
+              {row.original.warehouseName}
+            </span>
             {row.original.warehouseActive === false ? (
-              <span className="w-fit rounded-badge bg-line-soft px-1.5 py-0.5 text-badge text-faint">비활성</span>
+              <span className="shrink-0 rounded-badge bg-line-soft px-1.5 py-0.5 text-badge text-faint">
+                비활성
+              </span>
             ) : null}
           </span>
         ),
         header: '창고',
-        size: 130,
+        size: WAREHOUSE_COLUMN_SIZE,
       },
       {
         accessorKey: 'quantity',

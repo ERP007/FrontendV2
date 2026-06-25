@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -31,8 +31,8 @@ import { FgButton, FgCard, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 조회' }]
 
-/** 재고 조정·안전재고 조정 가능 역할(BRANCH_MANAGER는 자기 창고만 — 서버가 강제). 재고 신규 생성은 ADMIN 전용으로 더 좁다. */
-const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'BRANCH_MANAGER'])
+/** 재고 조정·안전재고 조정 가능 역할. BR 계열은 상세 패널 조정 액션을 노출하지 않는다. */
+const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 
 export function StocksPage() {
   const navigate = useNavigate()
@@ -130,7 +130,7 @@ export function StocksPage() {
   }
 
   function handleAdjustSubmit(values: AdjustmentFormValues) {
-    if (!selectedStock) return
+    if (!selectedStock || !canManage) return
 
     adjustMutation.mutate(
       { ...values, sku: selectedStock.sku },
@@ -144,6 +144,8 @@ export function StocksPage() {
   }
 
   function handleSafetySubmit(safetyStock: number) {
+    if (!canManage) return
+
     const edit = safetyEditQuery.data
     if (!edit) return
 
@@ -174,36 +176,15 @@ export function StocksPage() {
     <div className="fg-content">
       <FgPageHeader
         actions={
-          <>
-            {canManage ? (
-              <>
-                <FgButton
-                  disabled={!selectedStock}
-                  leftIcon={<ShieldCheck aria-hidden className="h-4 w-4" />}
-                  onClick={() => setSafetyOpen(true)}
-                >
-                  안전 재고 조정
-                </FgButton>
-                <FgButton
-                  disabled={!selectedStock}
-                  leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-                  variant="primary"
-                  onClick={() => setAdjustOpen(true)}
-                >
-                  재고 조정
-                </FgButton>
-              </>
-            ) : null}
-            {canCreate ? (
-              <FgButton
-                leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-                variant="primary"
-                onClick={() => setCreateOpen(true)}
-              >
-                재고 추가
-              </FgButton>
-            ) : null}
-          </>
+          canCreate ? (
+            <FgButton
+              leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+              variant="primary"
+              onClick={() => setCreateOpen(true)}
+            >
+              재고 추가
+            </FgButton>
+          ) : undefined
         }
         breadcrumbs={breadcrumbs}
         title="재고 조회"
@@ -239,7 +220,7 @@ export function StocksPage() {
           setPage(1)
         }}
       />
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 space-y-5">
           {listQuery.isError ? (
             <FgCard className="p-6 text-center text-muted">
@@ -276,12 +257,17 @@ export function StocksPage() {
             }}
           />
         </div>
-        <div className="w-96 shrink-0">
+        <div className="sticky top-5 max-h-screen w-96 shrink-0 self-start overflow-y-auto pr-1 fg-scrollbar">
           <StockDetailPanel
-            canAdjust={canManage}
+            canManage={canManage}
             detail={detail}
             loading={detailQuery.isLoading}
-            onAdjust={() => setAdjustOpen(true)}
+            onAdjust={() => {
+              if (canManage) setAdjustOpen(true)
+            }}
+            onSafetyAdjust={() => {
+              if (canManage) setSafetyOpen(true)
+            }}
             onViewHistory={() =>
               void navigate({
                 to: '/stock-movements',

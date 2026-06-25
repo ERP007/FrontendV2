@@ -117,7 +117,7 @@ export function FgAppShell({
 
   return (
     <div className="fg-page flex">
-      <aside className="flex min-h-screen w-sidebar shrink-0 flex-col border-r border-line bg-surface px-4 py-6">
+      <aside className="sticky top-0 flex h-screen w-sidebar shrink-0 flex-col overflow-hidden border-r border-line bg-surface px-4 py-6">
         <div className="mb-6 flex items-center gap-3 px-1">
           <span className="flex h-10 w-10 items-center justify-center rounded-nav bg-navy text-surface">
             <Package aria-hidden className="h-5 w-5" />
@@ -127,15 +127,17 @@ export function FgAppShell({
             <strong className="block truncate text-body font-extrabold text-ink">부품물류 ERP</strong>
           </span>
         </div>
-        <nav className="flex flex-1 flex-col gap-5">
-          {navGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="space-y-1">
-              {group.label ? <p className="px-3 pb-2 text-micro text-faint">{group.label}</p> : null}
-              {group.items.map((item, itemIndex) => (
-                <FgSidebarItem key={itemIndex} {...item} />
-              ))}
-            </div>
-          ))}
+        <nav className="min-h-0 flex-1 overflow-y-auto pr-1 fg-scrollbar">
+          <div className="flex flex-col gap-5">
+            {navGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="space-y-1">
+                {group.label ? <p className="px-3 pb-2 text-micro text-faint">{group.label}</p> : null}
+                {group.items.map((item, itemIndex) => (
+                  <FgSidebarItem key={itemIndex} {...item} />
+                ))}
+              </div>
+            ))}
+          </div>
         </nav>
         {bottomItems?.length ? (
           <div className="mt-5 space-y-1 border-t border-line-soft pt-4">

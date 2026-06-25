@@ -137,24 +137,24 @@ export function WarehousesPage() {
     <div className="fg-content">
       <FgPageHeader
         actions={
-          <>
-            <FgButton
-              disabled={!canManage}
-              leftIcon={<Building2 aria-hidden className="h-4 w-4" />}
-              variant="soft"
-              onClick={() => setBranchModalOpen(true)}
-            >
-              지점 추가
-            </FgButton>
-            <FgButton
-              disabled={!canManage}
-              leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={() => setCreateOpen(true)}
-            >
-              창고 추가
-            </FgButton>
-          </>
+          canManage ? (
+            <>
+              <FgButton
+                leftIcon={<Building2 aria-hidden className="h-4 w-4" />}
+                variant="soft"
+                onClick={() => setBranchModalOpen(true)}
+              >
+                지점 추가
+              </FgButton>
+              <FgButton
+                leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+                variant="primary"
+                onClick={() => setCreateOpen(true)}
+              >
+                창고 추가
+              </FgButton>
+            </>
+          ) : undefined
         }
         breadcrumbs={[{ label: '마스터' }, { label: '창고 관리' }]}
         title="창고 관리"

@@ -1,12 +1,18 @@
-import { ArrowUpDown, RotateCcw, Search } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 
-import { FgButton, FgCard, FgInput, FgSelect } from '@/shared/ui'
+import {
+  FgFilterBar,
+  FgFilterResetButton,
+  FgFilterSearch,
+  FgFilterSelect,
+  FgSelect,
+} from '@/shared/ui'
 
 import type { FgSelectOption } from '@/shared/ui'
 import type { ItemFilter, ItemSortKey } from '../model/types'
 
 const statusOptions = [
-  { label: '상태 : 전체', value: 'ALL' },
+  { label: '전체', value: 'ALL' },
   { label: '활성', value: 'ACTIVE' },
   { label: '비활성', value: 'INACTIVE' },
 ]
@@ -41,68 +47,63 @@ export function ItemFilterBar({
 }: ItemFilterBarProps) {
   const majorOptions = [
     {
-      label: isMajorCategoryLoading ? '대분류 불러오는 중' : '대분류 : 전체',
+      label: isMajorCategoryLoading ? '불러오는 중' : '전체',
       value: 'ALL',
     },
     ...majorCategoryOptions,
   ]
   const middleOptions = [
-    { label: '중분류 : 전체', value: 'ALL' },
+    { label: '전체', value: 'ALL' },
     ...middleCategoryOptions,
   ]
   const isMiddleCategoryDisabled = filter.majorCategory === 'ALL' || isMiddleCategoryLoading
 
   return (
-    <FgCard className="flex flex-wrap items-center gap-3 p-4">
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-        <FgInput
-          leftIcon={<Search aria-hidden className="h-4 w-4" />}
-          placeholder="부품명 또는 코드"
-          rootClassName="min-w-64 flex-1"
-          value={filter.keyword}
-          onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
-        />
-        <FgSelect
-          className="w-44 shrink-0"
-          disabled={isMajorCategoryLoading}
-          options={majorOptions}
-          value={filter.majorCategory}
-          onValueChange={(value) =>
-            onChange({ ...filter, majorCategory: value, middleCategory: 'ALL' })
-          }
-        />
-        <FgSelect
-          className="w-44 shrink-0"
-          disabled={isMiddleCategoryDisabled}
-          options={middleOptions}
-          value={filter.middleCategory}
-          onValueChange={(value) => onChange({ ...filter, middleCategory: value })}
-        />
-        <FgSelect
-          className="w-40 shrink-0"
-          options={statusOptions}
-          value={filter.status}
-          onValueChange={(value) => onChange({ ...filter, status: value as ItemFilter['status'] })}
-        />
-      </div>
-      <div className="ml-auto flex shrink-0 items-center gap-3">
-        <FgButton
-          className="shrink-0"
-          leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />}
-          variant="soft"
-          onClick={onReset}
-        >
-          초기화
-        </FgButton>
-        <span className="h-6 w-px shrink-0 bg-line" />
-        <FgSelect
-          className="w-64 shrink-0"
-          leftIcon={<ArrowUpDown aria-hidden className="h-4 w-4" />}
-          options={sortOptions}
-          value={filter.sort}
-          onValueChange={(value) => onChange({ ...filter, sort: value as ItemSortKey })}
-        />
-      </div>
-    </FgCard>
+    <FgFilterBar
+      actions={
+        <>
+          <FgFilterResetButton className="shrink-0" onClick={onReset} />
+          <span className="hidden h-6 w-px shrink-0 bg-line sm:block" />
+          <FgSelect
+            className="w-64 shrink-0"
+            leftIcon={<ArrowUpDown aria-hidden className="h-4 w-4" />}
+            options={sortOptions}
+            value={filter.sort}
+            onValueChange={(value) => onChange({ ...filter, sort: value as ItemSortKey })}
+          />
+        </>
+      }
+    >
+      <FgFilterSearch
+        placeholder="부품명 또는 코드"
+        value={filter.keyword}
+        onChange={(event) => onChange({ ...filter, keyword: event.target.value })}
+      />
+      <FgFilterSelect
+        className="w-44 shrink-0"
+        disabled={isMajorCategoryLoading}
+        label="대분류"
+        options={majorOptions}
+        value={filter.majorCategory}
+        onValueChange={(value) =>
+          onChange({ ...filter, majorCategory: value, middleCategory: 'ALL' })
+        }
+      />
+      <FgFilterSelect
+        className="w-44 shrink-0"
+        disabled={isMiddleCategoryDisabled}
+        label="중분류"
+        options={middleOptions}
+        value={filter.middleCategory}
+        onValueChange={(value) => onChange({ ...filter, middleCategory: value })}
+      />
+      <FgFilterSelect
+        className="w-40 shrink-0"
+        label="상태"
+        options={statusOptions}
+        value={filter.status}
+        onValueChange={(value) => onChange({ ...filter, status: value as ItemFilter['status'] })}
+      />
+    </FgFilterBar>
   )
 }
