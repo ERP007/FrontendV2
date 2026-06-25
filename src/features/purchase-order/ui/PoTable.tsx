@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
-import { formatDate } from '@/shared/lib/format'
+import { formatDateKorean } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { PurchaseOrderRow } from '../model/po-list-row'
@@ -22,7 +22,7 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
         accessorKey: 'code',
         cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         enableSorting: false,
-        header: '요청 번호',
+        header: '요청번호',
         size: 140,
       },
       {
@@ -40,7 +40,9 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
       {
         accessorKey: 'createdAt',
         cell: ({ row }) => (
-          <span className="font-medium text-muted">{formatDate(row.original.createdAt)}</span>
+          <span className="whitespace-nowrap font-medium text-muted">
+            {formatDateKorean(row.original.createdAt)}
+          </span>
         ),
         enableSorting: true,
         header: '등록일',

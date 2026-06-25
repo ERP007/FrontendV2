@@ -143,7 +143,7 @@ export function PurchaseOrderDetailPage() {
           </>
         }
         badge={<FgDomainStatusBadge label={po.progressLabel} status={po.progressBadgeStatus} />}
-        breadcrumbs={[{ label: '구매' }, { label: '구매 주문' }, { label: po.code }]}
+        breadcrumbs={[{ label: '구매' }, { label: '구매 현황' }, { label: po.code }]}
         title={po.code}
       />
 

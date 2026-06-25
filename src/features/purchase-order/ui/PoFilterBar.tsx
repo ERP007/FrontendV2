@@ -83,7 +83,7 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
     <FgCard className="flex items-center gap-3 p-4">
       <FgInput
         leftIcon={<Search aria-hidden className="h-4 w-4" />}
-        placeholder="요청 번호 또는 공급사명"
+        placeholder="요청번호 또는 공급사명"
         rootClassName="flex-1"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}

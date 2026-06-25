@@ -113,7 +113,7 @@ export function PurchaseOrderEditPage() {
 
   const breadcrumbs = [
     { label: '구매' },
-    { label: '구매 주문' },
+    { label: '구매 현황' },
     { label: code || '—' },
     { label: '수정' },
   ]
