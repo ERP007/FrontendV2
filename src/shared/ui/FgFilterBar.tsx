@@ -1,5 +1,6 @@
-import { RotateCcw, Search } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronDown, RotateCcw, Search } from 'lucide-react'
+import { forwardRef } from 'react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { FgButton } from '@/shared/ui/FgButton'
@@ -57,6 +58,46 @@ export function FgFilterSelect({ className, label, triggerClassName, ...props }:
     />
   )
 }
+
+export interface FgFilterMenuTriggerProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode
+  label: string
+}
+
+export const FgFilterMenuTrigger = forwardRef<HTMLButtonElement, FgFilterMenuTriggerProps>(
+  (
+    {
+      children,
+      className,
+      disabled,
+      label,
+      type = 'button',
+      ...props
+    },
+    ref,
+  ) => (
+    <button
+      ref={ref}
+      className={cn(
+        'relative flex h-11 shrink-0 items-center justify-between gap-3 rounded-control border border-line bg-surface px-3.5 text-left text-body text-ink transition-colors',
+        'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
+        'disabled:cursor-not-allowed disabled:text-muted',
+        className,
+      )}
+      disabled={disabled}
+      type={type}
+      {...props}
+    >
+      <span className="pointer-events-none absolute -top-2 left-3 bg-surface px-1 text-micro font-bold text-faint">
+        {label}
+      </span>
+      <span className="min-w-0 truncate">{children}</span>
+      <ChevronDown aria-hidden className="h-4 w-4 shrink-0 text-faint" />
+    </button>
+  ),
+)
+
+FgFilterMenuTrigger.displayName = 'FgFilterMenuTrigger'
 
 export type FgFilterResetButtonProps = Omit<FgButtonProps, 'leftIcon'>
 
