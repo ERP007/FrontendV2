@@ -3,14 +3,13 @@ import dayjs from 'dayjs'
 import { Boxes, ChevronRight, ClipboardList, ShoppingCart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import {
-  ActivityChart,
-  TODO_FIXTURES,
-  TodoPanel,
-  useActivitySummaryQuery,
-} from '@/features/dashboard'
+import { ActivityChart, TodoPanel, useActivitySummaryQuery } from '@/features/dashboard'
 import { PoKpiCards, usePurchaseOrderKpiQuery } from '@/features/purchase-order'
-import { SoHqKpiCards, useSalesOrderHqKpiQuery } from '@/features/sales-order'
+import {
+  SoHqKpiCards,
+  useHqSalesOrdersQuery,
+  useSalesOrderHqKpiQuery,
+} from '@/features/sales-order'
 import { StockKpiCards, useStockKpiQuery } from '@/features/stock'
 import { FgCard, FgPageHeader } from '@/shared/ui'
 
@@ -36,6 +35,8 @@ export function DashboardPage() {
   const poKpiQuery = usePurchaseOrderKpiQuery()
   // 발주 KPI(발주 현황과 동일) — 전체 요청/출고 대기/도착 대기.
   const soKpiQuery = useSalesOrderHqKpiQuery()
+  // 할 일 목록 — 출고 대기/도착 대기/입고 발주를 최대(size 50)로 조회해 탭으로 분류.
+  const todoQuery = useHqSalesOrdersQuery({ size: 50, status: ['REQUESTED', 'APPROVED', 'DELIVERED'] })
   // 최근 7일 활동 차트. 집계 범위는 KPI와 동일하게 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
   const activitySummaryQuery = useActivitySummaryQuery()
 
@@ -73,9 +74,9 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-[1.15fr_1fr] gap-5">
         <TodoPanel
-          items={TODO_FIXTURES}
+          items={todoQuery.data?.content ?? []}
           onSelect={(item) =>
-            void navigate({ params: { soNo: item.reqNo }, to: '/sales-orders/$soNo' })
+            void navigate({ params: { soNo: item.code }, to: '/sales-orders/$soNo' })
           }
         />
         {activitySummaryQuery.isError ? (

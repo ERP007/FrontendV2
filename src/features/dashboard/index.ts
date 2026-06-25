@@ -1,5 +1,4 @@
 export { useActivitySummaryQuery } from './api/use-activity-summary-query'
-export { TODO_FIXTURES } from './model/fixtures'
-export type { ActivitySummary, TodoItem } from './model/types'
+export type { ActivitySummary } from './model/types'
 export { ActivityChart } from './ui/ActivityChart'
 export { TodoPanel } from './ui/TodoPanel'
