@@ -83,10 +83,6 @@ function deriveTab(status: SalesOrderStatus[]): SoStatusTab {
   return entries.find(([, value]) => statusListEquals(status, value))?.[0] ?? 'ALL'
 }
 
-function deriveKpiActive(status: SalesOrderStatus[]): SalesOrderStatus | undefined {
-  return status.length === 1 ? status[0] : undefined
-}
-
 export function BranchSalesOrdersPage() {
   const navigate = useNavigate()
   const [state, setState] = useState<SoBranchQueryState>(createDefaultQueryState)
@@ -109,7 +105,6 @@ export function BranchSalesOrdersPage() {
   const totalPages = Math.max(1, data?.totalPages ?? 1)
 
   const tab = useMemo(() => deriveTab(state.status), [state.status])
-  const activeKpiStatus = useMemo(() => deriveKpiActive(state.status), [state.status])
 
   function patchState(patch: Partial<SoBranchQueryState>) {
     setState((prev) => ({ ...prev, ...patch }))
@@ -130,7 +125,6 @@ export function BranchSalesOrdersPage() {
       <FgPageHeader breadcrumbs={breadcrumbs} title="발주 현황" />
       {kpi ? (
         <SoBranchKpiCards
-          activeStatus={activeKpiStatus}
           kpi={kpi}
           onSelect={(status) => patchState({ page: 1, status: status ? [status] : [] })}
         />

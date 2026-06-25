@@ -72,11 +72,6 @@ export function SalesOrdersPage() {
   const totalElements = page?.totalElements ?? 0
   const totalPages = page?.totalPages ?? 1
 
-  const activeKpiStatus = useMemo<SalesOrderStatus | undefined>(
-    () => (state.status.length === 1 ? state.status[0] : undefined),
-    [state.status],
-  )
-
   const rangeStart = totalElements === 0 ? 0 : (state.page - 1) * state.size + 1
   const rangeEnd = Math.min(state.page * state.size, totalElements)
 
@@ -116,7 +111,7 @@ export function SalesOrdersPage() {
         title="발주 현황"
       />
       {kpi && (
-        <SoHqKpiCards activeStatus={activeKpiStatus} kpi={kpi} onSelect={handleKpiSelect} />
+        <SoHqKpiCards kpi={kpi} onSelect={handleKpiSelect} />
       )}
       <SoFilterBar
         values={{
