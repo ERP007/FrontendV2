@@ -16,6 +16,7 @@ import {
   useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
+import { useStockQuantitiesQuery } from '@/features/stock'
 import { useMeQuery } from '@/features/user'
 import { formatNumber } from '@/shared/lib/format'
 import {
@@ -47,6 +48,9 @@ export function BranchSalesOrderArrivalPage() {
 
   const { data: so } = useBranchSalesOrderQuery(code)
   const { data: me } = useMeQuery()
+  // 현 지점(수신 창고) 현재고 조회 → 입고 후 수량 표시.
+  const skus = so?.lines.map((line) => line.itemCode) ?? []
+  const { data: stockMap } = useStockQuantitiesQuery(so?.toWarehouse.code, skus)
   const deliverMutation = useSalesOrderDeliverMutation(code)
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
@@ -136,7 +140,7 @@ export function BranchSalesOrderArrivalPage() {
             <h2 className="text-section text-ink">도착 품목 확인</h2>
             <FgBadge variant="outline">{so.lines.length} 라인</FgBadge>
           </div>
-          <span className="text-meta font-medium text-faint">출고 수량 기준으로 자동 확정</span>
+          <span className="text-meta font-medium text-faint">현재고 기준 · {so.toWarehouse.code}</span>
         </div>
         <div className="overflow-hidden rounded-control border border-line">
           <table className="w-full text-label">
@@ -144,36 +148,40 @@ export function BranchSalesOrderArrivalPage() {
               <tr>
                 <th className="px-4 py-3 text-left">부품</th>
                 <th className="w-24 px-4 py-3 text-center">단위</th>
-                <th className="w-32 px-4 py-3 text-right">출고 수량</th>
                 <th className="w-32 px-4 py-3 text-right">도착 수량</th>
+                <th className="w-32 px-4 py-3 text-right">현재고</th>
+                <th className="w-32 px-4 py-3 text-right">입고 후</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line-soft">
-              {so.lines.map((line) => (
-                <tr key={line.id}>
-                  <td className="px-4 py-3">
-                    <span className="block font-semibold text-ink">{line.itemName}</span>
-                    <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
-                  </td>
-                  <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-ink-2">
-                    {formatNumber(line.requestQuantity)}
-                    <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-bold text-ink">
-                    {formatNumber(line.requestQuantity)}
-                    <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
-                  </td>
-                </tr>
-              ))}
+              {so.lines.map((line) => {
+                const quantity = stockMap?.get(line.itemCode)?.quantity ?? 0
+                const after = quantity + line.requestQuantity
+                return (
+                  <tr key={line.id}>
+                    <td className="px-4 py-3">
+                      <span className="block font-semibold text-ink">{line.itemName}</span>
+                      <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
+                    <td className="px-4 py-3 text-right font-bold text-ink">
+                      {formatNumber(line.requestQuantity)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-ink-2">
+                      {formatNumber(quantity)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-success">
+                      {formatNumber(after)}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
         <div className="mt-4 flex items-center justify-between gap-4 border-t border-line-soft pt-4 text-label">
           <span className="font-medium text-muted">
             총 품목 수 <strong className="text-ink">{so.lines.length}종</strong>
-            <span className="mx-2 text-line">|</span>
-            출고 합계 <strong className="text-ink">{formatNumber(totalQuantity)}</strong>
             <span className="mx-2 text-line">|</span>
             도착 합계 <strong className="text-ink">{formatNumber(totalQuantity)}</strong>
           </span>

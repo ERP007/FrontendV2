@@ -49,7 +49,7 @@ export function AppShellLayout() {
 
   const salesOrderItems = [
     ...(canShowHqMenus
-      ? [item('/sales-orders', '발주 요청', <ClipboardCheck aria-hidden className={iconClassName} />)]
+      ? [item('/sales-orders', '발주 현황', <ClipboardCheck aria-hidden className={iconClassName} />)]
       : []),
     ...(canShowBranchMenus
       ? [

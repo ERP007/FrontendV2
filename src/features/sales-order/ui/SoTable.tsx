@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
-import { formatDate } from '@/shared/lib/format'
+import { formatDate, formatDateKorean } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { BranchSalesOrderRow, HqSalesOrderRow } from '../model/so-list-row'
@@ -163,8 +163,8 @@ export function SoBranchTable({
       {
         accessorKey: 'requestedAt',
         cell: ({ row }) => (
-          <span className="font-medium text-muted">
-            {row.original.requestedAt ? formatDate(row.original.requestedAt) : '—'}
+          <span className="whitespace-nowrap font-medium text-muted">
+            {row.original.requestedAt ? formatDateKorean(row.original.requestedAt) : '—'}
           </span>
         ),
         enableSorting: true,
@@ -175,7 +175,7 @@ export function SoBranchTable({
         cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
         id: 'itemCount',
-        meta: { align: 'right' },
+        meta: { align: 'right', cellClassName: 'pr-10', headClassName: 'pr-10' },
         size: 160,
       },
       {

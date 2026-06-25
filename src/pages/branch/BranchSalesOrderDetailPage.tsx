@@ -170,7 +170,16 @@ export function BranchSalesOrderDetailPage() {
               <InfoCell
                 icon={<UserIcon aria-hidden className="h-3.5 w-3.5" />}
                 label="요청자"
-                value={so.requesterLabel}
+                value={
+                  <span>
+                    {so.requesterName}
+                    {so.requesterPosition ? (
+                      <span className="ml-1.5 text-meta font-medium text-faint">
+                        {so.requesterPosition}
+                      </span>
+                    ) : null}
+                  </span>
+                }
               />
               <InfoCell
                 icon={<Check aria-hidden className="h-3.5 w-3.5" />}

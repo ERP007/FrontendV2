@@ -52,10 +52,10 @@ export const ORDER_PROGRESS_BADGE_STATUS: Record<OrderProgress, FgDomainStatus> 
 }
 
 export const REJECT_REASON_CATEGORY_LABELS: Record<RejectReasonCategory, string> = {
-  DUPLICATE: '중복 요청',
-  OTHER: '기타',
   OUT_OF_STOCK: '재고 부족',
+  DUPLICATE: '중복 요청',
   POLICY: '정책 위반',
+  OTHER: '기타',
 }
 
 export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [

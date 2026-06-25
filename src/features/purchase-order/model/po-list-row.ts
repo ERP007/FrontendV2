@@ -22,9 +22,9 @@ export interface PurchaseOrderRow {
 }
 
 export const PO_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
-  APPROVED: '확정',
+  APPROVED: '입고 대기',
   CANCELED: '취소',
-  DRAFT: '임시',
+  DRAFT: '임시저장',
   RECEIVED: '입고',
 }
 

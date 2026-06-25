@@ -95,7 +95,7 @@ export function SalesOrderShipPage() {
             <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
-        breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: `${so.code} 출고 처리` }]}
+        breadcrumbs={[{ label: '발주' }, { label: '발주 현황' }, { label: `${so.code} 출고 처리` }]}
         title={so.code}
       />
 
@@ -204,7 +204,7 @@ export function SalesOrderShipPage() {
       <FgCard>
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-section text-ink">출고 정보</h2>
-          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감 + 지점 알림 발송</span>
+          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감</span>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
           <FgInput

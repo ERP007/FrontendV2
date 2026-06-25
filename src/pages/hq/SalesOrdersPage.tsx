@@ -20,7 +20,7 @@ import { formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgBadge, FgPageHeader, FgPagination } from '@/shared/ui'
 
-const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
+const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
 
 interface SoHqQueryState {
   endDate?: string
@@ -112,7 +112,7 @@ export function SalesOrdersPage() {
       <FgPageHeader
         badge={<FgBadge variant="primary">본사</FgBadge>}
         breadcrumbs={breadcrumbs}
-        title="발주 요청"
+        title="발주 현황"
       />
       {kpi && (
         <SoHqKpiCards activeStatus={activeKpiStatus} kpi={kpi} onSelect={handleKpiSelect} />

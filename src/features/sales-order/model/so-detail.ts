@@ -26,6 +26,8 @@ export interface SalesOrderDetail extends Omit<SalesOrderDetailResponse, 'lines'
   progressBadgeStatus: FgDomainStatus
   requestedAtLabel: string
   requesterLabel: string
+  requesterName: string
+  requesterPosition: string | null
   statusLabel: string
   progressLabel: string
 }
@@ -45,6 +47,8 @@ export function mapSalesOrderDetail(detail: SalesOrderDetailResponse): SalesOrde
     progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[detail.progress],
     requestedAtLabel: detail.requestedAt ? formatDateTime(detail.requestedAt) : '—',
     requesterLabel: personLabel(detail.requester),
+    requesterName: detail.requester?.name ?? '—',
+    requesterPosition: detail.requester?.position ?? null,
     statusLabel: SO_STATUS_LABELS[detail.status],
     progressLabel: ORDER_PROGRESS_LABELS[detail.progress],
   }

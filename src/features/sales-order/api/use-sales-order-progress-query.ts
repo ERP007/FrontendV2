@@ -5,7 +5,7 @@ import { api } from '@/shared/api'
 import { salesOrderKeys } from '../model/so-query-keys'
 import type { SalesOrderProgressResponse } from '../model/types'
 
-const POLL_INTERVAL_MS = 1500
+const POLL_INTERVAL_MS = 1000
 
 /**
  * SO #10 진행 상태 조회(폴링) — GET /sales-orders/{code}/progress.
