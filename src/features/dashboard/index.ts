@@ -1,6 +1,5 @@
 export { useActivitySummaryQuery } from './api/use-activity-summary-query'
-export { DASHBOARD_KPI_FIXTURE, TODO_FIXTURES } from './model/fixtures'
-export type { ActivitySummary, DashboardKpi, TodoItem } from './model/types'
+export { TODO_FIXTURES } from './model/fixtures'
+export type { ActivitySummary, TodoItem } from './model/types'
 export { ActivityChart } from './ui/ActivityChart'
-export { DashboardKpiGrid } from './ui/DashboardKpiGrid'
 export { TodoPanel } from './ui/TodoPanel'

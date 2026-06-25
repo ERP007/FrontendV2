@@ -1,29 +1,3 @@
-/**
- * 본사 대시보드(DA-01) 보조 KPI UI 모델 (구매·발주).
- *
- * 상단 재고 KPI 4종(총 SKU/부족/충족률/최근 7일 이동)은 features/stock의 StockKpi로 분리되어
- * `GET /inventory/stocks/kpi`(ADMIN·HQ는 전사 범위) 실데이터로 그린다(StockKpiCards 재사용).
- * 이 타입은 아직 연동 전이라 fixture로 채우는 구매·발주 KPI만 담는다:
- * - 구매 KPI 2종(진행 중 PO/도착 예정 PO) = Procurement 요약
- * - 발주 KPI 2종(승인 대기/출고 대기) = Sales 요약
- */
-export interface DashboardKpi {
-  /** 구매 — 진행 중(DRAFT/APPROVED/SHIPPED) 구매 PO 수 */
-  activePoCount: number
-  /** 구매 — 진행 중 PO 총 발주 금액 합 */
-  activePoAmount: number
-  /** 구매 — 도착 예정 PO 수 */
-  arrivingPoCount: number
-  /** 구매 — 도착 예정 PO 중 지연 건수 */
-  delayedPoCount: number
-  /** 발주 — 승인 대기(REQUESTED) 발주 수 */
-  pendingApprovalCount: number
-  /** 발주 — 승인 대기 평균 대기 시간(시간) */
-  avgApprovalWaitHours: number
-  /** 발주 — 출고 대기(APPROVED) 발주 수 */
-  pendingShipCount: number
-}
-
 export type TodoCategory = 'APPROVAL' | 'SHIP' | 'ARRIVAL'
 
 /** 시점 긴급도: 지연(danger 점) / 오늘 / 일반 */

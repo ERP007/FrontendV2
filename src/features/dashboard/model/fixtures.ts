@@ -1,15 +1,4 @@
-import type { DashboardKpi, TodoItem } from './types'
-
-/** 백엔드 연동 전 화면 확인용 구매·발주 KPI fixture (상단 재고 KPI는 실데이터로 대체됨). */
-export const DASHBOARD_KPI_FIXTURE: DashboardKpi = {
-  activePoAmount: 482310000,
-  activePoCount: 27,
-  arrivingPoCount: 14,
-  avgApprovalWaitHours: 18,
-  delayedPoCount: 3,
-  pendingApprovalCount: 9,
-  pendingShipCount: 22,
-}
+import type { TodoItem } from './types'
 
 /** 할 일 목록 — 본사 전체 지점 집계(승인 대기 9 / 출고 대기 8 / 도착 지연 6 = 총 23건) */
 export const TODO_FIXTURES: TodoItem[] = [

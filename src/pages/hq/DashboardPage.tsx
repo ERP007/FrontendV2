@@ -5,12 +5,12 @@ import type { ReactNode } from 'react'
 
 import {
   ActivityChart,
-  DASHBOARD_KPI_FIXTURE,
-  DashboardKpiGrid,
   TODO_FIXTURES,
   TodoPanel,
   useActivitySummaryQuery,
 } from '@/features/dashboard'
+import { PoKpiCards, usePurchaseOrderKpiQuery } from '@/features/purchase-order'
+import { SoHqKpiCards, useSalesOrderHqKpiQuery } from '@/features/sales-order'
 import { StockKpiCards, useStockKpiQuery } from '@/features/stock'
 import { FgCard, FgPageHeader } from '@/shared/ui'
 
@@ -32,6 +32,10 @@ export function DashboardPage() {
   const navigate = useNavigate()
   // 상단 재고 KPI. 집계 범위는 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
   const stockKpiQuery = useStockKpiQuery()
+  // 구매 KPI(구매 현황과 동일) — 전체 요청/임시저장/입고 대기. 집계 범위는 백엔드가 호출자 소속으로 강제한다.
+  const poKpiQuery = usePurchaseOrderKpiQuery()
+  // 발주 KPI(발주 현황과 동일) — 전체 요청/출고 대기/도착 대기.
+  const soKpiQuery = useSalesOrderHqKpiQuery()
   // 최근 7일 활동 차트. 집계 범위는 KPI와 동일하게 호출자 소속(ADMIN·HQ는 전사)으로 백엔드가 강제한다.
   const activitySummaryQuery = useActivitySummaryQuery()
 
@@ -57,8 +61,15 @@ export function DashboardPage() {
         />
       ) : null}
 
-      {/* 구매·발주 KPI — Procurement·Sales 연동 전까지 fixture */}
-      <DashboardKpiGrid kpi={DASHBOARD_KPI_FIXTURE} />
+      {/* 구매 KPI — 구매 현황(PoKpiCards)을 실데이터로 재사용. 클릭 시 구매 현황으로 이동. */}
+      {poKpiQuery.data ? (
+        <PoKpiCards kpi={poKpiQuery.data} onSelect={() => void navigate({ to: '/purchase-orders' })} />
+      ) : null}
+
+      {/* 발주 KPI — 발주 현황(SoHqKpiCards)을 실데이터로 재사용. 클릭 시 발주 현황으로 이동. */}
+      {soKpiQuery.data ? (
+        <SoHqKpiCards kpi={soKpiQuery.data} onSelect={() => void navigate({ to: '/sales-orders' })} />
+      ) : null}
 
       <div className="grid grid-cols-[1.15fr_1fr] gap-5">
         <TodoPanel
