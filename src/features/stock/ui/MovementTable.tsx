@@ -1,11 +1,12 @@
 import dayjs from 'dayjs'
-import { ArrowDown, ArrowUp, ChevronsUpDown, RefreshCw, Warehouse as WarehouseIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, MessageSquareText, RefreshCw, Warehouse as WarehouseIcon } from 'lucide-react'
+import { useState } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatDelta, formatNumber } from '@/shared/lib/format'
 import {
-  FgAvatar,
   FgEmptyState,
+  FgModal,
   FgTable,
   FgTableCell,
   FgTableContainer,
@@ -21,6 +22,11 @@ import { MovementTypeBadge } from './StockBadges'
 import type { Movement, MovementSort, MovementSortField } from '../model/types'
 
 const COLUMN_COUNT = 7
+
+/** 메모(note)가 비어있지 않으면 true — 담당자 열의 '메모 보기' 버튼 노출 조건. */
+function hasNote(movement: Movement): boolean {
+  return movement.note != null && movement.note.trim().length > 0
+}
 
 interface SortableHeadProps {
   className?: string
@@ -55,7 +61,12 @@ function SortableHead({ className, field, label, onSortChange, sort }: SortableH
   )
 }
 
-function MovementRow({ movement }: { movement: Movement }) {
+interface MovementRowProps {
+  movement: Movement
+  onNoteClick: (movement: Movement) => void
+}
+
+function MovementRow({ movement, onNoteClick }: MovementRowProps) {
   // 수행자는 사번이 아니라 이름으로 표시한다(executorName은 응답에 항상 포함).
   const executor = movement.executorName
 
@@ -93,8 +104,17 @@ function MovementRow({ movement }: { movement: Movement }) {
       </FgTableCell>
       <FgTableCell>
         <span className="flex items-center gap-2">
-          <FgAvatar fallback={executor} size="sm" />
           <span className="font-medium text-ink-2">{executor}</span>
+          {hasNote(movement) ? (
+            <button
+              aria-label="메모 보기"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-muted transition-colors hover:bg-background hover:text-ink-2"
+              type="button"
+              onClick={() => onNoteClick(movement)}
+            >
+              <MessageSquareText aria-hidden className="h-4 w-4" />
+            </button>
+          ) : null}
         </span>
       </FgTableCell>
     </FgTableRow>
@@ -123,95 +143,116 @@ export function MovementTable({
   sort,
   totalCount,
 }: MovementTableProps) {
+  const [memoMovement, setMemoMovement] = useState<Movement | null>(null)
   // 정렬은 일시(occurredAt)만 노출하므로 표는 항상 날짜 그룹으로 묶는다.
   const groups = groupMovementsByDate(movements)
 
   return (
-    <FgTableContainer>
-      <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-3.5 text-label text-muted">
-        <span>
-          {periodLabel ? <span className="text-faint">{periodLabel} · </span> : null}
-          총 <strong className="text-ink">{formatNumber(totalCount)}</strong>건
-        </span>
-        <button
-          className="flex items-center gap-1.5 text-meta font-semibold text-muted transition-colors hover:text-ink-2"
-          type="button"
-          onClick={onRefresh}
-        >
-          <RefreshCw aria-hidden className="h-3.5 w-3.5" />
-          새로고침
-        </button>
-      </div>
-      <div className="overflow-x-auto fg-scrollbar">
-        <FgTable>
-          <FgTableHeader>
-            <tr>
-              <SortableHead className="w-28" field="occurredAt" label="일시" onSortChange={onSortChange} sort={sort} />
-              <FgTableHead>부품</FgTableHead>
-              <FgTableHead className="w-36">창고</FgTableHead>
-              <FgTableHead className="w-28">유형</FgTableHead>
-              <FgTableHead className="w-28 text-right">수량</FgTableHead>
-              <FgTableHead className="w-48">사유 · 원천</FgTableHead>
-              <FgTableHead className="w-32">담당자</FgTableHead>
-            </tr>
-          </FgTableHeader>
-          {error ? (
-            <tbody>
+    <>
+      <FgTableContainer>
+        <div className="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-3.5 text-label text-muted">
+          <span>
+            {periodLabel ? <span className="text-faint">{periodLabel} · </span> : null}
+            총 <strong className="text-ink">{formatNumber(totalCount)}</strong>건
+          </span>
+          <button
+            className="flex items-center gap-1.5 text-meta font-semibold text-muted transition-colors hover:text-ink-2"
+            type="button"
+            onClick={onRefresh}
+          >
+            <RefreshCw aria-hidden className="h-3.5 w-3.5" />
+            새로고침
+          </button>
+        </div>
+        <div className="overflow-x-auto fg-scrollbar">
+          <FgTable>
+            <FgTableHeader>
               <tr>
-                <td colSpan={COLUMN_COUNT}>
-                  <div className="flex flex-col items-center gap-3 px-5 py-14 text-center">
-                    <p className="text-label text-muted">이동 이력을 불러오지 못했습니다.</p>
-                    <button
-                      className="rounded-control border border-line px-3 py-1.5 text-meta font-semibold text-ink-2 transition-colors hover:bg-background"
-                      type="button"
-                      onClick={onRefresh}
-                    >
-                      다시 시도
-                    </button>
-                  </div>
-                </td>
+                <SortableHead className="w-28" field="occurredAt" label="일시" onSortChange={onSortChange} sort={sort} />
+                <FgTableHead>부품</FgTableHead>
+                <FgTableHead className="w-36">창고</FgTableHead>
+                <FgTableHead className="w-28">유형</FgTableHead>
+                <FgTableHead className="w-28 text-right">수량</FgTableHead>
+                <FgTableHead className="w-48">사유 · 원천</FgTableHead>
+                <FgTableHead className="w-32">담당자</FgTableHead>
               </tr>
-            </tbody>
-          ) : loading && movements.length === 0 ? (
-            <tbody>
-              <tr>
-                <td className="px-5 py-14 text-center text-label text-muted" colSpan={COLUMN_COUNT}>
-                  이동 이력을 불러오는 중…
-                </td>
-              </tr>
-            </tbody>
-          ) : movements.length === 0 ? (
-            <tbody>
-              <tr>
-                <td colSpan={COLUMN_COUNT}>
-                  <FgEmptyState description="기간 또는 필터를 변경해 보세요" title="조회된 이동 이력이 없습니다" />
-                </td>
-              </tr>
-            </tbody>
-          ) : (
-            groups.map((group) => (
-              <tbody key={group.date} className="divide-y divide-line-soft">
-                <tr className="border-y border-line-soft bg-background">
-                  <td className="px-5 py-2.5" colSpan={COLUMN_COUNT}>
-                    <span className="flex items-center gap-2.5 text-label">
-                      <strong className="font-bold text-ink-2">
-                        {group.date}
-                        {group.isToday ? <span className="ml-1.5 text-primary-strong">(오늘)</span> : null}
-                      </strong>
-                      <span className="rounded-pill bg-line-soft px-2 py-0.5 text-badge text-muted">
-                        {group.count}건
-                      </span>
-                    </span>
+            </FgTableHeader>
+            {error ? (
+              <tbody>
+                <tr>
+                  <td colSpan={COLUMN_COUNT}>
+                    <div className="flex flex-col items-center gap-3 px-5 py-14 text-center">
+                      <p className="text-label text-muted">이동 이력을 불러오지 못했습니다.</p>
+                      <button
+                        className="rounded-control border border-line px-3 py-1.5 text-meta font-semibold text-ink-2 transition-colors hover:bg-background"
+                        type="button"
+                        onClick={onRefresh}
+                      >
+                        다시 시도
+                      </button>
+                    </div>
                   </td>
                 </tr>
-                {group.movements.map((movement) => (
-                  <MovementRow key={movement.id} movement={movement} />
-                ))}
               </tbody>
-            ))
-          )}
-        </FgTable>
-      </div>
-    </FgTableContainer>
+            ) : loading && movements.length === 0 ? (
+              <tbody>
+                <tr>
+                  <td className="px-5 py-14 text-center text-label text-muted" colSpan={COLUMN_COUNT}>
+                    이동 이력을 불러오는 중…
+                  </td>
+                </tr>
+              </tbody>
+            ) : movements.length === 0 ? (
+              <tbody>
+                <tr>
+                  <td colSpan={COLUMN_COUNT}>
+                    <FgEmptyState description="기간 또는 필터를 변경해 보세요" title="조회된 이동 이력이 없습니다" />
+                  </td>
+                </tr>
+              </tbody>
+            ) : (
+              groups.map((group) => (
+                <tbody key={group.date} className="divide-y divide-line-soft">
+                  <tr className="border-y border-line-soft bg-background">
+                    <td className="px-5 py-2.5" colSpan={COLUMN_COUNT}>
+                      <span className="flex items-center gap-2.5 text-label">
+                        <strong className="font-bold text-ink-2">
+                          {group.date}
+                          {group.isToday ? <span className="ml-1.5 text-primary-strong">(오늘)</span> : null}
+                        </strong>
+                        <span className="rounded-pill bg-line-soft px-2 py-0.5 text-badge text-muted">
+                          {group.count}건
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                  {group.movements.map((movement) => (
+                    <MovementRow key={movement.id} movement={movement} onNoteClick={setMemoMovement} />
+                  ))}
+                </tbody>
+              ))
+            )}
+          </FgTable>
+        </div>
+      </FgTableContainer>
+      <FgModal
+        description={
+          memoMovement
+            ? `${memoMovement.itemName} · ${dayjs(memoMovement.occurredAt).format('YYYY-MM-DD HH:mm')}`
+            : undefined
+        }
+        icon={<MessageSquareText aria-hidden className="h-5 w-5" />}
+        open={memoMovement !== null}
+        size="sm"
+        title="메모"
+        onOpenChange={(open) => {
+          if (!open) {
+            setMemoMovement(null)
+          }
+        }}
+      >
+        <p className="whitespace-pre-wrap break-words text-label text-ink-2">{memoMovement?.note}</p>
+      </FgModal>
+    </>
   )
 }

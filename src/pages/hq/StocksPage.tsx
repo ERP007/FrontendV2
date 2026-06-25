@@ -31,8 +31,8 @@ import { FgButton, FgCard, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 조회' }]
 
-/** 재고 조정·안전재고 조정 가능 역할. 재고 신규 생성은 ADMIN 전용으로 더 좁다. */
-const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
+/** 재고 조정·안전재고 조정 가능 역할(BRANCH_MANAGER는 자기 창고만 — 서버가 강제). 재고 신규 생성은 ADMIN 전용으로 더 좁다. */
+const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER', 'BRANCH_MANAGER'])
 
 export function StocksPage() {
   const navigate = useNavigate()
@@ -292,6 +292,7 @@ export function StocksPage() {
         </div>
       </div>
       <StockAdjustModal
+        lockWarehouse={isBranch}
         open={adjustOpen}
         skuRows={skuRows}
         stock={selectedStock}

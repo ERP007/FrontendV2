@@ -80,6 +80,8 @@ export interface Movement {
   executorName: string
   id: number
   itemName: string
+  /** 조정 메모(입고·출고는 null/미배포 백엔드는 undefined). 비어있지 않을 때만 이력 화면이 '메모 보기' 버튼을 노출한다. */
+  note?: string | null
   occurredAt: string
   reason: AdjustmentReason | null
   sku: string
