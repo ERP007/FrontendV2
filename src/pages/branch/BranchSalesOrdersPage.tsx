@@ -17,7 +17,7 @@ import type {
   SortDirection,
   SoStatusTab,
 } from '@/features/sales-order'
-import { formatNumber } from '@/shared/lib/format'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import {
   FgFilterBar,
@@ -50,14 +50,15 @@ interface SoBranchQueryState {
 }
 
 function createDefaultQueryState(): SoBranchQueryState {
+  const { endDate, startDate } = defaultDateRange(90)
   return {
-    endDate: undefined,
+    endDate,
     page: 1,
     search: '',
     size: 10,
     sortDirection: 'desc',
     sortField: 'requestedAt',
-    startDate: undefined,
+    startDate,
     status: [],
   }
 }

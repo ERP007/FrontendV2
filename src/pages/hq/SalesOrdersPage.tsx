@@ -16,7 +16,7 @@ import type {
   SortDirection,
 } from '@/features/sales-order'
 import { useHqWarehousesQuery } from '@/features/warehouse'
-import { formatNumber } from '@/shared/lib/format'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgBadge, FgPageHeader, FgPagination } from '@/shared/ui'
 
@@ -35,14 +35,15 @@ interface SoHqQueryState {
 }
 
 function createDefaultQueryState(): SoHqQueryState {
+  const { endDate, startDate } = defaultDateRange(90)
   return {
-    endDate: undefined,
+    endDate,
     page: 1,
     search: '',
     size: 20,
     sortDirection: 'desc',
     sortField: 'requestedAt',
-    startDate: undefined,
+    startDate,
     status: [],
     warehouseCode: undefined,
   }
