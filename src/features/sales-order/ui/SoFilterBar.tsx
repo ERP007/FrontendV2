@@ -37,7 +37,7 @@ export interface SoFilterBarProps {
 export function SoFilterBar({
   onChange,
   onReset,
-  searchPlaceholder = '요청번호, 부품명·코드, 지점명 검색',
+  searchPlaceholder = '요청번호 또는 지점명 검색',
   values,
   warehouses,
 }: SoFilterBarProps) {

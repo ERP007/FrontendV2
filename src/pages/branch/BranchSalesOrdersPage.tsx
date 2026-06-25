@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Calendar, Plus, RotateCcw, Search } from 'lucide-react'
+import { Calendar, RotateCcw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import {
@@ -21,7 +21,7 @@ import { formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgButton, FgCard, FgInput, FgPageHeader, FgPagination, FgTabs } from '@/shared/ui'
 
-const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }]
+const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
 
 const TAB_ITEMS = [
   { label: '전체', value: 'ALL' },
@@ -104,19 +104,7 @@ export function BranchSalesOrdersPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <FgButton
-            leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-            variant="primary"
-            onClick={() => void navigate({ to: '/branch/sales-orders/new' })}
-          >
-            발주 요청 등록
-          </FgButton>
-        }
-        breadcrumbs={breadcrumbs}
-        title="내 지점 발주 요청"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="발주 현황" />
       {kpi ? (
         <SoBranchKpiCards
           activeStatus={activeKpiStatus}
@@ -128,7 +116,7 @@ export function BranchSalesOrdersPage() {
       <FgCard className="flex items-center gap-3 p-4">
         <FgInput
           leftIcon={<Search aria-hidden className="h-4 w-4" />}
-          placeholder="요청번호 또는 부품명·코드 검색"
+          placeholder="요청번호 또는 요청자 검색"
           rootClassName="flex-1"
           value={state.search}
           onChange={(event) => patchState({ page: 1, search: event.target.value })}

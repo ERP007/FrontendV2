@@ -1,7 +1,7 @@
-import { AlertTriangle, ClipboardList, ShoppingCart, Truck } from 'lucide-react'
+import { ClipboardList, ShoppingCart, Truck } from 'lucide-react'
 
 import { formatNumber } from '@/shared/lib/format'
-import { FgBadge, FgKpiCard } from '@/shared/ui'
+import { FgKpiCard } from '@/shared/ui'
 
 import type { PurchaseOrderKpiResponse } from '../model/types'
 
@@ -14,11 +14,10 @@ export interface PoKpiCardsProps {
 
 export function PoKpiCards({ kpi, onSelect }: PoKpiCardsProps) {
   const hasDrafts = kpi.draftCount > 0
-  const hasDelays = kpi.delayedCount > 0
   const clickable = 'cursor-pointer transition-colors hover:border-primary'
 
   return (
-    <div className="grid grid-cols-4 gap-5">
+    <div className="grid grid-cols-3 gap-5">
       <FgKpiCard
         className={onSelect ? clickable : undefined}
         icon={<ShoppingCart aria-hidden className="h-4 w-4" />}
@@ -40,19 +39,6 @@ export function PoKpiCards({ kpi, onSelect }: PoKpiCardsProps) {
         label="도착 예정"
         metric={formatNumber(kpi.approvedCount)}
         onClick={() => onSelect?.('approved')}
-      />
-      <FgKpiCard
-        icon={<AlertTriangle aria-hidden className="h-4 w-4" />}
-        label="지연"
-        metric={
-          hasDelays ? (
-            <span className="text-danger">{formatNumber(kpi.delayedCount)}</span>
-          ) : (
-            formatNumber(kpi.delayedCount)
-          )
-        }
-        tag={hasDelays ? <FgBadge variant="danger">예정일 초과</FgBadge> : undefined}
-        tone={hasDelays ? 'warning' : 'default'}
       />
     </div>
   )

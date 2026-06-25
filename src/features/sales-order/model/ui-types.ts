@@ -5,9 +5,17 @@
 // enum 은 ./types 에서 재노출한다.
 // =============================================================================
 
-import type { CarrierType, Priority, RejectReasonCategory, SalesOrderStatus } from './types'
+import type { FgDomainStatus } from '@/shared/ui'
 
-export type { Priority, SalesOrderStatus } from './types'
+import type {
+  CarrierType,
+  OrderProgress,
+  Priority,
+  RejectReasonCategory,
+  SalesOrderStatus,
+} from './types'
+
+export type { OrderProgress, Priority, SalesOrderStatus } from './types'
 
 export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
   DELIVERY_SERVICE: '택배',
@@ -15,11 +23,39 @@ export const CARRIER_TYPE_LABELS: Record<CarrierType, string> = {
   VEHICLE: '차량',
 }
 
+/** 진행 상태(OrderProgress) 화면 라벨. UI 는 라벨 매핑만 담당한다. */
+export const ORDER_PROGRESS_LABELS: Record<OrderProgress, string> = {
+  DRAFT: '임시저장',
+  REQUESTED: '출고 대기',
+  OUTBOUND_IN_PROGRESS: '출고 처리중',
+  APPROVED: '도착 대기',
+  OUTBOUND_FAILED: '출고 실패',
+  INBOUND_IN_PROGRESS: '입고 처리중',
+  DELIVERED: '입고 완료',
+  INBOUND_FAILED: '입고 실패',
+  REJECTED: '거절',
+  CANCELED: '취소',
+}
+
+/** OrderProgress → 상태 배지 색/아이콘(FgDomainStatus) 매핑. 라벨은 ORDER_PROGRESS_LABELS. */
+export const ORDER_PROGRESS_BADGE_STATUS: Record<OrderProgress, FgDomainStatus> = {
+  DRAFT: 'DRAFT',
+  REQUESTED: 'REQUESTED',
+  OUTBOUND_IN_PROGRESS: 'SHIPPED',
+  APPROVED: 'APPROVED',
+  OUTBOUND_FAILED: 'REJECTED',
+  INBOUND_IN_PROGRESS: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  INBOUND_FAILED: 'REJECTED',
+  REJECTED: 'REJECTED',
+  CANCELED: 'CANCELED',
+}
+
 export const REJECT_REASON_CATEGORY_LABELS: Record<RejectReasonCategory, string> = {
-  DUPLICATE: '중복 요청',
-  OTHER: '기타',
   OUT_OF_STOCK: '재고 부족',
+  DUPLICATE: '중복 요청',
   POLICY: '정책 위반',
+  OTHER: '기타',
 }
 
 export const SO_BRANCH_STATUS_ORDER: SalesOrderStatus[] = [
@@ -78,13 +114,4 @@ export function emptySoDraftLine(): SoLine {
     safetyStock: null,
     unit: null,
   }
-}
-
-/** 진행 중 발주의 도착 희망일이 오늘보다 과거면 지연. (완료/취소/거절 제외) */
-export function isSoDelayed(
-  so: { desiredAt: string; status: SalesOrderStatus },
-  today: string,
-): boolean {
-  if (so.status === 'DELIVERED' || so.status === 'CANCELED' || so.status === 'REJECTED') return false
-  return so.desiredAt < today
 }

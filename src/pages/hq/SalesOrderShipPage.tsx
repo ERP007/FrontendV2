@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 
 import {
   CARRIER_TYPE_LABELS,
+  SoSagaProgressModal,
   useApproveSalesOrderMutation,
   useHqSalesOrderQuery,
 } from '@/features/sales-order'
@@ -55,6 +56,8 @@ export function SalesOrderShipPage() {
   const [carrierType, setCarrierType] = useState<CarrierType | ''>('')
   const [approvedDate, setApprovedDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [invoiceNumber, setInvoiceNumber] = useState('')
+  // 승인(#6) saga 진행을 스텝퍼 모달로 표시한다(OUTBOUND_IN_PROGRESS 시).
+  const [progressOpen, setProgressOpen] = useState(false)
 
   if (!so) return null
 
@@ -69,10 +72,15 @@ export function SalesOrderShipPage() {
       const result = await approveMutation.mutateAsync({
         approvedDate,
         carrierType,
-        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : null,
+        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : undefined,
       })
-      toast.success(`${result.code} 출고되었습니다.`)
-      void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      // 진행중이면 스텝퍼 모달, 즉시 확정이면 바로 이동.
+      if (result.progress === 'OUTBOUND_IN_PROGRESS') {
+        setProgressOpen(true)
+      } else {
+        toast.success(`${result.code} 출고되었습니다.`)
+        void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      }
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -84,10 +92,10 @@ export function SalesOrderShipPage() {
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">출고 처리</span>
-            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
+            <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
-        breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: `${so.code} 출고 처리` }]}
+        breadcrumbs={[{ label: '발주' }, { label: '발주 현황' }, { label: `${so.code} 출고 처리` }]}
         title={so.code}
       />
 
@@ -106,16 +114,6 @@ export function SalesOrderShipPage() {
                 <span className="ml-1.5 text-meta font-medium text-faint">
                   {so.fromWarehouse.code}
                 </span>
-              </span>
-            }
-          />
-          <InfoCell
-            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-            label="도착 희망일"
-            value={
-              <span>
-                {so.desiredArrivalDateLabel}
-                <strong className="ml-1.5 text-primary-strong">{so.dday}</strong>
               </span>
             }
           />
@@ -206,7 +204,7 @@ export function SalesOrderShipPage() {
       <FgCard>
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-section text-ink">출고 정보</h2>
-          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감 + 지점 알림 발송</span>
+          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감</span>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
           <FgInput
@@ -233,7 +231,7 @@ export function SalesOrderShipPage() {
           취소
         </FgButton>
         <FgButton
-          disabled={approveMutation.isPending}
+          disabled={approveMutation.isPending || progressOpen}
           leftIcon={<Truck aria-hidden className="h-4 w-4" />}
           variant="primary"
           onClick={() => void handleConfirm()}
@@ -241,6 +239,20 @@ export function SalesOrderShipPage() {
           출고 확정
         </FgButton>
       </FgCard>
+
+      {progressOpen ? (
+        <SoSagaProgressModal
+          code={code}
+          mode="OUTBOUND"
+          open
+          onClose={() => setProgressOpen(false)}
+          onSuccess={() => {
+            setProgressOpen(false)
+            toast.success(`${code} 출고되었습니다.`)
+            void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+          }}
+        />
+      ) : null}
     </div>
   )
 }

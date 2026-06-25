@@ -140,7 +140,7 @@ export function BranchSalesOrderEditPage() {
 
   const breadcrumbs = [
     { label: '발주' },
-    { label: '내 지점 발주 요청' },
+    { label: '발주 현황' },
     { label: code || '—' },
     { label: '수정' },
   ]
@@ -189,9 +189,8 @@ export function BranchSalesOrderEditPage() {
     const values = watch()
     try {
       const updated = await updateDraftMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: linesToRequest(lines),
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${updated.code} 발주 요청이 임시저장되었습니다.`)
@@ -216,9 +215,8 @@ export function BranchSalesOrderEditPage() {
 
     try {
       const updated = await submitMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: payloadLines,
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${updated.code} 발주 요청이 제출되었습니다.`)

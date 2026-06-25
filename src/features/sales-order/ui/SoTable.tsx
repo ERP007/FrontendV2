@@ -2,13 +2,14 @@ import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/shared/lib/cn'
-import { formatDate, formatDateTime } from '@/shared/lib/format'
+import { formatDate, formatDateKorean } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { BranchSalesOrderRow, HqSalesOrderRow } from '../model/so-list-row'
 import type { SalesOrderSortField, SortDirection } from '../model/types'
 
+// 컬럼 폭: 요청번호 = 가변폭(size 150)으로 남는 가로폭을 흡수한다.
+// 나머지는 고정폭. 상태는 whitespace-nowrap 으로 배지가 두 줄로 밀리지 않게 한다.
 export interface SoTableProps {
   header?: ReactNode
   onOpen: (row: HqSalesOrderRow) => void
@@ -26,74 +27,62 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
         accessorKey: 'code',
         cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         header: '요청번호',
-        size: 190,
+        size: 150, // 가변폭(absorber)
       },
       {
-        accessorKey: 'fromWarehouseCode',
+        accessorKey: 'fromWarehouseName',
         cell: ({ row }) => (
-          <span className="block font-semibold text-ink">{row.original.fromWarehouseCode}</span>
+          <span className="block">
+            <span className="block font-semibold text-ink">
+              {row.original.fromWarehouseName ?? row.original.fromWarehouseCode}
+            </span>
+            <span className="block text-meta font-medium text-faint">
+              {row.original.fromWarehouseCode}
+            </span>
+          </span>
         ),
         header: '지점',
-        size: 200,
+        size: 160,
       },
       {
         accessorKey: 'requesterName',
         cell: ({ row }) => (
           <span className="block">
-            <span className="block font-semibold text-ink-2">{row.original.requesterName}</span>
+            <span className="block font-semibold text-ink-2">{row.original.requesterName ?? '—'}</span>
             <span className="block text-meta font-medium text-faint">
               {row.original.requesterPosition}
             </span>
           </span>
         ),
         header: '요청자',
-        size: 130,
+        size: 160,
       },
       {
         accessorKey: 'requestedAt',
         cell: ({ row }) => (
-          <span className="font-medium text-muted">{formatDateTime(row.original.requestedAt)}</span>
+          <span className="font-medium text-muted">
+            {row.original.requestedAt ? formatDate(row.original.requestedAt) : '—'}
+          </span>
         ),
         enableSorting: true,
         header: '요청일',
-        size: 190,
-      },
-      {
-        accessorKey: 'desiredArrivalDate',
-        cell: ({ row }) => {
-          const { dday, delayed, desiredArrivalDate } = row.original
-          return (
-            <span className={cn('font-semibold', delayed ? 'text-danger' : 'text-ink-2')}>
-              {formatDate(desiredArrivalDate)}
-              {delayed ? <span className="ml-1.5 text-meta font-bold">({dday})</span> : null}
-            </span>
-          )
-        },
-        enableSorting: true,
-        header: '도착 희망일',
-        size: 135,
+        size: 160,
       },
       {
         cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
         id: 'itemCount',
         meta: { align: 'right' },
-        size: 90,
-      },
-      {
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.totalQuantity}</span>,
-        header: '총 수량',
-        id: 'totalQuantity',
-        meta: { align: 'right' },
-        size: 110,
+        size: 160,
       },
       {
         accessorKey: 'status',
         cell: ({ row }) => (
-          <FgDomainStatusBadge label={row.original.statusLabel} status={row.original.status} />
+          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.progressBadgeStatus} />
         ),
         header: '상태',
-        size: 130,
+        meta: { cellClassName: 'whitespace-nowrap' },
+        size: 160,
       },
     ],
     [],
@@ -116,7 +105,7 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
         if (!onSortChange) return
         const head = next[0]
         if (!head) return
-        if (head.id !== 'requestedAt' && head.id !== 'desiredArrivalDate') return
+        if (head.id !== 'requestedAt') return
         onSortChange(head.id, head.desc ? 'desc' : 'asc')
       }}
     />
@@ -126,10 +115,10 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
 export interface SoBranchTableProps {
   header?: ReactNode
   onOpen: (row: BranchSalesOrderRow) => void
-  onSortChange?: (field: 'requestedAt' | 'desiredArrivalDate', direction: 'asc' | 'desc') => void
+  onSortChange?: (field: SalesOrderSortField, direction: SortDirection) => void
   rows: BranchSalesOrderRow[]
-  sortDirection?: 'asc' | 'desc'
-  sortField?: 'requestedAt' | 'desiredArrivalDate'
+  sortDirection?: SortDirection
+  sortField?: SalesOrderSortField
 }
 
 /** SO-04 지점용 발주 요청 테이블 */
@@ -156,53 +145,47 @@ export function SoBranchTable({
           </span>
         ),
         header: '요청번호',
-        size: 220,
+        size: 150, // 가변폭(absorber)
+      },
+      {
+        accessorKey: 'requesterName',
+        cell: ({ row }) => (
+          <span className="block">
+            <span className="block font-semibold text-ink-2">{row.original.requesterName ?? '—'}</span>
+            <span className="block text-meta font-medium text-faint">
+              {row.original.requesterPosition}
+            </span>
+          </span>
+        ),
+        header: '요청자',
+        size: 160,
       },
       {
         accessorKey: 'requestedAt',
         cell: ({ row }) => (
-          <span className="font-medium text-muted">{formatDateTime(row.original.requestedAt)}</span>
+          <span className="whitespace-nowrap font-medium text-muted">
+            {row.original.requestedAt ? formatDateKorean(row.original.requestedAt) : '—'}
+          </span>
         ),
         enableSorting: true,
         header: '요청일',
-        size: 200,
-      },
-      {
-        accessorKey: 'desiredArrivalDate',
-        enableSorting: true,
-        cell: ({ row }) => {
-          const { dday, delayed, desiredArrivalDate } = row.original
-          return (
-            <span className={cn('font-semibold', delayed ? 'text-danger' : 'text-ink-2')}>
-              {formatDate(desiredArrivalDate)}
-              {delayed ? <span className="ml-1.5 text-meta font-bold">({dday})</span> : null}
-            </span>
-          )
-        },
-        header: '도착 희망일',
-        size: 150,
+        size: 160,
       },
       {
         cell: ({ row }) => <span className="font-semibold text-ink-2">{row.original.itemCount}</span>,
         header: '품목',
         id: 'itemCount',
-        meta: { align: 'right' },
-        size: 90,
-      },
-      {
-        cell: ({ row }) => <span className="font-semibold text-ink">{row.original.totalQuantity}</span>,
-        header: '총 수량',
-        id: 'totalQuantity',
-        meta: { align: 'right' },
-        size: 110,
+        meta: { align: 'right', cellClassName: 'pr-10', headClassName: 'pr-10' },
+        size: 160,
       },
       {
         accessorKey: 'status',
         cell: ({ row }) => (
-          <FgDomainStatusBadge label={row.original.statusLabel} status={row.original.status} />
+          <FgDomainStatusBadge label={row.original.progressLabel} status={row.original.progressBadgeStatus} />
         ),
         header: '상태',
-        size: 135,
+        meta: { cellClassName: 'whitespace-nowrap' },
+        size: 160,
       },
     ],
     [],
@@ -225,7 +208,7 @@ export function SoBranchTable({
         if (!onSortChange) return
         const head = next[0]
         if (!head) return
-        if (head.id !== 'requestedAt' && head.id !== 'desiredArrivalDate') return
+        if (head.id !== 'requestedAt') return
         onSortChange(head.id, head.desc ? 'desc' : 'asc')
       }}
     />

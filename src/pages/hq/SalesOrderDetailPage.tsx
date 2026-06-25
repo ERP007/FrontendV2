@@ -19,6 +19,9 @@ import {
   useRejectSalesOrderMutation,
 } from '@/features/sales-order'
 import type { RejectReasonCategory } from '@/features/sales-order'
+import { useStockQuantitiesQuery } from '@/features/stock'
+import { cn } from '@/shared/lib/cn'
+import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
 function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
@@ -39,6 +42,9 @@ export function SalesOrderDetailPage() {
   const code = params.soNo ?? ''
 
   const { data: so } = useHqSalesOrderQuery(code)
+  // 출고 창고 현재고 조회 → 현재고/잔여 표시(출고 화면과 동일).
+  const skus = so?.lines.map((line) => line.itemCode) ?? []
+  const { data: stockMap } = useStockQuantitiesQuery(so?.toWarehouse.code, skus)
   const rejectMutation = useRejectSalesOrderMutation(code)
   const [rejectOpen, setRejectOpen] = useState(false)
 
@@ -48,7 +54,7 @@ export function SalesOrderDetailPage() {
 
   async function handleReject(reasonCategory: RejectReasonCategory, memo: string | null) {
     try {
-      const result = await rejectMutation.mutateAsync({ memo, reasonCategory })
+      const result = await rejectMutation.mutateAsync({ memo: memo ?? undefined, reasonCategory })
       toast.success(`${result.code} 발주 요청이 거절되었습니다.`)
       setRejectOpen(false)
     } catch {
@@ -79,8 +85,8 @@ export function SalesOrderDetailPage() {
             </FgButton>
           </>
         }
-        badge={<FgDomainStatusBadge label={so.statusLabel} status={so.status} />}
-        breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: so.code }]}
+        badge={<FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />}
+        breadcrumbs={[{ label: '발주' }, { label: '발주 현황' }, { label: so.code }]}
         title={so.code}
       />
 
@@ -118,7 +124,16 @@ export function SalesOrderDetailPage() {
               <InfoCell
                 icon={<UserIcon aria-hidden className="h-3.5 w-3.5" />}
                 label="요청자"
-                value={so.requesterLabel}
+                value={
+                  <span>
+                    {so.requesterName}
+                    {so.requesterPosition ? (
+                      <span className="ml-1.5 text-meta font-medium text-faint">
+                        {so.requesterPosition}
+                      </span>
+                    ) : null}
+                  </span>
+                }
               />
               <InfoCell
                 icon={<Check aria-hidden className="h-3.5 w-3.5" />}
@@ -129,16 +144,6 @@ export function SalesOrderDetailPage() {
                 icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
                 label="요청일"
                 value={so.requestedAtLabel}
-              />
-              <InfoCell
-                icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-                label="도착 희망일"
-                value={
-                  <span>
-                    {so.desiredArrivalDateLabel}
-                    <strong className="ml-1.5 text-primary-strong">{so.dday}</strong>
-                  </span>
-                }
               />
             </div>
           </FgCard>
@@ -155,21 +160,41 @@ export function SalesOrderDetailPage() {
                     <th className="px-4 py-3 text-left">부품</th>
                     <th className="w-24 px-4 py-3 text-center">단위</th>
                     <th className="w-32 px-4 py-3 text-right">요청 수량</th>
+                    <th className="w-32 px-4 py-3 text-right">현재고</th>
+                    <th className="w-32 px-4 py-3 text-right">잔여</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line-soft">
-                  {so.lines.map((line) => (
-                    <tr key={line.id}>
-                      <td className="px-4 py-3">
-                        <span className="block font-semibold text-ink">{line.itemName}</span>
-                        <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
-                      <td className="px-4 py-3 text-right font-bold text-ink">
-                        {line.requestQuantity.toLocaleString('ko-KR')}
-                      </td>
-                    </tr>
-                  ))}
+                  {so.lines.map((line) => {
+                    // 재고 미조회(로딩/SKU 없음)면 0 으로 단정하지 않고 '—' 표시.
+                    const stock = stockMap?.get(line.itemCode)
+                    const remaining = stock ? stock.quantity - line.requestQuantity : 0
+                    const shortage = stock != null && remaining < 0
+                    return (
+                      <tr key={line.id}>
+                        <td className="px-4 py-3">
+                          <span className="block font-semibold text-ink">{line.itemName}</span>
+                          <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
+                        <td className="px-4 py-3 text-right font-bold text-ink">
+                          {formatNumber(line.requestQuantity)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-ink-2">
+                          {stock ? formatNumber(stock.quantity) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {stock ? (
+                            <span className={cn('font-bold', shortage ? 'text-danger' : 'text-ink')}>
+                              {formatNumber(remaining)}
+                            </span>
+                          ) : (
+                            <span className="font-medium text-faint">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

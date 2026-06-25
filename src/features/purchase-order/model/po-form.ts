@@ -13,7 +13,6 @@ import type {
 } from './types'
 
 export const defaultPurchaseOrderFormValues: PurchaseOrderDraftFormValues = {
-  desiredArrivalDate: '',
   memo: '',
   vendorCode: '',
   warehouseCode: '',
@@ -62,7 +61,6 @@ export function detailToFormValues(
   detail: PurchaseOrderDetailResponse,
 ): PurchaseOrderDraftFormValues {
   return {
-    desiredArrivalDate: detail.desiredArrivalDate.slice(0, 10),
     memo: detail.memo ?? '',
     vendorCode: detail.vendor.code,
     warehouseCode: detail.warehouse.code,

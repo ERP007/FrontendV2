@@ -49,10 +49,24 @@ export function AppShellLayout() {
 
   const salesOrderItems = [
     ...(canShowHqMenus
-      ? [item('/sales-orders', '발주 요청', <ClipboardCheck aria-hidden className={iconClassName} />)]
+      ? [item('/sales-orders', '발주 현황', <ClipboardCheck aria-hidden className={iconClassName} />)]
       : []),
     ...(canShowBranchMenus
-      ? [item('/branch/sales-orders', '내 지점 발주 요청', <Store aria-hidden className={iconClassName} />)]
+      ? [
+          {
+            // '발주 요청'(신규 등록) 경로와 겹치지 않게 현황 탭 active 를 직접 계산한다.
+            ...item('/branch/sales-orders', '발주 현황', <Store aria-hidden className={iconClassName} />),
+            active:
+              (pathname === '/branch/sales-orders' ||
+                pathname.startsWith('/branch/sales-orders/')) &&
+              !pathname.startsWith('/branch/sales-orders/new'),
+          },
+          item(
+            '/branch/sales-orders/new',
+            '발주 요청',
+            <ClipboardCheck aria-hidden className={iconClassName} />,
+          ),
+        ]
       : []),
   ]
 
@@ -76,7 +90,31 @@ export function AppShellLayout() {
           label: '재고 관리',
         },
         ...(canShowHqMenus
-          ? [item('/purchase-orders', '구매 관리', <ShoppingCart aria-hidden className={iconClassName} />)]
+          ? [
+              {
+                children: [
+                  {
+                    // '구매 주문'(신규 등록) 경로와 겹치지 않게 현황 탭 active 를 직접 계산한다.
+                    ...item(
+                      '/purchase-orders',
+                      '구매 현황',
+                      <ClipboardCheck aria-hidden className={iconClassName} />,
+                    ),
+                    active:
+                      (pathname === '/purchase-orders' ||
+                        pathname.startsWith('/purchase-orders/')) &&
+                      !pathname.startsWith('/purchase-orders/new'),
+                  },
+                  item(
+                    '/purchase-orders/new',
+                    '구매 주문',
+                    <ShoppingCart aria-hidden className={iconClassName} />,
+                  ),
+                ],
+                icon: <ShoppingCart aria-hidden className={iconClassName} />,
+                label: '구매 관리',
+              },
+            ]
           : []),
         ...(salesOrderItems.length > 0
           ? [

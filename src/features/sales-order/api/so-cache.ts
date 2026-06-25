@@ -18,8 +18,8 @@ export function invalidateSalesOrderCollections(queryClient: QueryClient) {
  * 상태 변경(제출·요청·승인·거절·취소·도착)에 사용한다.
  */
 export function invalidateSalesOrder(queryClient: QueryClient, code: string) {
-  void queryClient.invalidateQueries({ queryKey: salesOrderKeys.branchDetail(code) })
-  void queryClient.invalidateQueries({ queryKey: salesOrderKeys.hqDetail(code) })
+  void queryClient.invalidateQueries({ queryKey: salesOrderKeys.detail(code) })
   void queryClient.invalidateQueries({ queryKey: salesOrderKeys.histories(code) })
+  void queryClient.invalidateQueries({ queryKey: salesOrderKeys.progress(code) })
   invalidateSalesOrderCollections(queryClient)
 }

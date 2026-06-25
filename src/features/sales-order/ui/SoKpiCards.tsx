@@ -1,4 +1,4 @@
-import { AlertTriangle, ClipboardCheck, ClipboardList, FileEdit, Truck } from 'lucide-react'
+import { ClipboardCheck, ClipboardList, FileEdit, Truck } from 'lucide-react'
 
 import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgKpiCard } from '@/shared/ui'
@@ -21,7 +21,7 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
   const isApprovedActive = activeStatus === 'APPROVED'
 
   return (
-    <div className="grid grid-cols-4 gap-5">
+    <div className="grid grid-cols-3 gap-5">
       <FgKpiCard
         className={cn(
           onSelect && 'cursor-pointer transition-colors',
@@ -67,19 +67,6 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
         }
         tone={kpi.approvedCount > 0 ? 'primary' : undefined}
         onClick={onSelect ? () => onSelect('APPROVED') : undefined}
-      />
-      <FgKpiCard
-        icon={<AlertTriangle aria-hidden className="h-4 w-4" />}
-        label="지연"
-        metric={
-          kpi.delayedCount > 0 ? (
-            <span className="text-danger">{formatNumber(kpi.delayedCount)}</span>
-          ) : (
-            formatNumber(kpi.delayedCount)
-          )
-        }
-        tag={kpi.delayedCount > 0 ? <FgBadge variant="danger">희망일 초과</FgBadge> : undefined}
-        tone={kpi.delayedCount > 0 ? 'warning' : undefined}
       />
     </div>
   )

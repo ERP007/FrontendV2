@@ -113,7 +113,7 @@ export function PurchaseOrderEditPage() {
 
   const breadcrumbs = [
     { label: '구매' },
-    { label: '구매 주문' },
+    { label: '구매 현황' },
     { label: code || '—' },
     { label: '수정' },
   ]
@@ -162,7 +162,6 @@ export function PurchaseOrderEditPage() {
     }
     setLineError(null)
     const payload: DraftPurchaseOrderRequest = {
-      desiredArrivalDate: values.desiredArrivalDate,
       lines: payloadLines.length > 0 ? payloadLines : undefined,
       memo: values.memo || undefined,
       vendorCode: values.vendorCode,

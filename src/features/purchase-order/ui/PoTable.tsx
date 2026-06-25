@@ -2,8 +2,7 @@ import { useMemo } from 'react'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/shared/lib/cn'
-import { formatDate } from '@/shared/lib/format'
+import { formatDateKorean } from '@/shared/lib/format'
 import { FgDataTable, FgDomainStatusBadge } from '@/shared/ui'
 
 import type { PurchaseOrderRow } from '../model/po-list-row'
@@ -23,14 +22,16 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
         accessorKey: 'code',
         cell: ({ row }) => <span className="font-semibold text-ink">{row.original.code}</span>,
         enableSorting: false,
-        header: 'PO 번호',
+        header: '요청번호',
         size: 140,
       },
       {
         accessorKey: 'vendorName',
         cell: ({ row }) => (
           <span className="block">
-            <span className="block truncate font-semibold text-ink">{row.original.vendorName}</span>
+            <span className="block truncate font-semibold text-ink">
+              {row.original.vendorName ?? '—'}
+            </span>
             <span className="block text-meta font-medium text-faint">{row.original.vendorCode}</span>
           </span>
         ),
@@ -41,26 +42,12 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
       {
         accessorKey: 'createdAt',
         cell: ({ row }) => (
-          <span className="font-medium text-muted">{formatDate(row.original.createdAt)}</span>
+          <span className="whitespace-nowrap font-medium text-muted">
+            {formatDateKorean(row.original.createdAt)}
+          </span>
         ),
         enableSorting: true,
         header: '등록일',
-        size: 130,
-      },
-      {
-        accessorKey: 'desiredArrivalDate',
-        cell: ({ row }) => {
-          const { delayed, dday, desiredArrivalDate } = row.original
-          if (!desiredArrivalDate) return <span className="font-medium text-faint">—</span>
-          return (
-            <span className={cn('font-semibold', delayed ? 'text-danger' : 'text-ink-2')}>
-              {formatDate(desiredArrivalDate)}
-              {delayed ? <span className="ml-1.5 text-meta font-bold">({dday})</span> : null}
-            </span>
-          )
-        },
-        enableSorting: true,
-        header: '도착 예정일',
         size: 140,
       },
       {
@@ -70,16 +57,6 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
         id: 'lineCount',
         meta: { align: 'right' },
         size: 90,
-      },
-      {
-        cell: ({ row }) => (
-          <span className="font-semibold text-ink">{row.original.totalQuantity}</span>
-        ),
-        enableSorting: false,
-        header: '총 수량',
-        id: 'totalQuantity',
-        meta: { align: 'right' },
-        size: 100,
       },
       {
         accessorKey: 'totalAmount',
@@ -92,10 +69,14 @@ export function PoTable({ header, onOpen, onSortingChange, rows, sorting }: PoTa
       {
         accessorKey: 'status',
         cell: ({ row }) => (
-          <FgDomainStatusBadge label={row.original.statusLabel} status={row.original.status} />
+          <FgDomainStatusBadge
+            label={row.original.progressLabel}
+            status={row.original.progressBadgeStatus}
+          />
         ),
         enableSorting: false,
         header: '상태',
+        meta: { cellClassName: 'whitespace-nowrap' },
         size: 125,
       },
     ],
