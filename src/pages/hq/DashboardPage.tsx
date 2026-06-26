@@ -1,7 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Boxes, ChevronRight, ClipboardList, ShoppingCart } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 import { ActivityChart, TodoPanel, useActivitySummaryQuery } from '@/features/dashboard'
 import { PoKpiCards, usePurchaseOrderKpiQuery } from '@/features/purchase-order'
@@ -14,18 +12,6 @@ import { StockKpiCards, useStockKpiQuery } from '@/features/stock'
 import { FgCard, FgPageHeader } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '본사' }, { label: '대시보드' }]
-
-interface QuickLink {
-  icon: ReactNode
-  label: string
-  to: string
-}
-
-const quickLinks: QuickLink[] = [
-  { icon: <Boxes aria-hidden className="h-4 w-4" />, label: '재고 전체 보기', to: '/stocks' },
-  { icon: <ShoppingCart aria-hidden className="h-4 w-4" />, label: '구매 전체 보기', to: '/purchase-orders' },
-  { icon: <ClipboardList aria-hidden className="h-4 w-4" />, label: '발주 전체 보기', to: '/sales-orders' },
-]
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -90,21 +76,6 @@ export function DashboardPage() {
             최근 7일 활동을 불러오는 중…
           </FgCard>
         )}
-      </div>
-
-      <div className="flex items-center justify-end gap-5">
-        {quickLinks.map((link) => (
-          <button
-            key={link.to}
-            className="flex items-center gap-1.5 text-label font-semibold text-primary-strong transition-colors hover:text-brand"
-            type="button"
-            onClick={() => void navigate({ to: link.to })}
-          >
-            {link.icon}
-            {link.label}
-            <ChevronRight aria-hidden className="h-3.5 w-3.5" />
-          </button>
-        ))}
       </div>
     </div>
   )
