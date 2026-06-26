@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { Box, Send } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -24,6 +24,13 @@ import { SoItemSearchPanel } from './SoItemSearchPanel'
 
 const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
 
+// 재고 조회 '부족 부품 발주 요청'에서 history state로 넘어오는 프리필 라인.
+declare module '@tanstack/react-router' {
+  interface HistoryState {
+    soPrefillLines?: SoDraftLine[]
+  }
+}
+
 export function BranchSalesOrderCreatePage() {
   const navigate = useNavigate()
   const router = useRouter()
@@ -42,7 +49,11 @@ export function BranchSalesOrderCreatePage() {
     resolver: zodResolver(soDraftFormSchema),
   })
 
-  const [lines, setLines] = useState<SoDraftLine[]>([emptySoDraftLine()])
+  // 재고 조회에서 history state로 넘어온 프리필 라인(있으면 초기 라인으로 사용).
+  const prefillLines = useRouterState({ select: (state) => state.location.state.soPrefillLines })
+  const [lines, setLines] = useState<SoDraftLine[]>(() =>
+    prefillLines && prefillLines.length > 0 ? prefillLines : [emptySoDraftLine()],
+  )
   const [linesError, setLinesError] = useState<string | null>(null)
 
   const createDraftMutation = useCreateSalesOrderDraftMutation()

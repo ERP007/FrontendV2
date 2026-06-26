@@ -1,12 +1,13 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Plus } from 'lucide-react'
+import { PackagePlus, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   DEFAULT_STOCK_FILTER,
   DEFAULT_STOCK_SORT,
+  LowStockOrderModal,
   SafetyStockModal,
   StockAdjustModal,
   StockCreateModal,
@@ -23,6 +24,7 @@ import {
   useStockSkuDetailQuery,
 } from '@/features/stock'
 import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter, StockSort } from '@/features/stock'
+import type { SoDraftLine } from '@/features/sales-order'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -51,6 +53,7 @@ export function StocksPage() {
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [safetyOpen, setSafetyOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [lowStockOpen, setLowStockOpen] = useState(false)
 
   const sessionQuery = useSession()
   const userRole = sessionQuery.data?.userRole ?? ''
@@ -169,6 +172,22 @@ export function StocksPage() {
     })
   }
 
+  // 부족 재고 행 → 발주 요청 등록 폼 라인. 요청 수량은 부족분(안전재고−현재고, 최소 1)으로 프리필한다.
+  function handleLowStockRequest(lowStocks: Stock[]) {
+    const prefillLines: SoDraftLine[] = lowStocks.map((stock) => ({
+      branchStock: stock.quantity,
+      itemCode: stock.sku,
+      itemName: stock.itemName,
+      priority: 'NORMAL',
+      quantity: Math.max(stock.safetyStock - stock.quantity, 1),
+      safetyStock: stock.safetyStock,
+      unit: stock.itemUnit,
+    }))
+    setLowStockOpen(false)
+    // 라인 배열은 URL이 아닌 history state로 넘긴다(발주 요청 등록 페이지에서 프리필).
+    void navigate({ to: '/branch/sales-orders/new', state: { soPrefillLines: prefillLines } })
+  }
+
   const rangeStart = totalElements === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, totalElements)
 
@@ -176,15 +195,25 @@ export function StocksPage() {
     <div className="fg-content">
       <FgPageHeader
         actions={
-          canCreate ? (
-            <FgButton
-              leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={() => setCreateOpen(true)}
-            >
-              재고 추가
-            </FgButton>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {isBranch ? (
+              <FgButton
+                leftIcon={<PackagePlus aria-hidden className="h-4 w-4" />}
+                onClick={() => setLowStockOpen(true)}
+              >
+                부족 부품 발주 요청
+              </FgButton>
+            ) : null}
+            {canCreate ? (
+              <FgButton
+                leftIcon={<Plus aria-hidden className="h-4 w-4" />}
+                variant="primary"
+                onClick={() => setCreateOpen(true)}
+              >
+                재고 추가
+              </FgButton>
+            ) : null}
+          </div>
         }
         breadcrumbs={breadcrumbs}
         title="재고 조회"
@@ -301,6 +330,14 @@ export function StocksPage() {
         onClose={() => setCreateOpen(false)}
         onSubmit={handleCreateSubmit}
       />
+      {lowStockOpen ? (
+        <LowStockOrderModal
+          open={lowStockOpen}
+          warehouseCode={effectiveWarehouseCode}
+          onClose={() => setLowStockOpen(false)}
+          onRequest={handleLowStockRequest}
+        />
+      ) : null}
     </div>
   )
 }
