@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { Building2, Calendar, FileText, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import { Building2, Calendar, FileText, ShoppingCart, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
@@ -13,6 +13,7 @@ import {
   useHqSalesOrderQuery,
 } from '@/features/sales-order'
 import type { CarrierType } from '@/features/sales-order'
+import type { PoDraftLine } from '@/features/purchase-order'
 import { invalidateStockQueries, useStockQuantitiesQuery } from '@/features/stock'
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
@@ -65,6 +66,24 @@ export function SalesOrderShipPage() {
 
   const totalRequested = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
 
+  // 현재고가 요청 수량에 못 미치는(잔여 음수) 라인 → 구매 요청 프리필. 구매 수량은 부족분(요청−현재고).
+  const shortageLines: PoDraftLine[] = so.lines
+    .map((line) => ({ line, shortfall: line.requestQuantity - (stockMap?.get(line.itemCode)?.quantity ?? 0) }))
+    .filter(({ shortfall }) => shortfall > 0)
+    .map(({ line, shortfall }) => ({
+      itemName: line.itemName,
+      quantity: shortfall,
+      sku: line.itemCode,
+      unit: line.unit,
+      unitPrice: 0,
+    }))
+
+  function handlePurchaseRequest() {
+    if (shortageLines.length === 0) return
+    // 라인 배열은 URL이 아닌 history state로 넘긴다(구매 주문 등록 페이지에서 프리필).
+    void navigate({ to: '/purchase-orders/new', state: { poPrefillLines: shortageLines } })
+  }
+
   async function handleConfirm() {
     if (!carrierType) {
       toast.error('운송 수단을 선택하세요.')
@@ -92,6 +111,16 @@ export function SalesOrderShipPage() {
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={
+          <FgButton
+            disabled={shortageLines.length === 0}
+            leftIcon={<ShoppingCart aria-hidden className="h-4 w-4" />}
+            onClick={handlePurchaseRequest}
+          >
+            부족 부품 구매 요청
+            {shortageLines.length > 0 ? ` (${shortageLines.length})` : ''}
+          </FgButton>
+        }
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">출고 처리</span>

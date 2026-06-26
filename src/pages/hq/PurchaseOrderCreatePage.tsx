@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { Box, Check } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
+import { useItemsBatchMutation } from '@/features/item'
 import {
   defaultPurchaseOrderFormValues,
   emptyDraftLine,
@@ -30,16 +31,56 @@ import { PoItemSearchPanel } from './PoItemSearchPanel'
 
 const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }, { label: '신규 등록' }]
 
+// 발주 출고 처리 '부족 부품 구매 요청'에서 history state로 넘어오는 프리필 라인.
+declare module '@tanstack/react-router' {
+  interface HistoryState {
+    poPrefillLines?: PoDraftLine[]
+  }
+}
+
 export function PurchaseOrderCreatePage() {
   const navigate = useNavigate()
   const router = useRouter()
-  const [lines, setLines] = useState<PoDraftLine[]>([emptyDraftLine()])
+  // 출고 처리 화면에서 history state로 넘어온 프리필 라인(있으면 초기 라인으로 사용).
+  const prefillLines = useRouterState({ select: (state) => state.location.state.poPrefillLines })
+  const [lines, setLines] = useState<PoDraftLine[]>(() =>
+    prefillLines && prefillLines.length > 0 ? prefillLines : [emptyDraftLine()],
+  )
   const [lineError, setLineError] = useState<string | null>(null)
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
   const { data: session } = useSession()
   const draftMutation = useCreatePurchaseOrderDraftMutation()
   const createMutation = useCreatePurchaseOrderMutation()
+  const itemsBatchMutation = useItemsBatchMutation()
+
+  // 프리필 라인의 단가는 출고 화면에서 비어(0) 넘어온다. item 일괄 조회(/items/batch)로 sku별
+  // 단가를 채운다. StrictMode 이중 호출을 ref로 1회만 실행하고, setLines는 비동기 콜백에서 호출한다.
+  const priceFilledRef = useRef(false)
+  useEffect(() => {
+    if (priceFilledRef.current) return
+    const skus = (prefillLines ?? [])
+      .map((line) => line.sku)
+      .filter((sku): sku is string => sku !== null)
+    if (skus.length === 0) return
+    priceFilledRef.current = true
+
+    void itemsBatchMutation
+      .mutateAsync(skus)
+      .then((result) => {
+        const priceBySku = new Map(result.items.map((item) => [item.sku, item.unitPrice]))
+        setLines((current) =>
+          current.map((line) =>
+            line.sku ? { ...line, unitPrice: priceBySku.get(line.sku) ?? line.unitPrice } : line,
+          ),
+        )
+      })
+      .catch(() => {
+        // 전역 인터셉터가 toast 처리. 단가는 0으로 유지된다.
+      })
+    // 최초 진입 시 1회만 실행한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const {
     control,

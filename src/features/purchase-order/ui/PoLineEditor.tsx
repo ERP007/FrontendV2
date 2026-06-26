@@ -133,17 +133,9 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                   updateLine(index, { quantity: digits ? Number(digits) : 0 })
                 }}
               />
-              <input
-                aria-label={`주문 품목 ${index + 1} 단가`}
-                className="h-11 w-32 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
-                inputMode="numeric"
-                type="text"
-                value={line.unitPrice === 0 ? '' : line.unitPrice}
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '')
-                  updateLine(index, { unitPrice: digits ? Number(digits) : 0 })
-                }}
-              />
+              <span className="w-32 text-right text-label font-bold text-ink-2">
+                {formatCurrency(line.unitPrice)}
+              </span>
               <span className="w-32 text-right text-label font-bold text-ink">
                 {formatCurrency(draftLineAmount(line))}
               </span>
