@@ -50,12 +50,20 @@ export function DashboardPage() {
 
       {/* 구매 KPI — 구매 현황(PoKpiCards)을 실데이터로 재사용. 클릭 시 구매 현황으로 이동. */}
       {poKpiQuery.data ? (
-        <PoKpiCards kpi={poKpiQuery.data} onSelect={() => void navigate({ to: '/purchase-orders' })} />
+        <PoKpiCards
+          kpi={poKpiQuery.data}
+          labelPrefix="구매 "
+          onSelect={() => void navigate({ to: '/purchase-orders' })}
+        />
       ) : null}
 
       {/* 발주 KPI — 발주 현황(SoHqKpiCards)을 실데이터로 재사용. 클릭 시 발주 현황으로 이동. */}
       {soKpiQuery.data ? (
-        <SoHqKpiCards kpi={soKpiQuery.data} onSelect={() => void navigate({ to: '/sales-orders' })} />
+        <SoHqKpiCards
+          kpi={soKpiQuery.data}
+          labelPrefix="발주 "
+          onSelect={() => void navigate({ to: '/sales-orders' })}
+        />
       ) : null}
 
       <div className="grid grid-cols-[1.15fr_1fr] gap-5">

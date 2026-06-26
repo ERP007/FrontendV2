@@ -9,10 +9,12 @@ import type { BranchSalesOrderKpiResponse, HqSalesOrderKpiResponse } from '../mo
 
 export interface SoHqKpiCardsProps {
   kpi: HqSalesOrderKpiResponse
+  /** 라벨 앞에 붙일 접두어(예: 대시보드에서 '발주 '). 현황 페이지에선 생략. */
+  labelPrefix?: string
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 
-export function SoHqKpiCards({ kpi, onSelect }: SoHqKpiCardsProps) {
+export function SoHqKpiCards({ kpi, labelPrefix = '', onSelect }: SoHqKpiCardsProps) {
   const clickable = onSelect ? 'cursor-pointer transition-colors hover:border-primary' : undefined
 
   return (
@@ -20,14 +22,14 @@ export function SoHqKpiCards({ kpi, onSelect }: SoHqKpiCardsProps) {
       <FgKpiCard
         className={clickable}
         icon={<ClipboardList aria-hidden className="h-4 w-4" />}
-        label="전체 요청"
+        label={`${labelPrefix}전체 요청`}
         metric={formatNumber(kpi.totalCount)}
         onClick={onSelect ? () => onSelect(undefined) : undefined}
       />
       <FgKpiCard
         className={clickable}
         icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
-        label="출고 대기"
+        label={`${labelPrefix}출고 대기`}
         metric={
           kpi.requestedCount > 0 ? (
             <span className="text-primary-strong">{formatNumber(kpi.requestedCount)}</span>
@@ -43,7 +45,7 @@ export function SoHqKpiCards({ kpi, onSelect }: SoHqKpiCardsProps) {
         className={clickable}
         footer="승인 완료 · 배송 중"
         icon={<Truck aria-hidden className="h-4 w-4" />}
-        label="도착 대기"
+        label={`${labelPrefix}도착 대기`}
         metric={
           kpi.approvedCount > 0 ? (
             <span className="text-primary-strong">{formatNumber(kpi.approvedCount)}</span>
