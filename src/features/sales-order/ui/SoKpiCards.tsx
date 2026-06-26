@@ -1,44 +1,35 @@
-import { AlertTriangle, ClipboardCheck, ClipboardList, FileEdit, Truck } from 'lucide-react'
+import { ClipboardCheck, ClipboardList, FileEdit, Truck } from 'lucide-react'
 
 import { formatNumber } from '@/shared/lib/format'
 import { FgBadge, FgKpiCard } from '@/shared/ui'
-
-import { cn } from '@/shared/lib/cn'
 
 import type { SalesOrderStatus } from '../model/ui-types'
 
 import type { BranchSalesOrderKpiResponse, HqSalesOrderKpiResponse } from '../model/types'
 
 export interface SoHqKpiCardsProps {
-  activeStatus?: SalesOrderStatus
   kpi: HqSalesOrderKpiResponse
+  /** 라벨 앞에 붙일 접두어(예: 대시보드에서 '발주 '). 현황 페이지에선 생략. */
+  labelPrefix?: string
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 
-export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps) {
-  const isTotalActive = activeStatus === undefined
-  const isRequestedActive = activeStatus === 'REQUESTED'
-  const isApprovedActive = activeStatus === 'APPROVED'
+export function SoHqKpiCards({ kpi, labelPrefix = '', onSelect }: SoHqKpiCardsProps) {
+  const clickable = onSelect ? 'cursor-pointer transition-colors hover:border-primary' : undefined
 
   return (
-    <div className="grid grid-cols-4 gap-5">
+    <div className="grid grid-cols-3 gap-5">
       <FgKpiCard
-        className={cn(
-          onSelect && 'cursor-pointer transition-colors',
-          isTotalActive && 'border-primary ring-2 ring-primary',
-        )}
+        className={clickable}
         icon={<ClipboardList aria-hidden className="h-4 w-4" />}
-        label="전체 요청"
+        label={`${labelPrefix}전체 요청`}
         metric={formatNumber(kpi.totalCount)}
         onClick={onSelect ? () => onSelect(undefined) : undefined}
       />
       <FgKpiCard
-        className={cn(
-          onSelect && 'cursor-pointer transition-colors',
-          isRequestedActive && 'border-primary ring-2 ring-primary',
-        )}
+        className={clickable}
         icon={<ClipboardCheck aria-hidden className="h-4 w-4" />}
-        label="승인 대기"
+        label={`${labelPrefix}출고 대기`}
         metric={
           kpi.requestedCount > 0 ? (
             <span className="text-primary-strong">{formatNumber(kpi.requestedCount)}</span>
@@ -51,13 +42,10 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
         onClick={onSelect ? () => onSelect('REQUESTED') : undefined}
       />
       <FgKpiCard
-        className={cn(
-          onSelect && 'cursor-pointer transition-colors',
-          isApprovedActive && 'border-primary ring-2 ring-primary',
-        )}
+        className={clickable}
         footer="승인 완료 · 배송 중"
         icon={<Truck aria-hidden className="h-4 w-4" />}
-        label="배송 중"
+        label={`${labelPrefix}도착 대기`}
         metric={
           kpi.approvedCount > 0 ? (
             <span className="text-primary-strong">{formatNumber(kpi.approvedCount)}</span>
@@ -68,30 +56,16 @@ export function SoHqKpiCards({ activeStatus, kpi, onSelect }: SoHqKpiCardsProps)
         tone={kpi.approvedCount > 0 ? 'primary' : undefined}
         onClick={onSelect ? () => onSelect('APPROVED') : undefined}
       />
-      <FgKpiCard
-        icon={<AlertTriangle aria-hidden className="h-4 w-4" />}
-        label="지연"
-        metric={
-          kpi.delayedCount > 0 ? (
-            <span className="text-danger">{formatNumber(kpi.delayedCount)}</span>
-          ) : (
-            formatNumber(kpi.delayedCount)
-          )
-        }
-        tag={kpi.delayedCount > 0 ? <FgBadge variant="danger">희망일 초과</FgBadge> : undefined}
-        tone={kpi.delayedCount > 0 ? 'warning' : undefined}
-      />
     </div>
   )
 }
 
 export interface SoBranchKpiCardsProps {
-  activeStatus?: SalesOrderStatus
   kpi: BranchSalesOrderKpiResponse
   onSelect?: (status: SalesOrderStatus | undefined) => void
 }
 
-export function SoBranchKpiCards({ activeStatus, kpi, onSelect }: SoBranchKpiCardsProps) {
+export function SoBranchKpiCards({ kpi, onSelect }: SoBranchKpiCardsProps) {
   const cards: Array<{
     footer?: string
     icon: typeof ClipboardList
@@ -121,15 +95,13 @@ export function SoBranchKpiCards({ activeStatus, kpi, onSelect }: SoBranchKpiCar
     <div className="grid grid-cols-4 gap-5">
       {cards.map((card) => {
         const Icon = card.icon
-        const isActive = card.status === activeStatus
         const isApprovedHighlight = card.status === 'APPROVED' && kpi.approvedCount > 0
         return (
           <FgKpiCard
             key={card.label}
-            className={cn(
-              onSelect && 'cursor-pointer transition-colors',
-              isActive && 'border-primary ring-2 ring-primary',
-            )}
+            className={
+              onSelect ? 'cursor-pointer transition-colors hover:border-primary' : undefined
+            }
             footer={card.footer}
             icon={<Icon aria-hidden className="h-4 w-4" />}
             label={card.label}

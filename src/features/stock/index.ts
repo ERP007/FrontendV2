@@ -1,4 +1,5 @@
 export { useMovementListQuery } from './api/use-movement-list-query'
+export { invalidateStockQueries } from './api/stock-cache'
 export { useSafetyStockEditQuery } from './api/use-safety-stock-edit-query'
 export { useSafetyStockMutation } from './api/use-safety-stock-mutation'
 export { useStockAdjustMutation } from './api/use-stock-adjust-mutation'
@@ -22,6 +23,7 @@ export {
   ADJUSTMENT_TYPE_LABELS,
   DEFAULT_MOVEMENT_SORT,
   DEFAULT_STOCK_FILTER,
+  DEFAULT_STOCK_SORT,
   MOVEMENT_TYPE_LABELS,
   movementSourceLabel,
   previewAdjustedQuantity,
@@ -44,6 +46,8 @@ export type {
   StockFilter,
   StockKpi,
   StockSkuDetail,
+  StockSort,
+  StockSortKey,
   StockStatus,
 } from './model/types'
 export { MovementFilterBar } from './ui/MovementFilterBar'
@@ -51,6 +55,7 @@ export { MovementTable } from './ui/MovementTable'
 export { MovementTypeBadge, StockStatusBadge } from './ui/StockBadges'
 export { SafetyStockModal } from './ui/SafetyStockModal'
 export { StockAdjustModal } from './ui/StockAdjustModal'
+export { LowStockOrderModal } from './ui/LowStockOrderModal'
 export { StockCreateModal } from './ui/StockCreateModal'
 export { StockDetailPanel } from './ui/StockDetailPanel'
 export { StockFilterBar } from './ui/StockFilterBar'

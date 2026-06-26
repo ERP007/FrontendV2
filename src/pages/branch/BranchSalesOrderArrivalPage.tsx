@@ -1,17 +1,26 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { Calendar, Check, FileText, Lock, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import {
+  Calendar,
+  Check,
+  Lock,
+  User as UserIcon,
+  Warehouse as WarehouseIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
-  CARRIER_TYPE_LABELS,
+  SoSagaProgressModal,
   useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
-import { useMeQuery } from '@/features/user'
-import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
+import { invalidateStockQueries, useStockQuantitiesQuery } from '@/features/stock'
+import { useSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
+import { formatNumber } from '@/shared/lib/format'
 import {
   FgBadge,
   FgButton,
@@ -37,13 +46,19 @@ export function BranchSalesOrderArrivalPage() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const code = params.soNo ?? ''
 
   const { data: so } = useBranchSalesOrderQuery(code)
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
+  // 현 지점(입고 창고) 현재고 조회 → 입고 후 수량 표시.
+  const skus = so?.lines.map((line) => line.itemCode) ?? []
+  const { data: stockMap } = useStockQuantitiesQuery(so?.toWarehouse.code, skus)
   const deliverMutation = useSalesOrderDeliverMutation(code)
 
   const [arrivalDate, setArrivalDate] = useState(dayjs().format('YYYY-MM-DD'))
+  // 입고(#9) saga 진행을 스텝퍼 모달로 표시한다(INBOUND_IN_PROGRESS 시).
+  const [progressOpen, setProgressOpen] = useState(false)
 
   if (!so) return null
 
@@ -52,8 +67,14 @@ export function BranchSalesOrderArrivalPage() {
   async function handleConfirm() {
     try {
       const result = await deliverMutation.mutateAsync({ deliveredDate: arrivalDate })
-      toast.success(`${result.code} 도착이 확정되었습니다.`)
-      void navigate({ replace: true, to: '/branch/sales-orders' })
+      // 진행중이면 스텝퍼 모달, 즉시 확정이면 바로 이동.
+      if (result.progress === 'INBOUND_IN_PROGRESS') {
+        setProgressOpen(true)
+      } else {
+        invalidateStockQueries(queryClient)
+        toast.success(`${result.code} 입고가 확정되었습니다.`)
+        void navigate({ replace: true, to: '/branch/sales-orders' })
+      }
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -65,12 +86,12 @@ export function BranchSalesOrderArrivalPage() {
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">도착 입고 확인</span>
-            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
+            <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
         breadcrumbs={[
           { label: '발주' },
-          { label: '내 지점 발주 요청' },
+          { label: '발주 현황' },
           { label: `${so.code} 도착 입고 확인` },
         ]}
         title={so.code}
@@ -80,45 +101,39 @@ export function BranchSalesOrderArrivalPage() {
         <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-section text-ink">발주 요약</h2>
           <span className="text-meta font-medium text-faint">
-            출고지 · {so.fromWarehouse.name} ({so.fromWarehouse.code})
+            출고지 · {so.fromWarehouse.name ?? so.fromWarehouse.code} ({so.fromWarehouse.code})
           </span>
         </div>
         <div className="grid grid-cols-4 gap-x-6 gap-y-7">
           <InfoCell
-            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-            label="본사 출고 일자"
+            icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
+            label="출고 창고"
             value={
-              so.approvedAt ? (
-                <span>
-                  {formatDate(so.approvedAt)}
-                  <span className="ml-1.5 text-meta font-medium text-faint">
-                    {formatTime(so.approvedAt)}
-                  </span>
-                </span>
-              ) : (
-                '—'
-              )
+              <span>
+                {so.fromWarehouse.name ?? so.fromWarehouse.code}
+                <span className="ml-1.5 text-meta font-medium text-faint">{so.fromWarehouse.code}</span>
+              </span>
             }
-          />
-          <InfoCell
-            icon={<FileText aria-hidden className="h-3.5 w-3.5" />}
-            label="송장번호"
-            value={so.invoiceNumber ?? '—'}
-          />
-          <InfoCell
-            icon={<Truck aria-hidden className="h-3.5 w-3.5" />}
-            label="운송 수단"
-            value={so.carrierType ? CARRIER_TYPE_LABELS[so.carrierType] : '—'}
           />
           <InfoCell
             icon={<WarehouseIcon aria-hidden className="h-3.5 w-3.5" />}
-            label="수신 창고"
+            label="입고 창고"
             value={
               <span>
-                {so.toWarehouse.name}
+                {so.toWarehouse.name ?? so.toWarehouse.code}
                 <span className="ml-1.5 text-meta font-medium text-faint">{so.toWarehouse.code}</span>
               </span>
             }
+          />
+          <InfoCell
+            icon={<UserIcon aria-hidden className="h-3.5 w-3.5" />}
+            label="요청자"
+            value={so.requesterLabel}
+          />
+          <InfoCell
+            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
+            label="요청일"
+            value={so.requestedAtLabel}
           />
         </div>
       </FgCard>
@@ -129,7 +144,7 @@ export function BranchSalesOrderArrivalPage() {
             <h2 className="text-section text-ink">도착 품목 확인</h2>
             <FgBadge variant="outline">{so.lines.length} 라인</FgBadge>
           </div>
-          <span className="text-meta font-medium text-faint">출고 수량 기준으로 자동 확정</span>
+          <span className="text-meta font-medium text-faint">현재고 기준 · {so.toWarehouse.code}</span>
         </div>
         <div className="overflow-hidden rounded-control border border-line">
           <table className="w-full text-label">
@@ -137,36 +152,40 @@ export function BranchSalesOrderArrivalPage() {
               <tr>
                 <th className="px-4 py-3 text-left">부품</th>
                 <th className="w-24 px-4 py-3 text-center">단위</th>
-                <th className="w-32 px-4 py-3 text-right">출고 수량</th>
                 <th className="w-32 px-4 py-3 text-right">도착 수량</th>
+                <th className="w-32 px-4 py-3 text-right">현재고</th>
+                <th className="w-32 px-4 py-3 text-right">입고 후</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line-soft">
-              {so.lines.map((line) => (
-                <tr key={line.id}>
-                  <td className="px-4 py-3">
-                    <span className="block font-semibold text-ink">{line.itemName}</span>
-                    <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
-                  </td>
-                  <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-ink-2">
-                    {formatNumber(line.requestQuantity)}
-                    <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-bold text-ink">
-                    {formatNumber(line.requestQuantity)}
-                    <span className="ml-1 text-meta font-medium text-faint">{line.unit}</span>
-                  </td>
-                </tr>
-              ))}
+              {so.lines.map((line) => {
+                const quantity = stockMap?.get(line.itemCode)?.quantity ?? 0
+                const after = quantity + line.requestQuantity
+                return (
+                  <tr key={line.id}>
+                    <td className="px-4 py-3">
+                      <span className="block font-semibold text-ink">{line.itemName}</span>
+                      <span className="block text-meta font-medium text-faint">{line.itemCode}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-semibold text-ink-2">{line.unit}</td>
+                    <td className="px-4 py-3 text-right font-bold text-ink">
+                      {formatNumber(line.requestQuantity)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-ink-2">
+                      {formatNumber(quantity)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-success">
+                      {formatNumber(after)}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
         <div className="mt-4 flex items-center justify-between gap-4 border-t border-line-soft pt-4 text-label">
           <span className="font-medium text-muted">
             총 품목 수 <strong className="text-ink">{so.lines.length}종</strong>
-            <span className="mx-2 text-line">|</span>
-            출고 합계 <strong className="text-ink">{formatNumber(totalQuantity)}</strong>
             <span className="mx-2 text-line">|</span>
             도착 합계 <strong className="text-ink">{formatNumber(totalQuantity)}</strong>
           </span>
@@ -194,9 +213,9 @@ export function BranchSalesOrderArrivalPage() {
             <span className="block text-label text-ink-2">수령자</span>
             <div className="flex h-11 items-center justify-between gap-3 rounded-control border border-line bg-background px-3.5 text-body">
               <span className="font-semibold text-ink">
-                {me?.name ?? '—'}
+                {session?.name ?? '—'}
                 <span className="ml-1.5 text-meta font-medium text-faint">
-                  {me?.tenancyName ?? '—'} · {me?.position ?? '—'}
+                  {session?.tenancyName ?? '—'} · {roleLabel(session?.userRole)}
                 </span>
               </span>
               <span className="flex items-center gap-1 text-meta font-semibold text-faint">
@@ -218,7 +237,7 @@ export function BranchSalesOrderArrivalPage() {
             취소
           </FgButton>
           <FgButton
-            disabled={deliverMutation.isPending}
+            disabled={deliverMutation.isPending || progressOpen}
             leftIcon={<Check aria-hidden className="h-4 w-4" />}
             variant="primary"
             onClick={() => void handleConfirm()}
@@ -227,6 +246,21 @@ export function BranchSalesOrderArrivalPage() {
           </FgButton>
         </span>
       </FgCard>
+
+      {progressOpen ? (
+        <SoSagaProgressModal
+          code={code}
+          mode="INBOUND"
+          open
+          onClose={() => setProgressOpen(false)}
+          onSuccess={() => {
+            invalidateStockQueries(queryClient)
+            setProgressOpen(false)
+            toast.success(`${code} 입고가 확정되었습니다.`)
+            void navigate({ replace: true, to: '/branch/sales-orders' })
+          }}
+        />
+      ) : null}
     </div>
   )
 }

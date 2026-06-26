@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/shared/api'
 
 import type {
-  CreatePurchaseOrderResponse,
+  PurchaseOrderStatusResponse,
   DraftPurchaseOrderRequest,
 } from '../model/types'
 import { invalidatePurchaseOrder } from './po-cache'
@@ -18,7 +18,7 @@ export function useUpdatePurchaseOrderMutation() {
 
   return useMutation({
     mutationFn: async ({ code, payload }: UpdatePurchaseOrderVariables) => {
-      const response = await api.put<CreatePurchaseOrderResponse>(
+      const response = await api.put<PurchaseOrderStatusResponse>(
         `/procurement-orders/${code}`,
         payload,
       )

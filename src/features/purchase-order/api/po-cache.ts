@@ -18,5 +18,6 @@ export function invalidatePurchaseOrderCollections(queryClient: QueryClient) {
 export function invalidatePurchaseOrder(queryClient: QueryClient, code: string) {
   void queryClient.invalidateQueries({ queryKey: purchaseOrderKeys.detail(code) })
   void queryClient.invalidateQueries({ queryKey: purchaseOrderKeys.histories(code) })
+  void queryClient.invalidateQueries({ queryKey: purchaseOrderKeys.progress(code) })
   invalidatePurchaseOrderCollections(queryClient)
 }

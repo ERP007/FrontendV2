@@ -21,8 +21,9 @@ import type {
 } from '@/features/purchase-order'
 import { useItemsBatchMutation } from '@/features/item'
 import type { ItemBatchResponse } from '@/features/item'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
+import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgCard, FgNotice, FgPageHeader } from '@/shared/ui'
 
 import { PoItemSearchPanel } from './PoItemSearchPanel'
@@ -63,7 +64,7 @@ export function PurchaseOrderEditPage() {
 
   const { data, isLoading } = usePurchaseOrderFormQuery(code)
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
   const updateMutation = useUpdatePurchaseOrderMutation()
   const itemsBatchMutation = useItemsBatchMutation()
 
@@ -113,7 +114,7 @@ export function PurchaseOrderEditPage() {
 
   const breadcrumbs = [
     { label: '구매' },
-    { label: '구매 주문' },
+    { label: '구매 현황' },
     { label: code || '—' },
     { label: '수정' },
   ]
@@ -162,7 +163,6 @@ export function PurchaseOrderEditPage() {
     }
     setLineError(null)
     const payload: DraftPurchaseOrderRequest = {
-      desiredArrivalDate: values.desiredArrivalDate,
       lines: payloadLines.length > 0 ? payloadLines : undefined,
       memo: values.memo || undefined,
       vendorCode: values.vendorCode,
@@ -195,7 +195,7 @@ export function PurchaseOrderEditPage() {
       />
 
       <PoForm
-        assigneeLabel={`${me?.name ?? '—'} / ${me?.position ?? '—'}`}
+        assigneeLabel={`${session?.name ?? '—'} / ${roleLabel(session?.userRole)}`}
         control={control}
         errors={errors}
         initialVendorName={data.vendor.name}

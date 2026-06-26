@@ -1,10 +1,13 @@
-import { useNavigate } from '@tanstack/react-router'
-import { Download, Plus, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import dayjs from 'dayjs'
+import { PackagePlus, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   DEFAULT_STOCK_FILTER,
+  DEFAULT_STOCK_SORT,
+  LowStockOrderModal,
   SafetyStockModal,
   StockAdjustModal,
   StockCreateModal,
@@ -20,7 +23,8 @@ import {
   useStockListQuery,
   useStockSkuDetailQuery,
 } from '@/features/stock'
-import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter } from '@/features/stock'
+import type { AdjustmentFormValues, Stock, StockCreateFormValues, StockFilter, StockSort } from '@/features/stock'
+import type { SoDraftLine } from '@/features/sales-order'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useSession } from '@/shared/auth/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -29,13 +33,19 @@ import { FgButton, FgCard, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 조회' }]
 
-/** 재고 조정·안전재고 조정 가능 역할. 재고 신규 생성은 ADMIN 전용으로 더 좁다. */
+/** 재고 조정·안전재고 조정 가능 역할. BR 계열은 상세 패널 조정 액션을 노출하지 않는다. */
 const MANAGER_ROLES = new Set(['ADMIN', 'HQ_MANAGER'])
 
 export function StocksPage() {
   const navigate = useNavigate()
 
-  const [filter, setFilter] = useState<StockFilter>(DEFAULT_STOCK_FILTER)
+  // 대시보드 KPI 카드로 진입하면 초기 상태 필터(전체/부족)를 search 파라미터에서 받아 적용한다.
+  const { status: statusParam } = useSearch({ strict: false }) as { status?: StockFilter['status'] }
+  const [filter, setFilter] = useState<StockFilter>(() => ({
+    ...DEFAULT_STOCK_FILTER,
+    status: statusParam ?? DEFAULT_STOCK_FILTER.status,
+  }))
+  const [sort, setSort] = useState<StockSort>(DEFAULT_STOCK_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   // 첫 진입 시 우측 상세 패널은 비워둔다(선택 전).
@@ -43,6 +53,7 @@ export function StocksPage() {
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [safetyOpen, setSafetyOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [lowStockOpen, setLowStockOpen] = useState(false)
 
   const sessionQuery = useSession()
   const userRole = sessionQuery.data?.userRole ?? ''
@@ -50,7 +61,7 @@ export function StocksPage() {
   const canCreate = userRole === 'ADMIN'
 
   // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
-  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  const { branchLockedCode, branchLockedName, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
   // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
   const effectiveWarehouseCode = isBranch
     ? (branchLockedCode ?? filter.warehouseCode)
@@ -63,8 +74,9 @@ export function StocksPage() {
       filter: { ...filter, keyword: debouncedKeyword, warehouseCode: effectiveWarehouseCode },
       page,
       size: pageSize,
+      sort,
     }),
-    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize],
+    [filter, debouncedKeyword, effectiveWarehouseCode, page, pageSize, sort],
   )
 
   const kpiQuery = useStockKpiQuery()
@@ -121,7 +133,7 @@ export function StocksPage() {
   }
 
   function handleAdjustSubmit(values: AdjustmentFormValues) {
-    if (!selectedStock) return
+    if (!selectedStock || !canManage) return
 
     adjustMutation.mutate(
       { ...values, sku: selectedStock.sku },
@@ -135,6 +147,8 @@ export function StocksPage() {
   }
 
   function handleSafetySubmit(safetyStock: number) {
+    if (!canManage) return
+
     const edit = safetyEditQuery.data
     if (!edit) return
 
@@ -158,6 +172,22 @@ export function StocksPage() {
     })
   }
 
+  // 부족 재고 행 → 발주 요청 등록 폼 라인. 요청 수량은 부족분(안전재고−현재고, 최소 1)으로 프리필한다.
+  function handleLowStockRequest(lowStocks: Stock[]) {
+    const prefillLines: SoDraftLine[] = lowStocks.map((stock) => ({
+      branchStock: stock.quantity,
+      itemCode: stock.sku,
+      itemName: stock.itemName,
+      priority: 'NORMAL',
+      quantity: Math.max(stock.safetyStock - stock.quantity, 1),
+      safetyStock: stock.safetyStock,
+      unit: stock.itemUnit,
+    }))
+    setLowStockOpen(false)
+    // 라인 배열은 URL이 아닌 history state로 넘긴다(발주 요청 등록 페이지에서 프리필).
+    void navigate({ to: '/branch/sales-orders/new', state: { soPrefillLines: prefillLines } })
+  }
+
   const rangeStart = totalElements === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, totalElements)
 
@@ -165,31 +195,14 @@ export function StocksPage() {
     <div className="fg-content">
       <FgPageHeader
         actions={
-          <>
-            <FgButton
-              leftIcon={<Download aria-hidden className="h-4 w-4" />}
-              onClick={() => toast.info('내보내기는 백엔드 연동 후 제공됩니다.')}
-            >
-              내보내기
-            </FgButton>
-            {canManage ? (
-              <>
-                <FgButton
-                  disabled={!selectedStock}
-                  leftIcon={<ShieldCheck aria-hidden className="h-4 w-4" />}
-                  onClick={() => setSafetyOpen(true)}
-                >
-                  안전 재고 조정
-                </FgButton>
-                <FgButton
-                  disabled={!selectedStock}
-                  leftIcon={<SlidersHorizontal aria-hidden className="h-4 w-4" />}
-                  variant="primary"
-                  onClick={() => setAdjustOpen(true)}
-                >
-                  재고 조정
-                </FgButton>
-              </>
+          <div className="flex items-center gap-2">
+            {isBranch ? (
+              <FgButton
+                leftIcon={<PackagePlus aria-hidden className="h-4 w-4" />}
+                onClick={() => setLowStockOpen(true)}
+              >
+                부족 부품 발주 요청
+              </FgButton>
             ) : null}
             {canCreate ? (
               <FgButton
@@ -200,7 +213,7 @@ export function StocksPage() {
                 재고 추가
               </FgButton>
             ) : null}
-          </>
+          </div>
         }
         breadcrumbs={breadcrumbs}
         title="재고 조회"
@@ -208,17 +221,35 @@ export function StocksPage() {
       {kpiQuery.data ? (
         <StockKpiCards
           kpi={kpiQuery.data}
+          onRecentMovementsClick={() =>
+            void navigate({
+              to: '/stock-movements',
+              search: {
+                from: dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+                to: dayjs().format('YYYY-MM-DD'),
+              },
+            })
+          }
           onStatusSelect={(status) => handleFilterChange({ ...filter, status })}
         />
       ) : null}
       <StockFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        lockedWarehouseName={branchLockedName}
+        safetyRatioActive={sort.field === 'safetyRatio'}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
-        onReset={() => handleFilterChange(DEFAULT_STOCK_FILTER)}
+        onReset={() => {
+          handleFilterChange(DEFAULT_STOCK_FILTER)
+          setSort(DEFAULT_STOCK_SORT)
+        }}
+        onSafetyRatioSort={() => {
+          setSort(DEFAULT_STOCK_SORT)
+          setPage(1)
+        }}
       />
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 space-y-5">
           {listQuery.isError ? (
             <FgCard className="p-6 text-center text-muted">
@@ -233,8 +264,13 @@ export function StocksPage() {
                 </span>
               }
               selectedId={selectedStock?.id ?? null}
+              sort={sort}
               stocks={stocks}
               onSelect={handleSelectStock}
+              onSortChange={(next) => {
+                setSort(next)
+                setPage(1)
+              }}
             />
           )}
           <FgPagination
@@ -250,12 +286,17 @@ export function StocksPage() {
             }}
           />
         </div>
-        <div className="w-96 shrink-0">
+        <div className="sticky top-5 max-h-screen w-96 shrink-0 self-start overflow-y-auto pr-1 fg-scrollbar">
           <StockDetailPanel
-            canAdjust={canManage}
+            canManage={canManage}
             detail={detail}
             loading={detailQuery.isLoading}
-            onAdjust={() => setAdjustOpen(true)}
+            onAdjust={() => {
+              if (canManage) setAdjustOpen(true)
+            }}
+            onSafetyAdjust={() => {
+              if (canManage) setSafetyOpen(true)
+            }}
             onViewHistory={() =>
               void navigate({
                 to: '/stock-movements',
@@ -266,6 +307,7 @@ export function StocksPage() {
         </div>
       </div>
       <StockAdjustModal
+        lockWarehouse={isBranch}
         open={adjustOpen}
         skuRows={skuRows}
         stock={selectedStock}
@@ -288,6 +330,14 @@ export function StocksPage() {
         onClose={() => setCreateOpen(false)}
         onSubmit={handleCreateSubmit}
       />
+      {lowStockOpen ? (
+        <LowStockOrderModal
+          open={lowStockOpen}
+          warehouseCode={effectiveWarehouseCode}
+          onClose={() => setLowStockOpen(false)}
+          onRequest={handleLowStockRequest}
+        />
+      ) : null}
     </div>
   )
 }

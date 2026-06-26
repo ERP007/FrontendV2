@@ -23,22 +23,22 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
         {
           accessorKey: 'code',
           cell: ({ row }) => (
-            <span className="block max-w-48 truncate font-semibold text-ink" title={row.original.code}>
+            <span className="block max-w-44 truncate text-table text-ink" title={row.original.code}>
               {row.original.code}
             </span>
           ),
           header: '부품 코드',
-          size: 190,
+          size: 170,
         },
         {
           accessorKey: 'name',
           cell: ({ row }) => (
-            <span className="block max-w-56 truncate font-bold text-ink" title={row.original.name}>
+            <span className="block max-w-52 truncate text-table font-bold text-ink" title={row.original.name}>
               {row.original.name}
             </span>
           ),
           header: '부품명',
-          size: 230,
+          size: 210,
         },
         {
           cell: ({ row }) => (
@@ -89,7 +89,8 @@ export function ItemTable({ emptyState, header, items, onSelect, onToggleActive 
               </FgBadge>
             ),
           header: '상태',
-          size: 84,
+          meta: { align: 'center', cellClassName: 'whitespace-nowrap', headClassName: 'whitespace-nowrap' },
+          size: 96,
         },
         {
           accessorKey: 'updatedAt',

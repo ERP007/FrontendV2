@@ -75,7 +75,7 @@ export const ITEM_STOCK_FIXTURES: ItemStockFixtureRow[] = [
     currentStock: 0,
     safetyStock: 40,
     sku: 'HMC-EL-04481',
-    status: 'OUT',
+    status: 'LOW',
     warehouseCode: 'WH-SE-001',
     warehouseName: '서울 1창고',
   },
@@ -167,10 +167,7 @@ function resolveMockStockStatus(
   currentStock: number,
   safetyStock: number,
 ): ItemStockFixtureRow['status'] {
-  if (currentStock === 0) {
-    return 'OUT'
-  }
-
+  // 재고 0도 안전재고 미만이면 '부족'(LOW)에 편입.
   return currentStock < safetyStock ? 'LOW' : 'NORMAL'
 }
 

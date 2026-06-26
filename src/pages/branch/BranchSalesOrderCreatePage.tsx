@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { Box, Send } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -15,21 +15,28 @@ import {
   useCreateSalesOrderMutation,
 } from '@/features/sales-order'
 import type { SoDraftLine, SoFormValues } from '@/features/sales-order'
-import { useMeQuery } from '@/features/user'
 import { useHqWarehousesQuery } from '@/features/warehouse'
+import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { FgButton, FgPageHeader } from '@/shared/ui'
 
 import { SoItemSearchPanel } from './SoItemSearchPanel'
 
-const breadcrumbs = [{ label: '발주' }, { label: '내 지점 발주 요청' }, { label: '신규 등록' }]
+const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
+
+// 재고 조회 '부족 부품 발주 요청'에서 history state로 넘어오는 프리필 라인.
+declare module '@tanstack/react-router' {
+  interface HistoryState {
+    soPrefillLines?: SoDraftLine[]
+  }
+}
 
 export function BranchSalesOrderCreatePage() {
   const navigate = useNavigate()
   const router = useRouter()
 
   const { data: hqWarehouses } = useHqWarehousesQuery()
-  const { data: me } = useMeQuery()
+  const { data: session } = useSession()
 
   const {
     control,
@@ -42,7 +49,11 @@ export function BranchSalesOrderCreatePage() {
     resolver: zodResolver(soDraftFormSchema),
   })
 
-  const [lines, setLines] = useState<SoDraftLine[]>([emptySoDraftLine()])
+  // 재고 조회에서 history state로 넘어온 프리필 라인(있으면 초기 라인으로 사용).
+  const prefillLines = useRouterState({ select: (state) => state.location.state.soPrefillLines })
+  const [lines, setLines] = useState<SoDraftLine[]>(() =>
+    prefillLines && prefillLines.length > 0 ? prefillLines : [emptySoDraftLine()],
+  )
   const [linesError, setLinesError] = useState<string | null>(null)
 
   const createDraftMutation = useCreateSalesOrderDraftMutation()
@@ -69,9 +80,8 @@ export function BranchSalesOrderCreatePage() {
 
     try {
       const order = await createSalesOrderMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: payloadLines,
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${order.code} 발주 요청이 제출되었습니다.`)
@@ -93,9 +103,8 @@ export function BranchSalesOrderCreatePage() {
 
     try {
       const draft = await createDraftMutation.mutateAsync({
-        desiredArrivalDate: values.desiredArrivalDate,
         lines: payloadLines,
-        memo: values.memo ?? null,
+        memo: values.memo,
         warehouseCode: values.warehouseCode,
       })
       toast.success(`${draft.code} 임시저장되었습니다.`)
@@ -107,42 +116,20 @@ export function BranchSalesOrderCreatePage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Box aria-hidden className="h-4 w-4" />}
-              onClick={handleDraftSave}
-            >
-              임시저장
-            </FgButton>
-            <FgButton
-              disabled={isSubmitting}
-              leftIcon={<Send aria-hidden className="h-4 w-4" />}
-              variant="primary"
-              onClick={submit}
-            >
-              요청 제출
-            </FgButton>
-          </>
-        }
-        breadcrumbs={breadcrumbs}
-        title="발주 요청 등록"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="발주 요청 등록" />
 
-      <form className="fg-content" onSubmit={submit}>
+      <form noValidate className="fg-content" onSubmit={submit}>
         <SoForm
-          assigneeLabel={`${me?.name ?? '—'} / ${me?.tenancyName ?? '—'} · ${roleLabel(me?.role)}`}
-          branchCode={me?.tenancyCode ?? '—'}
-          branchName={me?.tenancyName ?? '—'}
+          assigneeLabel={`${session?.name ?? '—'} / ${session?.tenancyName ?? '—'} · ${roleLabel(session?.userRole)}`}
+          branchCode={session?.tenancyCode ?? '—'}
+          branchName={session?.tenancyName ?? '—'}
           control={control}
           errors={errors}
           lineError={linesError}
           lines={lines}
           register={register}
           renderSearchPanel={(props) => (
-            <SoItemSearchPanel {...props} warehouseCode={me?.tenancyCode} />
+            <SoItemSearchPanel {...props} warehouseCode={session?.tenancyCode ?? undefined} />
           )}
           warehouses={hqWarehouses}
           watch={watch}

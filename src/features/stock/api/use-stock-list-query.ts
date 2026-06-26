@@ -2,7 +2,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
-import type { Stock, StockFilter, StockSortKey } from '../model/types'
+import { stockQueryBaseKey } from './stock-cache'
+
+import type { Stock, StockFilter, StockSort } from '../model/types'
 
 /** GET /inventory/stocks 응답 (swagger StockListResponse). page는 1-base. */
 export interface StockListResponse {
@@ -19,17 +21,10 @@ export interface StockListParams {
   filter: StockFilter
   page: number
   size: number
+  sort: StockSort
 }
 
-/** UI 정렬 키 → 백엔드 sort 파라미터("{property},{direction}"). 방향은 키의 의미에 맞춘다. */
-const SORT_PARAM: Record<StockSortKey, string> = {
-  lastAdjustedAt: 'lastAdjustedAt,desc',
-  name: 'name,asc',
-  quantity: 'quantity,desc',
-  safetyRatio: 'safetyRatio,asc',
-}
-
-export const stockListBaseKey = ['stocks', 'list'] as const
+export const stockListBaseKey = [...stockQueryBaseKey, 'list'] as const
 
 export const stockListQueryKey = (params: StockListParams) =>
   [...stockListBaseKey, params] as const
@@ -43,13 +38,14 @@ export function useStockListQuery(params: StockListParams) {
   return useQuery({
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const { filter, page, size } = params
+      const { filter, page, size, sort } = params
       const search = new URLSearchParams()
       const keyword = filter.keyword.trim()
       if (keyword) search.set('keyword', keyword)
       if (filter.warehouseCode !== 'ALL') search.set('warehouseCodes', filter.warehouseCode)
       if (filter.status !== 'ALL') search.set('status', filter.status)
-      search.set('sort', SORT_PARAM[filter.sort])
+      if (filter.includeInactive) search.set('includeInactive', 'true')
+      search.set('sort', `${sort.field},${sort.direction}`)
       search.set('page', String(page))
       search.set('size', String(size))
 
@@ -57,6 +53,6 @@ export function useStockListQuery(params: StockListParams) {
       return response.data
     },
     queryKey: stockListQueryKey(params),
-    staleTime: 30_000,
+    staleTime: 0,
   })
 }

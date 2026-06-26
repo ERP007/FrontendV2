@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
-import { FgButton, FgCard, FgSelect } from '@/shared/ui'
+import { FgCard, FgSelect } from '@/shared/ui'
 
 import { emptySoDraftLine, SO_PRIORITY_LABELS } from '../model/ui-types'
 
@@ -66,22 +66,11 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
 
   return (
     <FgCard>
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-section text-ink">요청 품목</h2>
-          <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
-            {lines.length} / {MAX_LINES} 라인
-          </span>
-        </div>
-        <FgButton
-          disabled={lines.length >= MAX_LINES}
-          leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-          size="sm"
-          variant="soft"
-          onClick={addLine}
-        >
-          라인 추가
-        </FgButton>
+      <div className="mb-5 flex items-center gap-2.5">
+        <h2 className="text-section text-ink">요청 품목</h2>
+        <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
+          {lines.length} / {MAX_LINES} 라인
+        </span>
       </div>
 
       <div className="flex items-center gap-3 rounded-t-control border border-line bg-background px-4 py-3 text-table text-faint">
@@ -123,6 +112,7 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
                     </button>
                   ) : (
                     <input
+                      aria-label={`요청 품목 ${index + 1} 검색`}
                       className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none placeholder:text-faint"
                       placeholder="부품명 또는 코드 검색"
                       value={line.itemName}
@@ -152,6 +142,7 @@ export function SoLineEditor({ lines, onChange, renderSearchPanel }: SoLineEdito
                 {line.unit ?? '—'}
               </span>
               <input
+                aria-label={`요청 품목 ${index + 1} 수량`}
                 className="h-11 w-24 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
                 min={0}
                 type="number"

@@ -17,6 +17,8 @@ export const purchaseOrderKeys = {
 
   histories: (code: string) => [...purchaseOrderKeys.all, 'histories', code] as const,
 
+  progress: (code: string) => [...purchaseOrderKeys.all, 'progress', code] as const,
+
   kpi: () => [...purchaseOrderKeys.all, 'kpi'] as const,
 
   vendors: (search: string) => [...purchaseOrderKeys.all, 'vendors', search] as const,

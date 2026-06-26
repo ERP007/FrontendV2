@@ -28,6 +28,15 @@ export function PoHistoryTimeline({ rows, title = '변경 이력' }: PoHistoryTi
                 <UserIcon aria-hidden className="h-3.5 w-3.5 text-faint" />
                 {row.changedByLabel}
               </p>
+              {row.metaLines.length > 0 ? (
+                <ul className="mt-1.5 space-y-0.5">
+                  {row.metaLines.map((line) => (
+                    <li key={line} className="text-meta font-medium text-faint">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ol>

@@ -13,7 +13,6 @@ import type {
 } from './types'
 
 export const defaultPurchaseOrderFormValues: PurchaseOrderDraftFormValues = {
-  desiredArrivalDate: '',
   memo: '',
   vendorCode: '',
   warehouseCode: '',
@@ -35,8 +34,8 @@ export function validateLineValues(lines: PurchaseOrderLineRequest[]): string | 
   if (lines.some((line) => line.quantity < 1)) {
     return '모든 품목의 수량을 1 이상으로 입력하세요.'
   }
-  if (lines.some((line) => line.unitPrice < 0)) {
-    return '모든 품목의 단가를 0 이상으로 입력하세요.'
+  if (lines.some((line) => line.unitPrice < 1)) {
+    return '모든 품목의 단가를 1 이상으로 입력하세요.'
   }
   return null
 }
@@ -62,7 +61,6 @@ export function detailToFormValues(
   detail: PurchaseOrderDetailResponse,
 ): PurchaseOrderDraftFormValues {
   return {
-    desiredArrivalDate: detail.desiredArrivalDate.slice(0, 10),
     memo: detail.memo ?? '',
     vendorCode: detail.vendor.code,
     warehouseCode: detail.warehouse.code,

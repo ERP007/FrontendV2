@@ -20,12 +20,25 @@ export function formatDateWithDay(value: DateInput): string {
   return safeFormat(value, 'YYYY-MM-DD (dd)')
 }
 
+export function formatDateKorean(value: DateInput): string {
+  return safeFormat(value, 'YYYY년 MM월 DD일')
+}
+
 export function formatDateTime(value: DateInput): string {
-  return safeFormat(value, 'YYYY-MM-DD HH:mm')
+  return safeFormat(value, 'YYYY년 MM월 DD일 HH시 mm분')
 }
 
 export function formatTime(value: DateInput): string {
   return safeFormat(value, 'HH:mm')
+}
+
+/** 검색 필터 기본 날짜 범위: 오늘-days ~ 오늘 (YYYY-MM-DD) */
+export function defaultDateRange(days = 90): { endDate: string; startDate: string } {
+  const today = dayjs()
+  return {
+    endDate: today.format('YYYY-MM-DD'),
+    startDate: today.subtract(days, 'day').format('YYYY-MM-DD'),
+  }
 }
 
 export function formatNumber(value: number): string {

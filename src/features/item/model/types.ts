@@ -42,7 +42,7 @@ export interface ItemSkuCheckResult {
   sku: string
 }
 
-export type ItemStockStatus = 'NORMAL' | 'LOW' | 'OUT'
+export type ItemStockStatus = 'NORMAL' | 'LOW'
 
 export interface ItemDetail {
   active: boolean
@@ -183,9 +183,6 @@ export function resolveItemStockStatus(stock: Pick<ItemStockRow, 'currentStock' 
     return stock.status
   }
 
-  if (stock.currentStock === 0) {
-    return 'OUT'
-  }
-
+  // 재고 0도 안전재고 미만이면 '부족'(LOW)에 편입. 안전재고 0이면 0재고도 '정상'(NORMAL).
   return stock.currentStock < stock.safetyStock ? 'LOW' : 'NORMAL'
 }

@@ -2,10 +2,10 @@ import { Clock, Lock, Pencil, User as UserIcon } from 'lucide-react'
 
 import { roleLabel } from '@/shared/config/session'
 import { cn } from '@/shared/lib/cn'
-import { formatDate, formatDateTime, formatDelta } from '@/shared/lib/format'
+import { formatDate, formatDateTime as formatProfileDateTime, formatTime } from '@/shared/lib/format'
 import { FgAvatar, FgBadge, FgButton, FgCard, FgCardHeader, FgMeta } from '@/shared/ui'
 
-import { ACTIVITY_TYPE_LABELS } from '../model/types'
+import { getUserActionTypeLabel } from '../model/types'
 
 import type { MyPageResponse, UserActivity } from '../model/types'
 
@@ -41,7 +41,7 @@ export function MyProfileCard({ profile }: { profile: MyPageResponse }) {
             <FgMeta label="소속" value={formatTenancy(profile)} />
             <FgMeta label="직급" value={profile.position || '-'} />
             <FgMeta label="가입일" value={formatDate(profile.joinedAt)} />
-            <FgMeta label="마지막 로그인" value={formatDateTime(profile.lastLoginAt)} />
+            <FgMeta label="마지막 로그인" value={formatProfileDateTime(profile.lastLoginAt)} />
           </dl>
           <p className="mt-6 flex items-center gap-1.5 border-t border-line-soft pt-4 text-meta text-faint">
             <Clock aria-hidden className="h-3.5 w-3.5" />
@@ -81,15 +81,58 @@ export function MyPasswordCard({ changedAt, onChangePassword }: MyPasswordCardPr
   )
 }
 
-function ActivityTag({ type }: { type: UserActivity['type'] }) {
+function ActivityTag({ actionType }: { actionType: UserActivity['actionType'] }) {
   return (
     <FgBadge
-      className={cn('rounded-badge border-dashed', type === 'ADJUST' ? undefined : 'bg-surface')}
-      variant={type === 'ADJUST' ? 'primary' : 'outline'}
+      className="whitespace-nowrap justify-center rounded-pill border-dashed px-4 py-2 text-label font-bold"
+      variant="primary"
     >
-      {ACTIVITY_TYPE_LABELS[type]}
+      {getUserActionTypeLabel(actionType)}
     </FgBadge>
   )
+}
+
+function getActivityStatusClassName(status: string) {
+  const normalized = status.trim().toUpperCase()
+
+  if (
+    normalized.startsWith('-') ||
+    normalized === 'INACTIVE' ||
+    normalized.includes('(INACTIVE)') ||
+    normalized === '비활성' ||
+    normalized === '출고' ||
+    normalized === '취소' ||
+    normalized === '거절'
+  ) {
+    return 'bg-danger-bg text-danger'
+  }
+
+  if (
+    normalized.startsWith('+') ||
+    normalized === 'ACTIVE' ||
+    normalized.includes('(ACTIVE)') ||
+    normalized === '활성' ||
+    normalized === '입고' ||
+    normalized === '출고대기'
+  ) {
+    return 'bg-success-bg text-success'
+  }
+
+  if (normalized === '임시저장') {
+    return 'bg-line-soft text-muted'
+  }
+
+  return 'bg-line-soft text-muted'
+}
+
+function formatActivityDateTime(value: string) {
+  const matched = value.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/)
+  if (matched) return `${matched[1]} ${matched[2]}`
+
+  const date = formatDate(value)
+  const time = formatTime(value)
+
+  return date === '-' || time === '-' ? '-' : `${date} ${time}`
 }
 
 export function MyActivityCard({ activities }: { activities: UserActivity[] }) {
@@ -101,32 +144,36 @@ export function MyActivityCard({ activities }: { activities: UserActivity[] }) {
         title="최근 활동"
       />
       <div className="divide-y divide-line-soft">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center gap-4 py-3.5">
-            <span className="w-36 shrink-0 text-meta font-medium text-muted">
-              {formatDateTime(activity.occurredAt)}
-            </span>
-            <span className="w-24 shrink-0">
-              <ActivityTag type={activity.type} />
-            </span>
-            <span className="flex min-w-0 flex-1 items-center gap-2 text-label">
-              <span className="truncate font-semibold text-ink-2">{activity.description}</span>
-              {activity.refCode ? (
-                <span className="shrink-0 text-meta font-medium text-faint">{activity.refCode}</span>
-              ) : null}
-              {activity.delta !== null ? (
+        {activities.length === 0 ? (
+          <p className="py-6 text-label font-medium text-muted">최근 활동 내역이 없습니다.</p>
+        ) : (
+          activities.map((activity) => (
+            <div key={activity.id} className="flex items-center gap-4 py-3.5">
+              <span className="w-48 shrink-0 whitespace-nowrap text-meta font-medium text-muted">
+                {formatActivityDateTime(activity.occurredAt)}
+              </span>
+              <span className="w-32 shrink-0">
+                <ActivityTag actionType={activity.actionType} />
+              </span>
+              <span className="flex min-w-0 flex-1 items-center gap-2 text-label">
+                <span className="truncate font-bold text-ink">{activity.title}</span>
+                {activity.content ? (
+                  <span className="shrink-0 text-meta font-medium text-faint">{activity.content}</span>
+                ) : null}
+              </span>
+              {activity.status ? (
                 <span
                   className={cn(
-                    'shrink-0 font-bold',
-                    activity.delta < 0 ? 'text-danger' : 'text-success',
+                    'ml-auto shrink-0 rounded-pill px-3.5 py-1.5 text-label font-extrabold',
+                    getActivityStatusClassName(activity.status),
                   )}
                 >
-                  {formatDelta(activity.delta)}
+                  {activity.status}
                 </span>
               ) : null}
-            </span>
-          </div>
-        ))}
+            </div>
+          ))
+        )}
       </div>
     </FgCard>
   )

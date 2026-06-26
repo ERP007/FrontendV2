@@ -38,7 +38,6 @@ const emptyValues: ItemDetailFormValues = {
 const stockStatusMeta = {
   LOW: { label: '부족', variant: 'warning' },
   NORMAL: { label: '정상', variant: 'success' },
-  OUT: { label: '없음', variant: 'danger' },
 } as const satisfies Record<ItemStockStatus, { label: string; variant: 'danger' | 'success' | 'warning' }>
 
 function toFormValues(detail: ItemDetail): ItemDetailFormValues {

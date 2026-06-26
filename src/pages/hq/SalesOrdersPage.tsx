@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import {
   SoFilterBar,
@@ -16,11 +16,11 @@ import type {
   SortDirection,
 } from '@/features/sales-order'
 import { useHqWarehousesQuery } from '@/features/warehouse'
-import { formatNumber } from '@/shared/lib/format'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import { FgBadge, FgPageHeader, FgPagination } from '@/shared/ui'
 
-const breadcrumbs = [{ label: '발주' }, { label: '발주 요청' }]
+const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
 
 interface SoHqQueryState {
   endDate?: string
@@ -35,14 +35,15 @@ interface SoHqQueryState {
 }
 
 function createDefaultQueryState(): SoHqQueryState {
+  const { endDate, startDate } = defaultDateRange(90)
   return {
-    endDate: undefined,
+    endDate,
     page: 1,
     search: '',
     size: 20,
     sortDirection: 'desc',
     sortField: 'requestedAt',
-    startDate: undefined,
+    startDate,
     status: [],
     warehouseCode: undefined,
   }
@@ -70,11 +71,6 @@ export function SalesOrdersPage() {
   const orders = page?.content ?? []
   const totalElements = page?.totalElements ?? 0
   const totalPages = page?.totalPages ?? 1
-
-  const activeKpiStatus = useMemo<SalesOrderStatus | undefined>(
-    () => (state.status.length === 1 ? state.status[0] : undefined),
-    [state.status],
-  )
 
   const rangeStart = totalElements === 0 ? 0 : (state.page - 1) * state.size + 1
   const rangeEnd = Math.min(state.page * state.size, totalElements)
@@ -112,10 +108,10 @@ export function SalesOrdersPage() {
       <FgPageHeader
         badge={<FgBadge variant="primary">본사</FgBadge>}
         breadcrumbs={breadcrumbs}
-        title="발주 요청"
+        title="발주 현황"
       />
       {kpi && (
-        <SoHqKpiCards activeStatus={activeKpiStatus} kpi={kpi} onSelect={handleKpiSelect} />
+        <SoHqKpiCards kpi={kpi} onSelect={handleKpiSelect} />
       )}
       <SoFilterBar
         values={{

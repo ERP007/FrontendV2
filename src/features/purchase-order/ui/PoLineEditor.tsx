@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { formatCurrency } from '@/shared/lib/format'
-import { FgButton, FgCard } from '@/shared/ui'
+import { FgCard } from '@/shared/ui'
 
 import { draftLineAmount, emptyDraftLine } from '../model/ui-types'
 
@@ -58,22 +58,11 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
 
   return (
     <FgCard>
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-section text-ink">주문 품목</h2>
-          <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
-            {lines.length} / {MAX_LINES} 라인
-          </span>
-        </div>
-        <FgButton
-          disabled={lines.length >= MAX_LINES}
-          leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-          size="sm"
-          variant="soft"
-          onClick={addLine}
-        >
-          라인 추가
-        </FgButton>
+      <div className="mb-5 flex items-center gap-2.5">
+        <h2 className="text-section text-ink">주문 품목</h2>
+        <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
+          {lines.length} / {MAX_LINES} 라인
+        </span>
       </div>
 
       <div className="flex items-center gap-3 rounded-t-control border border-line bg-background px-4 py-3 text-table text-faint">
@@ -110,6 +99,7 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                     </button>
                   ) : (
                     <input
+                      aria-label={`주문 품목 ${index + 1} 검색`}
                       className="min-w-0 flex-1 bg-transparent text-label font-semibold text-ink outline-none ring-0 placeholder:text-faint focus:outline-none focus:ring-0"
                       placeholder="부품명 또는 코드 검색"
                       value={line.itemName}
@@ -133,6 +123,7 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                 {line.unit ?? '—'}
               </span>
               <input
+                aria-label={`주문 품목 ${index + 1} 수량`}
                 className="h-11 w-28 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
                 inputMode="numeric"
                 type="text"
@@ -142,16 +133,9 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
                   updateLine(index, { quantity: digits ? Number(digits) : 0 })
                 }}
               />
-              <input
-                className="h-11 w-32 rounded-control border border-line bg-surface px-3 text-right text-label font-bold text-ink outline-none transition-colors focus:border-primary"
-                inputMode="numeric"
-                type="text"
-                value={line.unitPrice === 0 ? '' : line.unitPrice}
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '')
-                  updateLine(index, { unitPrice: digits ? Number(digits) : 0 })
-                }}
-              />
+              <span className="w-32 text-right text-label font-bold text-ink-2">
+                {formatCurrency(line.unitPrice)}
+              </span>
               <span className="w-32 text-right text-label font-bold text-ink">
                 {formatCurrency(draftLineAmount(line))}
               </span>

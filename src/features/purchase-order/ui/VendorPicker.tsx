@@ -84,6 +84,7 @@ export function VendorPicker({ error, initialName, onChange, value }: VendorPick
                 <button
                   key={vendor.code}
                   className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-primary-soft"
+                  data-testid="po-vendor-search-result"
                   type="button"
                   onMouseDown={(event) => {
                     event.preventDefault()

@@ -13,6 +13,6 @@ export function useSalesOrderBranchKpiQuery() {
       return response.data
     },
     queryKey: salesOrderKeys.branchKpi(),
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }

@@ -12,15 +12,16 @@ export const salesOrderKeys = {
   branchLists: () => [...salesOrderKeys.all, 'branch', 'list'] as const,
   branchList: (params: BranchSalesOrderListParams) =>
     [...salesOrderKeys.branchLists(), params] as const,
-  branchDetails: () => [...salesOrderKeys.all, 'branch', 'detail'] as const,
-  branchDetail: (code: string) => [...salesOrderKeys.branchDetails(), code] as const,
 
   hqLists: () => [...salesOrderKeys.all, 'hq', 'list'] as const,
   hqList: (params: HqSalesOrderListParams) => [...salesOrderKeys.hqLists(), params] as const,
-  hqDetails: () => [...salesOrderKeys.all, 'hq', 'detail'] as const,
-  hqDetail: (code: string) => [...salesOrderKeys.hqDetails(), code] as const,
+
+  // 상세는 지점/본사 공통(GET /sales-orders/{code})이라 단일 키로 공유한다.
+  details: () => [...salesOrderKeys.all, 'detail'] as const,
+  detail: (code: string) => [...salesOrderKeys.details(), code] as const,
 
   histories: (code: string) => [...salesOrderKeys.all, 'histories', code] as const,
+  progress: (code: string) => [...salesOrderKeys.all, 'progress', code] as const,
 
   branchKpi: () => [...salesOrderKeys.all, 'kpi', 'branch'] as const,
   hqKpi: () => [...salesOrderKeys.all, 'kpi', 'hq'] as const,

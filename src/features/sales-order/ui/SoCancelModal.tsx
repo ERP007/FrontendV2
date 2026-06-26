@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { FgBadge, FgButton, FgModal, FgNotice, FgTextarea } from '@/shared/ui'
 
-import type { BranchSalesOrderDetail } from '../model/so-detail'
+import type { SalesOrderDetail } from '../model/so-detail'
 
 const MAX_REASON = 200
 
@@ -12,7 +12,7 @@ export interface SoCancelModalProps {
   onClose: () => void
   onConfirm: (reason: string) => void
   open: boolean
-  so: BranchSalesOrderDetail
+  so: SalesOrderDetail
 }
 
 export function SoCancelModal({ isSubmitting, onClose, onConfirm, open, so }: SoCancelModalProps) {

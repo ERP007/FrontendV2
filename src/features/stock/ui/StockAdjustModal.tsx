@@ -24,6 +24,8 @@ const reasonOptions = (Object.keys(ADJUSTMENT_REASON_LABELS) as Array<keyof type
 )
 
 export interface StockAdjustModalProps {
+  /** true면 창고를 드롭다운 대신 고정(읽기전용) 표시한다. BRANCH 사용자(자기 창고만 조정)용. */
+  lockWarehouse?: boolean
   onClose: () => void
   onSubmit: (values: AdjustmentFormValues) => void
   open: boolean
@@ -35,6 +37,7 @@ export interface StockAdjustModalProps {
 }
 
 export function StockAdjustModal({
+  lockWarehouse = false,
   onClose,
   onSubmit,
   open,
@@ -136,20 +139,30 @@ export function StockAdjustModal({
           </div>
         </div>
 
-        <Controller
-          control={control}
-          name="warehouseCode"
-          render={({ field }) => (
-            <FgSelect
-              error={errors.warehouseCode?.message}
-              label="창고"
-              options={warehouseOptions}
-              required
-              value={field.value}
-              onValueChange={field.onChange}
-            />
-          )}
-        />
+        {lockWarehouse ? (
+          <div className="space-y-2">
+            <span className="block text-label text-ink-2">창고</span>
+            <div className="flex h-11 items-center gap-3 rounded-control border border-line bg-line-soft px-3.5 text-body">
+              <span className="truncate font-semibold text-ink">{stock.warehouseName}</span>
+            </div>
+            <input type="hidden" {...register('warehouseCode')} />
+          </div>
+        ) : (
+          <Controller
+            control={control}
+            name="warehouseCode"
+            render={({ field }) => (
+              <FgSelect
+                error={errors.warehouseCode?.message}
+                label="창고"
+                options={warehouseOptions}
+                required
+                value={field.value}
+                onValueChange={field.onChange}
+              />
+            )}
+          />
+        )}
 
         <div className="flex items-center justify-between rounded-control bg-background px-4 py-3 text-label">
           <span className="text-muted">현재 재고</span>

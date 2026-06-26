@@ -4,7 +4,7 @@ import { api } from '@/shared/api'
 
 import type {
   CancelPurchaseOrderRequest,
-  CancelPurchaseOrderResponse,
+  PurchaseOrderStatusResponse,
 } from '../model/types'
 import { invalidatePurchaseOrder } from './po-cache'
 
@@ -17,7 +17,7 @@ export function useCancelPurchaseOrderMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ code, payload }: CancelPurchaseOrderVariables) => {
-      const response = await api.patch<CancelPurchaseOrderResponse>(
+      const response = await api.patch<PurchaseOrderStatusResponse>(
         `/procurement-orders/${code}/cancel`,
         payload,
       )

@@ -1,32 +1,32 @@
 import { Building2, ChevronRight, ClipboardList } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { cn } from '@/shared/lib/cn'
-import { formatNumber } from '@/shared/lib/format'
+import { SO_STATUS_LABELS } from '@/features/sales-order'
+import type { HqSalesOrderRow, SalesOrderStatus } from '@/features/sales-order'
+import { formatDateTime, formatNumber } from '@/shared/lib/format'
 import { FgCard, FgCardHeader, FgEmptyState, FgTabs } from '@/shared/ui'
 
-import { TODO_CATEGORY_LABELS } from '../model/types'
-
-import type { TodoCategory, TodoItem } from '../model/types'
+/** 할 일 탭 — 출고 대기(REQUESTED) / 도착 대기(APPROVED) / 입고(DELIVERED) */
+const TODO_TABS: SalesOrderStatus[] = ['REQUESTED', 'APPROVED', 'DELIVERED']
 
 export interface TodoPanelProps {
-  items: TodoItem[]
-  onSelect: (item: TodoItem) => void
+  items: HqSalesOrderRow[]
+  onSelect: (item: HqSalesOrderRow) => void
 }
 
 export function TodoPanel({ items, onSelect }: TodoPanelProps) {
-  const [tab, setTab] = useState<TodoCategory>('APPROVAL')
+  const [tab, setTab] = useState<SalesOrderStatus>('REQUESTED')
 
   const counts = useMemo(
     () => ({
-      APPROVAL: items.filter((item) => item.category === 'APPROVAL').length,
-      ARRIVAL: items.filter((item) => item.category === 'ARRIVAL').length,
-      SHIP: items.filter((item) => item.category === 'SHIP').length,
+      APPROVED: items.filter((item) => item.status === 'APPROVED').length,
+      DELIVERED: items.filter((item) => item.status === 'DELIVERED').length,
+      REQUESTED: items.filter((item) => item.status === 'REQUESTED').length,
     }),
     [items],
   )
 
-  const visible = items.filter((item) => item.category === tab)
+  const visible = items.filter((item) => item.status === tab)
 
   return (
     <FgCard className="flex h-full flex-col">
@@ -39,13 +39,13 @@ export function TodoPanel({ items, onSelect }: TodoPanelProps) {
       />
       <FgTabs
         className="mb-2"
-        items={[
-          { count: counts.APPROVAL, label: TODO_CATEGORY_LABELS.APPROVAL, value: 'APPROVAL' },
-          { count: counts.SHIP, label: TODO_CATEGORY_LABELS.SHIP, value: 'SHIP' },
-          { count: counts.ARRIVAL, label: TODO_CATEGORY_LABELS.ARRIVAL, value: 'ARRIVAL' },
-        ]}
+        items={TODO_TABS.map((status) => ({
+          count: counts[status as 'REQUESTED' | 'APPROVED' | 'DELIVERED'],
+          label: SO_STATUS_LABELS[status],
+          value: status,
+        }))}
         value={tab}
-        onValueChange={(value) => setTab(value as TodoCategory)}
+        onValueChange={(value) => setTab(value as SalesOrderStatus)}
       />
       <div className="-mx-2 flex-1 divide-y divide-line-soft">
         {visible.length === 0 ? (
@@ -53,32 +53,21 @@ export function TodoPanel({ items, onSelect }: TodoPanelProps) {
         ) : (
           visible.map((item) => (
             <button
-              key={item.id}
+              key={item.code}
               className="flex w-full items-center gap-3 rounded-control px-2 py-3 text-left transition-colors hover:bg-background"
               type="button"
               onClick={() => onSelect(item)}
             >
-              <span className="w-24 shrink-0 text-meta font-semibold text-ink-2">{item.reqNo}</span>
-              <span className="flex w-28 shrink-0 items-center gap-1.5 text-meta font-medium text-muted">
+              <span className="w-28 shrink-0 text-meta font-semibold text-ink-2">{item.code}</span>
+              <span className="flex w-32 shrink-0 items-center gap-1.5 text-meta font-medium text-muted">
                 <Building2 aria-hidden className="h-3.5 w-3.5 text-faint" />
-                <span className="truncate">{item.warehouseName}</span>
+                <span className="truncate">{item.fromWarehouseName ?? item.fromWarehouseCode}</span>
               </span>
-              <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
-                <span className="truncate text-label font-semibold text-ink">{item.itemSummary}</span>
-                <span className="shrink-0 text-meta font-medium text-faint">
-                  · 수량 {formatNumber(item.totalQuantity)}
-                </span>
+              <span className="min-w-0 flex-1 truncate text-label font-semibold text-ink">
+                품목 {formatNumber(item.itemCount)}건
               </span>
-              <span
-                className={cn(
-                  'flex shrink-0 items-center gap-1.5 text-meta font-semibold',
-                  item.urgency === 'DELAYED' ? 'text-danger' : 'text-muted',
-                )}
-              >
-                {item.urgency === 'DELAYED' ? (
-                  <span className="h-1.5 w-1.5 rounded-pill bg-danger" />
-                ) : null}
-                {item.whenLabel}
+              <span className="shrink-0 text-meta font-medium text-faint">
+                {item.requestedAt ? formatDateTime(item.requestedAt) : '-'}
               </span>
               <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-faint" />
             </button>

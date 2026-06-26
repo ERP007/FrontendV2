@@ -6,10 +6,9 @@ import { STOCK_STATUS_LABELS } from '../model/types'
 
 import type { MovementType, StockStatus } from '../model/types'
 
-const stockStatusVariants: Record<StockStatus, 'success' | 'warning' | 'danger'> = {
+const stockStatusVariants: Record<StockStatus, 'success' | 'warning'> = {
   LOW: 'warning',
   NORMAL: 'success',
-  OUT: 'danger',
 }
 
 export function StockStatusBadge({ status }: { status: StockStatus }) {

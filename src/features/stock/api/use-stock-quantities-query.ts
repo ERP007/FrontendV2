@@ -2,6 +2,8 @@ import { queryOptions, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { stockQueryBaseKey } from './stock-cache'
+
 export interface StockQuantity {
   quantity: number
   safetyStock: number
@@ -13,6 +15,8 @@ interface StockQuantitiesResponse {
   warehouseCode: string
 }
 
+const stockQuantitiesQueryBaseKey = [...stockQueryBaseKey, 'quantities'] as const
+
 /** 특정 창고의 여러 SKU 현재고 일괄 조회(GET /inventory/stocks/quantities). */
 export function stockQuantitiesQueryOptions(warehouseCode: string, skus: string[]) {
   return queryOptions({
@@ -22,8 +26,8 @@ export function stockQuantitiesQueryOptions(warehouseCode: string, skus: string[
       })
       return response.data
     },
-    queryKey: ['stocks', 'quantities', warehouseCode, [...skus].sort()] as const,
-    staleTime: 60_000,
+    queryKey: [...stockQuantitiesQueryBaseKey, warehouseCode, [...skus].sort()] as const,
+    staleTime: 0,
   })
 }
 

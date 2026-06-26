@@ -1,6 +1,5 @@
 import { useSearch } from '@tanstack/react-router'
 import dayjs from 'dayjs'
-import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -14,7 +13,7 @@ import {
 import type { MovementFilter, MovementSort, MovementSortField } from '@/features/stock'
 import { useScopedWarehouseOptions } from '@/features/warehouse'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
-import { FgButton, FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
+import { FgNotice, FgPageHeader, FgPagination } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '재고 이력' }]
 
@@ -22,12 +21,22 @@ const breadcrumbs = [{ label: '물류 관리' }, { label: '재고' }, { label: '
 const MAX_RANGE_DAYS = 365
 
 export function StockMovementsPage() {
-  // 재고 조회 상세 패널에서 넘어온 sku를 검색어 초기값으로 채운다(선택적).
-  const { keyword: keywordParam } = useSearch({ strict: false }) as { keyword?: string }
-  const [filter, setFilter] = useState<MovementFilter>(() => ({
-    ...createDefaultMovementFilter(),
-    keyword: keywordParam ?? '',
-  }))
+  // 재고 조회 상세 패널에서 sku(keyword)를, KPI '최근 7일 이동' 클릭에서 기간(from/to)을 넘겨받는다(모두 선택적).
+  const {
+    from: fromParam,
+    keyword: keywordParam,
+    to: toParam,
+  } = useSearch({ strict: false }) as { from?: string; keyword?: string; to?: string }
+  const [filter, setFilter] = useState<MovementFilter>(() => {
+    const base = createDefaultMovementFilter()
+    return {
+      ...base,
+      // 기간이 넘어오면 기본값(30일) 대신 그 기간으로 시작한다(KPI 최근 7일 이동 진입).
+      from: fromParam ?? base.from,
+      keyword: keywordParam ?? '',
+      to: toParam ?? base.to,
+    }
+  })
   const [sort, setSort] = useState<MovementSort>(DEFAULT_MOVEMENT_SORT)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -39,7 +48,7 @@ export function StockMovementsPage() {
   const rangeInvalid = Boolean(filter.from && filter.to && dayjs(filter.from).isAfter(filter.to, 'day'))
 
   // 창고 드롭다운 옵션: BRANCH는 자기 창고만, ADMIN·HQ는 전체(소속 기준 스코핑).
-  const { branchLockedCode, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
+  const { branchLockedCode, branchLockedName, isBranch, options: warehouseOptions } = useScopedWarehouseOptions()
   // BRANCH는 창고 선택이 자기 창고로 고정된다(드롭다운 단일 옵션). ADMIN·HQ는 사용자가 고른 값을 그대로 쓴다.
   const effectiveWarehouseCode = isBranch
     ? (branchLockedCode ?? filter.warehouseCode)
@@ -88,21 +97,11 @@ export function StockMovementsPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <FgButton
-            leftIcon={<Download aria-hidden className="h-4 w-4" />}
-            onClick={() => toast.info('CSV 내보내기는 백엔드 연동 후 제공됩니다.')}
-          >
-            CSV 내보내기
-          </FgButton>
-        }
-        breadcrumbs={breadcrumbs}
-        title="재고 이력"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="재고 이력" />
       <MovementFilterBar
         filter={{ ...filter, warehouseCode: effectiveWarehouseCode }}
         includeAllOption={!isBranch}
+        lockedWarehouseName={branchLockedName}
         warehouses={warehouseOptions}
         onChange={handleFilterChange}
         onReset={() => {

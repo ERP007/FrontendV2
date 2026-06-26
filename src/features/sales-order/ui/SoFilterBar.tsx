@@ -1,8 +1,15 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Calendar, Check, ChevronDown, RotateCcw, Search } from 'lucide-react'
+import { Calendar, Check } from 'lucide-react'
 
 import { cn } from '@/shared/lib/cn'
-import { FgBadge, FgButton, FgCard, FgInput } from '@/shared/ui'
+import {
+  FgFilterBar,
+  FgFilterChips,
+  FgFilterMenuTrigger,
+  FgFilterResetButton,
+  FgFilterSearch,
+  FgInput,
+} from '@/shared/ui'
 
 import { SO_STATUS_LABELS } from '../model/ui-types'
 
@@ -13,8 +20,8 @@ import type { HqWarehouseSummary } from '@/features/warehouse'
 const HQ_STATUS_OPTIONS: SalesOrderStatus[] = [
   'REQUESTED',
   'APPROVED',
-  'REJECTED',
   'DELIVERED',
+  'REJECTED',
   'CANCELED',
 ]
 
@@ -37,11 +44,14 @@ export interface SoFilterBarProps {
 export function SoFilterBar({
   onChange,
   onReset,
-  searchPlaceholder = '요청번호, 부품명·코드, 지점명 검색',
+  searchPlaceholder = '요청번호 또는 지점명 검색',
   values,
   warehouses,
 }: SoFilterBarProps) {
-  const statusCount = values.status.length
+  const statusOptions = HQ_STATUS_OPTIONS.map((status) => ({
+    label: SO_STATUS_LABELS[status],
+    value: status,
+  }))
 
   function toggleStatus(status: SalesOrderStatus) {
     const next = values.status.includes(status)
@@ -51,80 +61,24 @@ export function SoFilterBar({
   }
 
   return (
-    <FgCard className="flex items-center gap-3 p-4">
-      <FgInput
-        leftIcon={<Search aria-hidden className="h-4 w-4" />}
+    <FgFilterBar>
+      <FgFilterSearch
         placeholder={searchPlaceholder}
-        rootClassName="flex-1"
         value={values.search}
         onChange={(event) => onChange({ ...values, search: event.target.value })}
       />
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <FgButton
-            className="w-40 justify-between"
-            rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
-          >
-            <span className="flex items-center gap-2 truncate">
-              상태
-              {statusCount > 0 ? (
-                <>
-                  <FgBadge variant="primary">{statusCount}</FgBadge>
-                  <span className="truncate text-meta text-muted">
-                    {values.status.map((status) => SO_STATUS_LABELS[status]).join(', ')}
-                  </span>
-                </>
-              ) : (
-                <span className="text-meta text-faint">전체</span>
-              )}
-            </span>
-          </FgButton>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="start"
-            className="z-50 min-w-48 rounded-control bg-surface/95 p-1 shadow-popover backdrop-blur focus:outline-none"
-            sideOffset={6}
-          >
-            {HQ_STATUS_OPTIONS.map((status) => {
-              const checked = values.status.includes(status)
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={status}
-                  checked={checked}
-                  className={cn(
-                    'flex min-h-10 cursor-pointer select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-label font-semibold text-ink-2 outline-none',
-                    'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
-                  )}
-                  onSelect={(event) => {
-                    event.preventDefault()
-                    toggleStatus(status)
-                  }}
-                >
-                  <span>{SO_STATUS_LABELS[status]}</span>
-                  {checked ? <Check aria-hidden className="h-4 w-4 text-primary" /> : null}
-                </DropdownMenu.CheckboxItem>
-              )
-            })}
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
       {warehouses ? (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <FgButton
-              className="w-40 justify-between"
-              rightIcon={<ChevronDown aria-hidden className="h-4 w-4" />}
-            >
+            <FgFilterMenuTrigger className="w-40" label="창고">
               <span className="flex items-center gap-2 truncate">
-                창고
                 {values.warehouseCode ? (
                   <span className="truncate text-meta text-muted">{values.warehouseCode}</span>
                 ) : (
                   <span className="text-meta text-faint">전체</span>
                 )}
               </span>
-            </FgButton>
+            </FgFilterMenuTrigger>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
@@ -188,9 +142,13 @@ export function SoFilterBar({
         value={values.endDate ?? ''}
         onChange={(event) => onChange({ ...values, endDate: event.target.value || undefined })}
       />
-      <FgButton leftIcon={<RotateCcw aria-hidden className="h-4 w-4" />} onClick={onReset}>
-        초기화
-      </FgButton>
-    </FgCard>
+      <FgFilterResetButton onClick={onReset} />
+      <FgFilterChips
+        label="상태"
+        options={statusOptions}
+        selected={values.status}
+        onToggle={toggleStatus}
+      />
+    </FgFilterBar>
   )
 }

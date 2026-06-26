@@ -1,17 +1,20 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { Building2, Calendar, FileText, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
+import { Building2, Calendar, FileText, ShoppingCart, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { ReactNode } from 'react'
 
 import {
   CARRIER_TYPE_LABELS,
+  SoSagaProgressModal,
   useApproveSalesOrderMutation,
   useHqSalesOrderQuery,
 } from '@/features/sales-order'
 import type { CarrierType } from '@/features/sales-order'
-import { useStockQuantitiesQuery } from '@/features/stock'
+import type { PoDraftLine } from '@/features/purchase-order'
+import { invalidateStockQueries, useStockQuantitiesQuery } from '@/features/stock'
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import {
@@ -45,6 +48,7 @@ export function SalesOrderShipPage() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const code = params.soNo ?? ''
 
   const { data: so } = useHqSalesOrderQuery(code)
@@ -55,10 +59,30 @@ export function SalesOrderShipPage() {
   const [carrierType, setCarrierType] = useState<CarrierType | ''>('')
   const [approvedDate, setApprovedDate] = useState(dayjs().format('YYYY-MM-DD'))
   const [invoiceNumber, setInvoiceNumber] = useState('')
+  // 승인(#6) saga 진행을 스텝퍼 모달로 표시한다(OUTBOUND_IN_PROGRESS 시).
+  const [progressOpen, setProgressOpen] = useState(false)
 
   if (!so) return null
 
   const totalRequested = so.lines.reduce((sum, line) => sum + line.requestQuantity, 0)
+
+  // 현재고가 요청 수량에 못 미치는(잔여 음수) 라인 → 구매 요청 프리필. 구매 수량은 부족분(요청−현재고).
+  const shortageLines: PoDraftLine[] = so.lines
+    .map((line) => ({ line, shortfall: line.requestQuantity - (stockMap?.get(line.itemCode)?.quantity ?? 0) }))
+    .filter(({ shortfall }) => shortfall > 0)
+    .map(({ line, shortfall }) => ({
+      itemName: line.itemName,
+      quantity: shortfall,
+      sku: line.itemCode,
+      unit: line.unit,
+      unitPrice: 0,
+    }))
+
+  function handlePurchaseRequest() {
+    if (shortageLines.length === 0) return
+    // 라인 배열은 URL이 아닌 history state로 넘긴다(구매 주문 등록 페이지에서 프리필).
+    void navigate({ to: '/purchase-orders/new', state: { poPrefillLines: shortageLines } })
+  }
 
   async function handleConfirm() {
     if (!carrierType) {
@@ -69,10 +93,16 @@ export function SalesOrderShipPage() {
       const result = await approveMutation.mutateAsync({
         approvedDate,
         carrierType,
-        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : null,
+        invoiceNumber: invoiceNumber.trim() ? invoiceNumber.trim() : undefined,
       })
-      toast.success(`${result.code} 출고되었습니다.`)
-      void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      // 진행중이면 스텝퍼 모달, 즉시 확정이면 바로 이동.
+      if (result.progress === 'OUTBOUND_IN_PROGRESS') {
+        setProgressOpen(true)
+      } else {
+        invalidateStockQueries(queryClient)
+        toast.success(`${result.code} 출고되었습니다.`)
+        void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+      }
     } catch {
       // 전역 인터셉터가 toast 처리
     }
@@ -81,13 +111,23 @@ export function SalesOrderShipPage() {
   return (
     <div className="fg-content">
       <FgPageHeader
+        actions={
+          <FgButton
+            disabled={shortageLines.length === 0}
+            leftIcon={<ShoppingCart aria-hidden className="h-4 w-4" />}
+            onClick={handlePurchaseRequest}
+          >
+            부족 부품 구매 요청
+            {shortageLines.length > 0 ? ` (${shortageLines.length})` : ''}
+          </FgButton>
+        }
         badge={
           <span className="flex items-center gap-2.5">
             <span className="text-h1 font-extrabold text-muted">출고 처리</span>
-            <FgDomainStatusBadge label={so.statusLabel} status={so.status} />
+            <FgDomainStatusBadge label={so.progressLabel} status={so.progressBadgeStatus} />
           </span>
         }
-        breadcrumbs={[{ label: '발주' }, { label: '발주 요청' }, { label: `${so.code} 출고 처리` }]}
+        breadcrumbs={[{ label: '발주' }, { label: '발주 현황' }, { label: `${so.code} 출고 처리` }]}
         title={so.code}
       />
 
@@ -106,16 +146,6 @@ export function SalesOrderShipPage() {
                 <span className="ml-1.5 text-meta font-medium text-faint">
                   {so.fromWarehouse.code}
                 </span>
-              </span>
-            }
-          />
-          <InfoCell
-            icon={<Calendar aria-hidden className="h-3.5 w-3.5" />}
-            label="도착 희망일"
-            value={
-              <span>
-                {so.desiredArrivalDateLabel}
-                <strong className="ml-1.5 text-primary-strong">{so.dday}</strong>
               </span>
             }
           />
@@ -206,7 +236,7 @@ export function SalesOrderShipPage() {
       <FgCard>
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-section text-ink">출고 정보</h2>
-          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감 + 지점 알림 발송</span>
+          <span className="text-meta font-medium text-faint">확정 시 재고 자동 차감</span>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
           <FgInput
@@ -233,7 +263,7 @@ export function SalesOrderShipPage() {
           취소
         </FgButton>
         <FgButton
-          disabled={approveMutation.isPending}
+          disabled={approveMutation.isPending || progressOpen}
           leftIcon={<Truck aria-hidden className="h-4 w-4" />}
           variant="primary"
           onClick={() => void handleConfirm()}
@@ -241,6 +271,21 @@ export function SalesOrderShipPage() {
           출고 확정
         </FgButton>
       </FgCard>
+
+      {progressOpen ? (
+        <SoSagaProgressModal
+          code={code}
+          mode="OUTBOUND"
+          open
+          onClose={() => setProgressOpen(false)}
+          onSuccess={() => {
+            invalidateStockQueries(queryClient)
+            setProgressOpen(false)
+            toast.success(`${code} 출고되었습니다.`)
+            void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
+          }}
+        />
+      ) : null}
     </div>
   )
 }

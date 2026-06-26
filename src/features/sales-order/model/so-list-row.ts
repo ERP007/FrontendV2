@@ -1,47 +1,48 @@
-import dayjs from 'dayjs'
+import type { FgDomainStatus } from '@/shared/ui'
 
-import { formatDday, formatNumber } from '@/shared/lib/format'
-
-import { IN_PROGRESS_STATUSES, isSoDelayed, SO_STATUS_LABELS } from './ui-types'
-import type { BranchSalesOrderSummary, HqSalesOrderSummary, SalesOrderStatus } from './types'
-
-// 단위 미확정(DRAFT 등)이면 '—', 아니면 "1,234 EA" 형태로 합쳐 표시한다.
-function totalQuantityLabel(total: number, unit: string | null): string {
-  return unit ? `${formatNumber(total)} ${unit}` : '—'
-}
+import {
+  IN_PROGRESS_STATUSES,
+  ORDER_PROGRESS_BADGE_STATUS,
+  ORDER_PROGRESS_LABELS,
+  SO_STATUS_LABELS,
+} from './ui-types'
+import type {
+  BranchSalesOrderSummary,
+  HqSalesOrderSummary,
+  OrderProgress,
+  SalesOrderStatus,
+} from './types'
 
 // =============================================================================
-// 지점 목록 행 (SO #9)
+// 지점 목록 행 (SO #11)
 // =============================================================================
 export interface BranchSalesOrderRow {
   code: string
-  dday: string
-  delayed: boolean
-  desiredArrivalDate: string
   inProgress: boolean
   itemCount: number
+  progress: OrderProgress
+  progressBadgeStatus: FgDomainStatus
+  progressLabel: string
   requestedAt: string | null
+  requesterName: string | null
+  requesterPosition: string | null
   status: SalesOrderStatus
   statusLabel: string
-  totalQuantity: string
 }
 
 export function mapBranchSalesOrderRow(summary: BranchSalesOrderSummary): BranchSalesOrderRow {
-  const today = dayjs().format('YYYY-MM-DD')
   return {
     code: summary.code,
-    dday: formatDday(summary.desiredArrivalDate),
-    delayed: isSoDelayed(
-      { desiredAt: summary.desiredArrivalDate, status: summary.status },
-      today,
-    ),
-    desiredArrivalDate: summary.desiredArrivalDate,
     inProgress: IN_PROGRESS_STATUSES.includes(summary.status),
     itemCount: summary.itemCount,
-    requestedAt: summary.requestedAt,
+    progress: summary.progress,
+    progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[summary.progress],
+    progressLabel: ORDER_PROGRESS_LABELS[summary.progress],
+    requestedAt: summary.request?.requestedAt ?? null,
+    requesterName: summary.request?.requestedBy.name ?? null,
+    requesterPosition: summary.request?.requestedBy.position ?? null,
     status: summary.status,
     statusLabel: SO_STATUS_LABELS[summary.status],
-    totalQuantity: totalQuantityLabel(summary.totalQuantity, summary.unitSnapshot),
   }
 }
 
@@ -50,36 +51,32 @@ export function mapBranchSalesOrderRow(summary: BranchSalesOrderSummary): Branch
 // =============================================================================
 export interface HqSalesOrderRow {
   code: string
-  dday: string
-  delayed: boolean
-  desiredArrivalDate: string
   fromWarehouseCode: string
+  fromWarehouseName: string | null
   itemCount: number
+  progress: OrderProgress
+  progressBadgeStatus: FgDomainStatus
+  progressLabel: string
   requestedAt: string | null
   requesterName: string | null
   requesterPosition: string | null
   status: SalesOrderStatus
   statusLabel: string
-  totalQuantity: string
 }
 
 export function mapHqSalesOrderRow(summary: HqSalesOrderSummary): HqSalesOrderRow {
-  const today = dayjs().format('YYYY-MM-DD')
   return {
     code: summary.code,
-    dday: formatDday(summary.desiredArrivalDate),
-    delayed: isSoDelayed(
-      { desiredAt: summary.desiredArrivalDate, status: summary.status },
-      today,
-    ),
-    desiredArrivalDate: summary.desiredArrivalDate,
-    fromWarehouseCode: summary.fromWarehouseCode,
+    fromWarehouseCode: summary.fromWarehouse.code,
+    fromWarehouseName: summary.fromWarehouse.name,
     itemCount: summary.itemCount,
-    requestedAt: summary.requestedAt,
-    requesterName: summary.requesterName,
-    requesterPosition: summary.requesterPosition,
+    progress: summary.progress,
+    progressBadgeStatus: ORDER_PROGRESS_BADGE_STATUS[summary.progress],
+    progressLabel: ORDER_PROGRESS_LABELS[summary.progress],
+    requestedAt: summary.request?.requestedAt ?? null,
+    requesterName: summary.request?.requestedBy.name ?? null,
+    requesterPosition: summary.request?.requestedBy.position ?? null,
     status: summary.status,
     statusLabel: SO_STATUS_LABELS[summary.status],
-    totalQuantity: totalQuantityLabel(summary.totalQuantity, summary.unitSnapshot),
   }
 }

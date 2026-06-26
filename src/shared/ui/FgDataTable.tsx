@@ -154,6 +154,7 @@ export function FgDataTable<TData>({
                 <FgTableRow
                   key={row.id}
                   className={cn(onRowClick && 'cursor-pointer', rowClassName?.(row.original))}
+                  data-testid="fg-data-table-row"
                   selected={isRowSelected?.(row.original) ?? false}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                 >

@@ -1,5 +1,4 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { SortingState } from '@tanstack/react-table'
 
@@ -16,18 +15,14 @@ import type {
   SearchPurchaseOrderRequest,
   SortField,
 } from '@/features/purchase-order'
-import { formatNumber } from '@/shared/lib/format'
-import { FgButton, FgPageHeader, FgPagination } from '@/shared/ui'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
+import { FgPageHeader, FgPagination } from '@/shared/ui'
 
-const breadcrumbs = [{ label: '구매' }, { label: '구매 주문' }]
+const breadcrumbs = [{ label: '구매' }, { label: '구매 현황' }]
 
-const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1 }
+const DEFAULT_PARAMS: SearchPurchaseOrderRequest = { page: 1, ...defaultDateRange(90) }
 
-const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set([
-  'createdAt',
-  'desiredArrivalDate',
-  'totalAmount',
-])
+const SORTABLE_FIELDS: ReadonlySet<SortField> = new Set(['createdAt', 'totalAmount'])
 
 export function PurchaseOrdersPage() {
   const navigate = useNavigate()
@@ -76,19 +71,7 @@ export function PurchaseOrdersPage() {
 
   return (
     <div className="fg-content">
-      <FgPageHeader
-        actions={
-          <FgButton
-            leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-            variant="primary"
-            onClick={() => void navigate({ to: '/purchase-orders/new' })}
-          >
-            구매 주문 등록
-          </FgButton>
-        }
-        breadcrumbs={breadcrumbs}
-        title="구매 주문"
-      />
+      <FgPageHeader breadcrumbs={breadcrumbs} title="구매 현황" />
       {kpi ? <PoKpiCards kpi={kpi} onSelect={handleKpiSelect} /> : null}
       <PoFilterBar
         params={params}

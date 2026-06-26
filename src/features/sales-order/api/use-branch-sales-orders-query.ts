@@ -59,6 +59,6 @@ export function useBranchSalesOrdersQuery(params: BranchSalesOrderListParams = {
       ...data,
       content: data.content.map(mapBranchSalesOrderRow),
     }),
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }
