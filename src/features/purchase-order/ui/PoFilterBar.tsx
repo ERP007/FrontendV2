@@ -1,13 +1,10 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Calendar, Check } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { cn } from '@/shared/lib/cn'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import {
-  FgBadge,
   FgFilterBar,
-  FgFilterMenuTrigger,
+  FgFilterChips,
   FgFilterResetButton,
   FgFilterSearch,
   FgFilterSelect,
@@ -67,7 +64,6 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
   }, [debouncedSearch])
 
   const selectedStatuses = parseStatusCsv(params.status)
-  const statusCount = selectedStatuses.length
 
   function update(patch: Partial<SearchPurchaseOrderRequest>) {
     onChange({ ...params, ...patch, page: 1 })
@@ -85,60 +81,18 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
     ...vendors.map((vendor) => ({ label: vendor.name, value: vendor.code })),
   ]
 
+  const statusOptions = STATUS_ORDER.map((status) => ({
+    label: PO_STATUS_LABELS[status],
+    value: status,
+  }))
+
   return (
-    <FgFilterBar actions={<FgFilterResetButton onClick={onReset} />}>
+    <FgFilterBar>
       <FgFilterSearch
         placeholder="요청번호 또는 공급사명"
         value={searchInput}
         onChange={(event) => setSearchState({ input: event.target.value, paramsSearch })}
       />
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <FgFilterMenuTrigger className="w-40" label="상태">
-            <span className="flex min-w-0 items-center gap-2 truncate">
-              {statusCount > 0 ? (
-                <>
-                  <FgBadge variant="primary">{statusCount}</FgBadge>
-                  <span className="truncate font-semibold text-ink">
-                    {selectedStatuses.map((s) => PO_STATUS_LABELS[s]).join(', ')}
-                  </span>
-                </>
-              ) : (
-                <span className="text-faint">전체</span>
-              )}
-            </span>
-          </FgFilterMenuTrigger>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="start"
-            className="z-50 min-w-48 overflow-hidden rounded-control bg-surface/95 p-1 shadow-popover backdrop-blur focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
-            sideOffset={6}
-          >
-            {STATUS_ORDER.map((status) => {
-              const checked = selectedStatuses.includes(status)
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={status}
-                  checked={checked}
-                  className={cn(
-                    'relative flex min-h-10 cursor-pointer select-none items-center justify-between gap-3 rounded-control px-3 py-2 text-label font-semibold text-ink-2 outline-none',
-                    'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
-                    'data-[highlighted]:bg-primary-soft data-[highlighted]:text-primary-strong',
-                  )}
-                  onSelect={(event) => {
-                    event.preventDefault()
-                    toggleStatus(status)
-                  }}
-                >
-                  <span>{PO_STATUS_LABELS[status]}</span>
-                  {checked ? <Check aria-hidden className="h-4 w-4 text-primary" /> : null}
-                </DropdownMenu.CheckboxItem>
-              )
-            })}
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
       <FgFilterSelect
         className="w-48"
         label="공급사"
@@ -166,6 +120,13 @@ export function PoFilterBar({ onChange, onReset, params, vendors = [] }: PoFilte
         value={params.endDate ?? ''}
         onChange={(event) => update({ endDate: event.target.value || undefined })}
         onClick={openDatePicker}
+      />
+      <FgFilterResetButton onClick={onReset} />
+      <FgFilterChips
+        label="상태"
+        options={statusOptions}
+        selected={selectedStatuses}
+        onToggle={toggleStatus}
       />
     </FgFilterBar>
   )

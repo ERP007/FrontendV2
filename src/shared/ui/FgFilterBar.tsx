@@ -38,7 +38,7 @@ export function FgFilterSearch({ rootClassName, ...props }: FgFilterSearchProps)
   return (
     <FgInput
       leftIcon={<Search aria-hidden className="h-4 w-4" />}
-      rootClassName={cn('min-w-64 flex-1', rootClassName)}
+      rootClassName={cn('min-w-48 flex-1', rootClassName)}
       {...props}
     />
   )
@@ -98,6 +98,51 @@ export const FgFilterMenuTrigger = forwardRef<HTMLButtonElement, FgFilterMenuTri
 )
 
 FgFilterMenuTrigger.displayName = 'FgFilterMenuTrigger'
+
+export interface FgFilterChipOption<T extends string> {
+  label: string
+  value: T
+}
+
+export interface FgFilterChipsProps<T extends string> {
+  className?: string
+  label?: string
+  onToggle: (value: T) => void
+  options: ReadonlyArray<FgFilterChipOption<T>>
+  selected: ReadonlyArray<T>
+}
+
+export function FgFilterChips<T extends string>({
+  className,
+  label,
+  onToggle,
+  options,
+  selected,
+}: FgFilterChipsProps<T>) {
+  return (
+    <div className={cn('flex basis-full flex-wrap items-center gap-2', className)}>
+      {label ? <span className="mr-1 text-meta font-semibold text-faint">{label}</span> : null}
+      {options.map((option) => {
+        const active = selected.includes(option.value)
+        return (
+          <button
+            key={option.value}
+            className={cn(
+              'flex h-9 items-center rounded-pill border px-3.5 text-label font-semibold transition-colors',
+              active
+                ? 'border-primary bg-primary-soft text-primary-strong'
+                : 'border-line bg-surface text-ink-2 hover:border-primary/40 hover:text-ink',
+            )}
+            type="button"
+            onClick={() => onToggle(option.value)}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 export type FgFilterResetButtonProps = Omit<FgButtonProps, 'leftIcon'>
 

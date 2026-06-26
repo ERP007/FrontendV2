@@ -28,6 +28,7 @@ export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'
 export { useBranchSalesOrderQuery } from './api/use-branch-sales-order-query'
 export type { SalesOrderDetail } from './model/so-detail'
 export { useHqSalesOrdersQuery } from './api/use-hq-sales-orders-query'
+export type { HqSalesOrderRow } from './model/so-list-row'
 export { useHqSalesOrderQuery } from './api/use-hq-sales-order-query'
 export { useSalesOrderFormQuery } from './api/use-sales-order-form-query'
 export { useSalesOrderBranchKpiQuery } from './api/use-sales-order-branch-kpi-query'
@@ -37,6 +38,8 @@ export { useSalesOrderHqKpiQuery } from './api/use-sales-order-hq-kpi-query'
 export {
   CARRIER_TYPE_LABELS,
   emptySoDraftLine,
+  SO_BRANCH_STATUS_ORDER,
+  SO_STATUS_LABELS,
   SO_TAB_STATUS_MAP,
 } from './model/ui-types'
 export type { SoLine as SoDraftLine, SoStatusTab } from './model/ui-types'
@@ -45,7 +48,6 @@ export type { SoFormValues } from './model/so-draft-schema'
 export { defaultSoFormValues, linesToRequest } from './model/so-form'
 
 // ----- UI -----
-export { SoBranchStatusFilter } from './ui/SoBranchStatusFilter'
 export { SoHistoryTimeline } from './ui/SoHistoryTimeline'
 export { SoCancelModal } from './ui/SoCancelModal'
 export { SoRejectModal } from './ui/SoRejectModal'

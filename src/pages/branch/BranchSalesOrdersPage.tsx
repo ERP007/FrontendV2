@@ -3,9 +3,10 @@ import { Calendar } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import {
+  SO_BRANCH_STATUS_ORDER,
+  SO_STATUS_LABELS,
   SO_TAB_STATUS_MAP,
   SoBranchKpiCards,
-  SoBranchStatusFilter,
   SoBranchTable,
   useBranchSalesOrdersQuery,
   useSalesOrderBranchKpiQuery,
@@ -17,10 +18,11 @@ import type {
   SortDirection,
   SoStatusTab,
 } from '@/features/sales-order'
-import { formatNumber } from '@/shared/lib/format'
+import { defaultDateRange, formatNumber } from '@/shared/lib/format'
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value'
 import {
   FgFilterBar,
+  FgFilterChips,
   FgFilterResetButton,
   FgFilterSearch,
   FgInput,
@@ -30,6 +32,11 @@ import {
 } from '@/shared/ui'
 
 const breadcrumbs = [{ label: '발주' }, { label: '발주 현황' }]
+
+const STATUS_CHIP_OPTIONS = SO_BRANCH_STATUS_ORDER.map((status) => ({
+  label: SO_STATUS_LABELS[status],
+  value: status,
+}))
 
 const TAB_ITEMS = [
   { label: '전체', value: 'ALL' },
@@ -50,14 +57,15 @@ interface SoBranchQueryState {
 }
 
 function createDefaultQueryState(): SoBranchQueryState {
+  const { endDate, startDate } = defaultDateRange(90)
   return {
-    endDate: undefined,
+    endDate,
     page: 1,
     search: '',
     size: 10,
     sortDirection: 'desc',
     sortField: 'requestedAt',
-    startDate: undefined,
+    startDate,
     status: [],
   }
 }
@@ -73,10 +81,6 @@ function statusListEquals(a: SalesOrderStatus[], b: SalesOrderStatus[] | undefin
 function deriveTab(status: SalesOrderStatus[]): SoStatusTab {
   const entries = Object.entries(SO_TAB_STATUS_MAP) as [SoStatusTab, SalesOrderStatus[] | undefined][]
   return entries.find(([, value]) => statusListEquals(status, value))?.[0] ?? 'ALL'
-}
-
-function deriveKpiActive(status: SalesOrderStatus[]): SalesOrderStatus | undefined {
-  return status.length === 1 ? status[0] : undefined
 }
 
 export function BranchSalesOrdersPage() {
@@ -101,10 +105,16 @@ export function BranchSalesOrdersPage() {
   const totalPages = Math.max(1, data?.totalPages ?? 1)
 
   const tab = useMemo(() => deriveTab(state.status), [state.status])
-  const activeKpiStatus = useMemo(() => deriveKpiActive(state.status), [state.status])
 
   function patchState(patch: Partial<SoBranchQueryState>) {
     setState((prev) => ({ ...prev, ...patch }))
+  }
+
+  function toggleStatus(status: SalesOrderStatus) {
+    const next = state.status.includes(status)
+      ? state.status.filter((item) => item !== status)
+      : [...state.status, status]
+    patchState({ page: 1, status: next })
   }
 
   const rangeStart = totalElements === 0 ? 0 : (state.page - 1) * state.size + 1
@@ -115,25 +125,16 @@ export function BranchSalesOrdersPage() {
       <FgPageHeader breadcrumbs={breadcrumbs} title="발주 현황" />
       {kpi ? (
         <SoBranchKpiCards
-          activeStatus={activeKpiStatus}
           kpi={kpi}
           onSelect={(status) => patchState({ page: 1, status: status ? [status] : [] })}
         />
       ) : null}
 
-      <FgFilterBar
-        actions={
-          <FgFilterResetButton onClick={() => setState(createDefaultQueryState())} />
-        }
-      >
+      <FgFilterBar>
         <FgFilterSearch
           placeholder="요청번호 또는 요청자 검색"
           value={state.search}
           onChange={(event) => patchState({ page: 1, search: event.target.value })}
-        />
-        <SoBranchStatusFilter
-          value={state.status}
-          onChange={(status) => patchState({ page: 1, status: status ?? [] })}
         />
         <FgInput
           leftIcon={<Calendar aria-hidden className="h-4 w-4" />}
@@ -149,6 +150,13 @@ export function BranchSalesOrdersPage() {
           type="date"
           value={state.endDate ?? ''}
           onChange={(event) => patchState({ page: 1, endDate: event.target.value || undefined })}
+        />
+        <FgFilterResetButton onClick={() => setState(createDefaultQueryState())} />
+        <FgFilterChips
+          label="상태"
+          options={STATUS_CHIP_OPTIONS}
+          selected={state.status}
+          onToggle={toggleStatus}
         />
       </FgFilterBar>
 

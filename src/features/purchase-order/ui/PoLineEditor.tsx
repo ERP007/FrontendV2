@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { formatCurrency } from '@/shared/lib/format'
-import { FgButton, FgCard } from '@/shared/ui'
+import { FgCard } from '@/shared/ui'
 
 import { draftLineAmount, emptyDraftLine } from '../model/ui-types'
 
@@ -58,22 +58,11 @@ export function PoLineEditor({ lines, onChange, renderSearchPanel }: PoLineEdito
 
   return (
     <FgCard>
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-section text-ink">주문 품목</h2>
-          <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
-            {lines.length} / {MAX_LINES} 라인
-          </span>
-        </div>
-        <FgButton
-          disabled={lines.length >= MAX_LINES}
-          leftIcon={<Plus aria-hidden className="h-4 w-4" />}
-          size="sm"
-          variant="soft"
-          onClick={addLine}
-        >
-          라인 추가
-        </FgButton>
+      <div className="mb-5 flex items-center gap-2.5">
+        <h2 className="text-section text-ink">주문 품목</h2>
+        <span className="rounded-pill bg-line-soft px-2.5 py-1 text-badge text-muted">
+          {lines.length} / {MAX_LINES} 라인
+        </span>
       </div>
 
       <div className="flex items-center gap-3 rounded-t-control border border-line bg-background px-4 py-3 text-table text-faint">
