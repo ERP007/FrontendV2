@@ -71,7 +71,7 @@ export function SalesOrderShipPage() {
     .map((line) => ({ line, shortfall: line.requestQuantity - (stockMap?.get(line.itemCode)?.quantity ?? 0) }))
     .filter(({ shortfall }) => shortfall > 0)
     .map(({ line, shortfall }) => ({
-      itemName: line.itemName ?? line.itemCode,
+      itemName: line.itemName ?? line.itemCode ?? '',
       quantity: shortfall,
       sku: line.itemCode,
       unit: line.unit,
