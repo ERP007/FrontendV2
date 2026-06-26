@@ -1,8 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Circle, Loader2, XCircle } from 'lucide-react'
+import { useEffect } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { FgBadge, FgButton, FgModal, FgNotice } from '@/shared/ui'
 
+import { invalidateSalesOrder } from '../api/so-cache'
 import { useSalesOrderProgressQuery } from '../api/use-sales-order-progress-query'
 
 export type SoSagaMode = 'OUTBOUND' | 'INBOUND'
@@ -47,12 +50,18 @@ export interface SoSagaProgressModalProps {
 
 /** 출고/입고 saga 진행을 단계별 체크로 보여주는 모달 (SO #10 폴링). */
 export function SoSagaProgressModal({ code, mode, open, onClose, onSuccess }: SoSagaProgressModalProps) {
+  const queryClient = useQueryClient()
   const { data: progress } = useSalesOrderProgressQuery(code, open)
   const outcome = progress?.outcome
   const states = deriveStepStates(outcome)
   const labels = STEP_LABELS[mode]
   const isSuccess = outcome === 'SUCCESS'
   const isFailed = outcome === 'FAILED'
+
+  // saga 성공 확정 시 발주 현황 상세·목록 캐시를 다시 무효화한다.
+  useEffect(() => {
+    if (isSuccess) invalidateSalesOrder(queryClient, code)
+  }, [isSuccess, code, queryClient])
 
   return (
     <FgModal

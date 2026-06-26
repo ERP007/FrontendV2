@@ -22,6 +22,7 @@ export { useApproveSalesOrderMutation } from './api/use-approve-sales-order-muta
 export { useRejectSalesOrderMutation } from './api/use-reject-sales-order-mutation'
 export { useCancelSalesOrderMutation } from './api/use-cancel-sales-order-mutation'
 export { useSalesOrderDeliverMutation } from './api/use-sales-order-deliver-mutation'
+export { invalidateSalesOrderQueries } from './api/so-cache'
 
 // ----- queries -----
 export { useBranchSalesOrdersQuery } from './api/use-branch-sales-orders-query'

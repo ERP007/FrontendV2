@@ -94,7 +94,7 @@ export function BranchSalesOrderEditPage() {
     if (!data || hydratedRef.current) return
     hydratedRef.current = true
 
-    // 1) 입고 창고: useForm 의 values prop(data.values)으로 지속 동기화하므로 여기선 라인만 채운다.
+    // 1) 출고 창고: useForm 의 values prop(data.values)으로 지속 동기화하므로 여기선 라인만 채운다.
     const detailLines = data.lines
     const skus = detailLines
       .map((line) => line.itemCode)
@@ -179,7 +179,7 @@ export function BranchSalesOrderEditPage() {
 
   const isSubmitting = submitMutation.isPending || updateDraftMutation.isPending
 
-  // 입고 창고 옵션: 전체 hq 목록 + (목록에 없으면) 현재 발주의 입고 창고를 합쳐 라벨 표시·변경 모두 지원.
+  // 출고 창고 옵션: 전체 hq 목록 + (목록에 없으면) 현재 발주의 출고 창고를 합쳐 라벨 표시·변경 모두 지원.
   const toWh = data.toWarehouse
   const warehouseOptions =
     hqWarehouses?.some((w) => w.code === toWh.code) ?? false

@@ -85,8 +85,8 @@ export interface SalesOrderLineResponse {
 // ----- 공통 상태전환 응답 (모든 상태전환 API 공통) -----
 export interface SalesOrderStatusChangedResponse {
   code: string
-  fromWarehouseCode: string // 출고 창고
-  toWarehouseCode: string // 수신(지점) 창고
+  fromWarehouseCode: string // 요청 지점/입고 창고
+  toWarehouseCode: string // 출고 창고
   status: SalesOrderStatus
   progress: OrderProgress
   totalQuantity: number // 라인 수량 합
@@ -94,7 +94,7 @@ export interface SalesOrderStatusChangedResponse {
 
 // ----- 1~5. 생성 / 임시저장 / 제출 요청 -----
 export interface CreateSalesOrderRequest {
-  warehouseCode: string // 필수, 입고 창고
+  warehouseCode: string // 필수, 출고 창고
   memo?: string // <= 500
   lines: SalesOrderLineRequest[] // 1..50 필수
 }

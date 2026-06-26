@@ -2,6 +2,8 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { stockQueryBaseKey } from './stock-cache'
+
 import type { Stock, StockFilter, StockSort } from '../model/types'
 
 /** GET /inventory/stocks 응답 (swagger StockListResponse). page는 1-base. */
@@ -22,7 +24,7 @@ export interface StockListParams {
   sort: StockSort
 }
 
-export const stockListBaseKey = ['stocks', 'list'] as const
+export const stockListBaseKey = [...stockQueryBaseKey, 'list'] as const
 
 export const stockListQueryKey = (params: StockListParams) =>
   [...stockListBaseKey, params] as const
@@ -51,6 +53,6 @@ export function useStockListQuery(params: StockListParams) {
       return response.data
     },
     queryKey: stockListQueryKey(params),
-    staleTime: 30_000,
+    staleTime: 0,
   })
 }
