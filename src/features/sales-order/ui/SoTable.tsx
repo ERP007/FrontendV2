@@ -97,6 +97,7 @@ export function SoTable({ header, onOpen, onSortChange, rows, sortDirection, sor
     <FgDataTable
       columns={columns}
       data={rows}
+      enableSortingRemoval={false}
       header={header}
       manualSorting
       sorting={sorting}
@@ -200,6 +201,7 @@ export function SoBranchTable({
     <FgDataTable
       columns={columns}
       data={rows}
+      enableSortingRemoval={false}
       header={header}
       manualSorting
       sorting={sorting}
