@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   Boxes,
   Building2,
+  Check,
   ClipboardCheck,
   ClipboardList,
   History,
@@ -16,10 +17,23 @@ import {
   User,
   Users,
 } from 'lucide-react'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { toast } from 'sonner'
 
-import { logoutAndRedirectToLogin, PASSWORD_CHANGE_URL } from '@/shared/api'
-import { useSession } from '@/shared/auth/session'
+import {
+  isErrorResponse,
+  logoutAndRedirectToLogin,
+  PASSWORD_CHANGE_URL,
+  queryClient,
+  redirectToAuthLogin,
+} from '@/shared/api'
+import {
+  ensureSession,
+  getSwitchDemoAccountErrorMessage,
+  switchDemoAccount,
+  useSession,
+} from '@/shared/auth/session'
 import {
   canAccessBranchScope,
   canAccessHqScope,
@@ -31,14 +45,90 @@ import type { FgDropdownItem, FgNavGroup, FgNavItem } from '@/shared/ui'
 
 const iconClassName = 'h-4.5 w-4.5'
 
+const demoAccounts = [
+  { description: '관리자 계정', employeeNo: 'ADMIN', label: 'ADMIN' },
+  { description: '본사 계정', employeeNo: 'HQ001', label: 'HQ001' },
+  { description: '지점 계정', employeeNo: 'BR001', label: 'BR001' },
+] as const
+
+function AccountSwitchLabel({
+  label,
+  description,
+}: {
+  label: string
+  description: string
+}) {
+  return (
+    <span className="min-w-44">
+      <span>
+        <strong className="block text-label font-extrabold">{label}</strong>
+        <span className="block text-micro font-medium text-faint">{description}</span>
+      </span>
+    </span>
+  )
+}
+
+function getInitialHomePath(userRole?: string | null) {
+  if (canAccessUserManagement(userRole)) {
+    return '/users'
+  }
+
+  if (canAccessHqScope(userRole)) {
+    return '/dashboard'
+  }
+
+  return '/stocks'
+}
+
 export function AppShellLayout() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { data: session } = useSession()
+  const switchingAccountRef = useRef(false)
+  const [switchingEmployeeNo, setSwitchingEmployeeNo] = useState<string | null>(null)
   const userRole = session?.userRole
   const canShowUserManagement = canAccessUserManagement(userRole)
   const canShowHqMenus = canAccessHqScope(userRole)
   const canShowBranchMenus = canAccessBranchScope(userRole)
+
+  const handleSwitchAccount = async (account: (typeof demoAccounts)[number]) => {
+    if (switchingAccountRef.current) {
+      return
+    }
+
+    const isCurrentAccount =
+      account.employeeNo === session?.employeeNo || account.employeeNo === session?.tenancyCode
+
+    if (isCurrentAccount) {
+      toast.info('이미 선택된 계정입니다.')
+      return
+    }
+
+    switchingAccountRef.current = true
+    setSwitchingEmployeeNo(account.employeeNo)
+
+    try {
+      await switchDemoAccount(account.employeeNo)
+      queryClient.clear()
+
+      const nextSession = await ensureSession()
+      const nextPath = getInitialHomePath(nextSession.userRole)
+
+      toast.success(`${account.label} 계정으로 전환되었습니다.`)
+      await navigate({ replace: true, to: nextPath })
+    } catch (error) {
+      const message = getSwitchDemoAccountErrorMessage(error)
+
+      toast.error(message)
+
+      if (isErrorResponse(error) && error.status === 401) {
+        redirectToAuthLogin()
+      }
+    } finally {
+      switchingAccountRef.current = false
+      setSwitchingEmployeeNo(null)
+    }
+  }
 
   const item = (to: string, label: string, icon?: ReactNode): FgNavItem => ({
     active: pathname === to || pathname.startsWith(`${to}/`),
@@ -159,6 +249,31 @@ export function AppShellLayout() {
       icon: <KeyRound aria-hidden className={iconClassName} />,
       label: '비밀번호 변경',
       onSelect: () => window.location.assign(PASSWORD_CHANGE_URL),
+    },
+    {
+      icon: <User aria-hidden className={iconClassName} />,
+      label: '계정 전환',
+      separatorBefore: true,
+      subItems: demoAccounts.map((account) => {
+        const active =
+          account.employeeNo === session?.tenancyCode || account.employeeNo === session?.employeeNo
+        const disabled = switchingEmployeeNo !== null || active
+
+        return {
+          ariaDisabled: disabled,
+          disabled,
+          icon: active ? <Check aria-hidden className={iconClassName} /> : <User aria-hidden className={iconClassName} />,
+          label: (
+            <AccountSwitchLabel
+              description={switchingEmployeeNo === account.employeeNo ? '전환 중' : account.description}
+              label={account.label}
+            />
+          ),
+          onSelect: disabled ? undefined : () => {
+            void handleSwitchAccount(account)
+          },
+        } satisfies FgDropdownItem
+      }),
     },
     {
       danger: true,
