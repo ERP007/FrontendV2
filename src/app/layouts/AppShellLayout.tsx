@@ -257,9 +257,11 @@ export function AppShellLayout() {
       subItems: demoAccounts.map((account) => {
         const active =
           account.employeeNo === session?.tenancyCode || account.employeeNo === session?.employeeNo
+        const disabled = switchingEmployeeNo !== null || active
 
         return {
-          ariaDisabled: switchingEmployeeNo !== null || active,
+          ariaDisabled: disabled,
+          disabled,
           icon: active ? <Check aria-hidden className={iconClassName} /> : <User aria-hidden className={iconClassName} />,
           label: (
             <AccountSwitchLabel
@@ -267,7 +269,7 @@ export function AppShellLayout() {
               label={account.label}
             />
           ),
-          onSelect: () => {
+          onSelect: disabled ? undefined : () => {
             void handleSwitchAccount(account)
           },
         } satisfies FgDropdownItem

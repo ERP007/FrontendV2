@@ -60,7 +60,9 @@ export function MyPage() {
           onChangePassword={() => window.location.assign(PASSWORD_CHANGE_URL)}
         />
       ) : null}
-      <MyActivityCard activities={myActivityQuery.data ?? []} />
+      {!myActivityQuery.isLoading && !activityErrorMessage && myActivityQuery.data ? (
+        <MyActivityCard activities={myActivityQuery.data} />
+      ) : null}
     </div>
   )
 }
