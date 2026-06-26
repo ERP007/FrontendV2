@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {
   Calendar,
@@ -16,7 +17,7 @@ import {
   useBranchSalesOrderQuery,
   useSalesOrderDeliverMutation,
 } from '@/features/sales-order'
-import { useStockQuantitiesQuery } from '@/features/stock'
+import { invalidateStockQueries, useStockQuantitiesQuery } from '@/features/stock'
 import { useSession } from '@/shared/auth/session'
 import { roleLabel } from '@/shared/config/session'
 import { formatNumber } from '@/shared/lib/format'
@@ -45,6 +46,7 @@ export function BranchSalesOrderArrivalPage() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const code = params.soNo ?? ''
 
   const { data: so } = useBranchSalesOrderQuery(code)
@@ -69,6 +71,7 @@ export function BranchSalesOrderArrivalPage() {
       if (result.progress === 'INBOUND_IN_PROGRESS') {
         setProgressOpen(true)
       } else {
+        invalidateStockQueries(queryClient)
         toast.success(`${result.code} 입고가 확정되었습니다.`)
         void navigate({ replace: true, to: '/branch/sales-orders' })
       }
@@ -251,6 +254,7 @@ export function BranchSalesOrderArrivalPage() {
           open
           onClose={() => setProgressOpen(false)}
           onSuccess={() => {
+            invalidateStockQueries(queryClient)
             setProgressOpen(false)
             toast.success(`${code} 입고가 확정되었습니다.`)
             void navigate({ replace: true, to: '/branch/sales-orders' })

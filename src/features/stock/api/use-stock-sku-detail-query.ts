@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { stockQueryBaseKey } from './stock-cache'
+
 import type { StockSkuDetail } from '../model/types'
+
+const stockSkuDetailQueryBaseKey = [...stockQueryBaseKey, 'detail'] as const
 
 /**
  * sku 상세 패널을 조회한다(GET /inventory/stocks/{sku}).
@@ -18,7 +22,7 @@ export function useStockSkuDetailQuery(sku: string | null) {
       )
       return response.data
     },
-    queryKey: ['stocks', 'detail', sku] as const,
-    staleTime: 30_000,
+    queryKey: [...stockSkuDetailQueryBaseKey, sku] as const,
+    staleTime: 0,
   })
 }

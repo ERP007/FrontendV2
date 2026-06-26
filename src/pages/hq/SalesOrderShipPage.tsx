@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { Building2, Calendar, FileText, Truck, Warehouse as WarehouseIcon } from 'lucide-react'
 import { useState } from 'react'
@@ -12,7 +13,7 @@ import {
   useHqSalesOrderQuery,
 } from '@/features/sales-order'
 import type { CarrierType } from '@/features/sales-order'
-import { useStockQuantitiesQuery } from '@/features/stock'
+import { invalidateStockQueries, useStockQuantitiesQuery } from '@/features/stock'
 import { cn } from '@/shared/lib/cn'
 import { formatNumber } from '@/shared/lib/format'
 import {
@@ -46,6 +47,7 @@ export function SalesOrderShipPage() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const code = params.soNo ?? ''
 
   const { data: so } = useHqSalesOrderQuery(code)
@@ -78,6 +80,7 @@ export function SalesOrderShipPage() {
       if (result.progress === 'OUTBOUND_IN_PROGRESS') {
         setProgressOpen(true)
       } else {
+        invalidateStockQueries(queryClient)
         toast.success(`${result.code} 출고되었습니다.`)
         void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })
       }
@@ -247,6 +250,7 @@ export function SalesOrderShipPage() {
           open
           onClose={() => setProgressOpen(false)}
           onSuccess={() => {
+            invalidateStockQueries(queryClient)
             setProgressOpen(false)
             toast.success(`${code} 출고되었습니다.`)
             void navigate({ params: { soNo: code }, replace: true, to: '/sales-orders/$soNo' })

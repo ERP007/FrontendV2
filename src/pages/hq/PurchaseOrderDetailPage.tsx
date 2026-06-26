@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   Ban,
@@ -26,6 +27,8 @@ import {
   usePurchaseOrderQuery,
   useReceivePurchaseOrderMutation,
 } from '@/features/purchase-order'
+import { invalidateSalesOrderQueries } from '@/features/sales-order'
+import { invalidateStockQueries } from '@/features/stock'
 import { formatDateKorean } from '@/shared/lib/format'
 import { FgBadge, FgButton, FgCard, FgDomainStatusBadge, FgPageHeader } from '@/shared/ui'
 
@@ -44,6 +47,7 @@ function InfoCell({ icon, label, value }: { icon: ReactNode; label: string; valu
 export function PurchaseOrderDetailPage() {
   const navigate = useNavigate()
   const params = useParams({ strict: false })
+  const queryClient = useQueryClient()
   const code = params.poNo ?? ''
   const { data: po } = usePurchaseOrderQuery(code)
   const { data: histories = [] } = usePurchaseOrderHistoriesQuery(code)
@@ -277,6 +281,8 @@ export function PurchaseOrderDetailPage() {
           open
           onClose={() => setReceiveProgressOpen(false)}
           onSuccess={() => {
+            invalidateSalesOrderQueries(queryClient)
+            invalidateStockQueries(queryClient)
             setReceiveProgressOpen(false)
             toast.success(`${code} 입고 처리되었습니다.`)
           }}

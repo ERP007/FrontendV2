@@ -13,10 +13,10 @@ import type {
 } from '../model/types'
 
 export interface SalesOrderFormData {
-  fromWarehouse: WarehouseInfo // 출고 창고 (현재고·안전재고 batch 조회 기준)
+  fromWarehouse: WarehouseInfo // 요청 지점/입고 창고 (현재고·안전재고 batch 조회 기준)
   lines: SoLine[]
   status: SalesOrderStatus
-  toWarehouse: WarehouseInfo // 입고 창고 select 옵션 fallback (hq 목록에 없을 수 있음)
+  toWarehouse: WarehouseInfo // 출고 창고 select 옵션 fallback (hq 목록에 없을 수 있음)
   values: SoFormValues
 }
 

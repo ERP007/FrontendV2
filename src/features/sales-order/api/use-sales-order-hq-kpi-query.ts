@@ -13,6 +13,6 @@ export function useSalesOrderHqKpiQuery() {
       return response.data
     },
     queryKey: salesOrderKeys.hqKpi(),
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }

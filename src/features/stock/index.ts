@@ -1,4 +1,5 @@
 export { useMovementListQuery } from './api/use-movement-list-query'
+export { invalidateStockQueries } from './api/stock-cache'
 export { useSafetyStockEditQuery } from './api/use-safety-stock-edit-query'
 export { useSafetyStockMutation } from './api/use-safety-stock-mutation'
 export { useStockAdjustMutation } from './api/use-stock-adjust-mutation'

@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 
 import { api } from '@/shared/api'
 
+import { stockQueryBaseKey } from './stock-cache'
+
 import type { StockKpi } from '../model/types'
 
-export const stockKpiQueryKey = ['stocks', 'kpi'] as const
+export const stockKpiQueryKey = [...stockQueryBaseKey, 'kpi'] as const
 
 const emptyStockKpi: StockKpi = {
   lowStockCount: 0,
@@ -55,6 +57,6 @@ export function useStockKpiQuery() {
       return normalizeStockKpi(response.data)
     },
     queryKey: stockKpiQueryKey,
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }

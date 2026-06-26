@@ -60,6 +60,6 @@ export function useHqSalesOrdersQuery(params: HqSalesOrderListParams = {}) {
       ...data,
       content: data.content.map(mapHqSalesOrderRow),
     }),
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }
